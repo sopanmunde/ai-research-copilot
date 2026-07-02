@@ -375,9 +375,20 @@ export default function Sidebar({
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="flex flex-col space-y-0.5 overflow-hidden pl-2"
                   >
-                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <Brain className="h-4 w-4" /><span>Brain</span>
-                    </button>
+                     <button
+                        onClick={() => {
+                          onSelect("brain");
+                          onClose?.();
+                        }}
+                        className={cls(
+                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                          selectedId === "brain"
+                            ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                        )}
+                      >
+                        <Brain className="h-4 w-4" /><span>Brain</span>
+                      </button>
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <Calendar className="h-4 w-4" /><span>Calendar</span>
                     </button>

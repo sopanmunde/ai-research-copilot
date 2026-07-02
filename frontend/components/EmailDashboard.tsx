@@ -1007,51 +1007,69 @@ export function EmailDashboard() {
 
                     <Separator className="mt-4" />
 
-                    <Card className="border-border bg-muted/30 shadow-none">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                              <MessageSquareText className="size-3.5" />
-                              Reply to {selectedEmail.name}
-                            </span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    triggerReply();
-                                    setAiAssistantOpen(true);
-                                  }}
-                                  className="text-xs gap-1.5 h-7"
-                                >
-                                  <Sparkles className="size-3" />
-                                  Reply with AI
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Open AI assistant to help draft a reply
-                              </TooltipContent>
-                            </Tooltip>
+                    {/* ── Reply Composer ── */}
+                    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/40">
+                        <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                          <div className="flex size-5 items-center justify-center rounded-md bg-muted border border-border">
+                            <MessageSquareText className="size-3 text-muted-foreground" />
                           </div>
-                          <div
-                            onClick={triggerReply}
-                            className="min-h-20 bg-muted border border-border rounded-md p-3 text-xs text-muted-foreground cursor-text hover:bg-accent/50 transition-all leading-relaxed"
-                          >
-                            Click here to write reply or use the AI draft assistant...
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <Badge variant="outline" className="font-normal px-2 py-0.5 rounded-md text-[10px]">
-                              Mute this thread
-                            </Badge>
-                            <Button size="sm" onClick={triggerReply} className="text-xs h-8 px-4">
-                              Reply
-                            </Button>
-                          </div>
+                          <span>Reply to <span className="font-semibold">{selectedEmail.name}</span></span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                triggerReply();
+                                setAiAssistantOpen(true);
+                              }}
+                              className="h-7 text-xs gap-1.5 border-border bg-background hover:bg-muted"
+                            >
+                              <Sparkles className="size-3" />
+                              Reply with AI
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Open AI assistant to help draft a reply
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Textarea */}
+                      <div className="px-4 pt-3 pb-2">
+                        <Textarea
+                          onClick={triggerReply}
+                          readOnly
+                          placeholder="Click here to write reply or use the AI draft assistant…"
+                          className="min-h-[80px] resize-none border-0 bg-transparent p-0 text-xs text-muted-foreground placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-text shadow-none leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Divider */}
+                      <Separator />
+
+                      {/* Footer toolbar */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-muted/20">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[11px] text-muted-foreground hover:text-foreground gap-1.5 px-2.5 rounded-md"
+                        >
+                          Mute this thread
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={triggerReply}
+                          className="h-7 text-xs px-4 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                        >
+                          <Reply className="size-3" />
+                          Reply
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
