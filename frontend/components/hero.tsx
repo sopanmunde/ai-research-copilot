@@ -13,10 +13,6 @@ import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 //   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
 //   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
 //   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-// ];
-=======
-import { TextAnimate } from "@/components/ui/text-animate"
-
 const textRevealVariants = {
   hidden: { y: "100%" },
   visible: (i: number) => ({
