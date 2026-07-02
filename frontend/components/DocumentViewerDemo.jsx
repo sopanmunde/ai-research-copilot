@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ── Sample demo files ─────────────────────────────────────────────────────────
 const DEMO_FILES = [
   {
     id: "md",

@@ -23,13 +23,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import RagPipelineVisualizer from "./RagPipelineVisualizer";
 
-/* â”€â”€ icon wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ActionIcon({ icon: Icon, customIcon }) {
   if (customIcon) return customIcon;
   return <Icon className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-400 group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400 transition-colors" />;
 }
 
-/* â”€â”€ single action row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ActionRow({ action, index, onAction }) {
   const Icon = action.icon;
   return (
@@ -57,7 +55,6 @@ function ActionRow({ action, index, onAction }) {
   );
 }
 
-/* â”€â”€ section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function SectionLabel({ children }) {
   return (
     <div className="px-3 pt-3 pb-1.5">
@@ -68,7 +65,6 @@ function SectionLabel({ children }) {
   );
 }
 
-/* â”€â”€ divider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function Divider() {
   return <div className="mx-2.5 my-1.5 h-px bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-700 to-transparent opacity-50" />;
 }

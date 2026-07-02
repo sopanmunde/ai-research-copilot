@@ -39,7 +39,6 @@ from src.streaming import (
 
 logger = get_logger(__name__)
 
-# ── Active SSE Streams Registry and Shutdown Tracking ─────────────────────────
 import asyncio
 from typing import Set
 
@@ -49,7 +48,6 @@ shutdown_event = asyncio.Event()
 async def signal_sse_shutdown():
     shutdown_event.set()
     logger.info(f"Signaling {len(active_queues)} active SSE streams of shutdown...")
-    # Queue sentinel for all active SSE streams to exit gracefully
     for q in list(active_queues):
         await q.put("server_shutdown")
 
@@ -78,11 +76,9 @@ async def _stream_chat_response_impl(
     history = []
     if conversation_id:
         try:
-            # Load up to 11 messages to ensure we get a full history window excluding the current message
             history = await get_conversation_history(
                 messages_collection, conversation_id, limit=6,
             )
-            # Exclude the current user query if it has already been saved to MongoDB
             if history and history[-1].get("role") == "user" and history[-1].get("content") == query:
                 history.pop()
         except Exception as e:
@@ -96,9 +92,6 @@ async def _stream_chat_response_impl(
     provider = model_provider or ""
     model = model_name or ""
 
-    # ═════════════════════════════════════════════════════════════════════
-    # QUICK MODE — Direct LLM call with automatic provider failover
-    # ═════════════════════════════════════════════════════════════════════
     if mode == "quick":
         try:
             from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -127,7 +120,6 @@ async def _stream_chat_response_impl(
 
             yield sse_node_event("direct_llm", "running")
 
-            # ── Auto-failover loop ──────────────────────────────────────────
             fallback_providers = get_fallback_providers(provider)
             qlog.info(f"Quick mode fallback chain: {fallback_providers}")
 
@@ -163,7 +155,6 @@ async def _stream_chat_response_impl(
                         qlog.warning(f"{attempt_provider} failed, trying next provider")
                         continue
 
-                    # Last provider — report the error to the user
                     if is_quota_error(e):
                         err_msg = "AI quota exhausted on all available providers. Please check your billing plans."
                     elif "503" in str(e) or "unavailable" in str(e).lower():
@@ -197,9 +188,6 @@ async def _stream_chat_response_impl(
             yield sse_error_event(str(e))
             return
 
-    # ═════════════════════════════════════════════════════════════════════
-    # AGENT MODE — Full LangGraph multi-agent pipeline
-    # ═════════════════════════════════════════════════════════════════════
     graph = get_workflow_for_mode(workflow_type)
 
     initial_state = {
@@ -235,7 +223,6 @@ async def _stream_chat_response_impl(
             name = event.get("name", "")
             data = event.get("data", {})
 
-            # Node lifecycle events
             if kind == "on_chain_start" and name in (
                 "planner", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
@@ -274,9 +261,7 @@ async def _stream_chat_response_impl(
                     if quality_score:
                         yield sse_quality_score_event(quality_score)
 
-            # Token-level streaming from the LLM
             elif kind == "on_chat_model_stream":
-                # Only stream tokens from output-facing nodes, not internal reasoning nodes
                 langgraph_node = event.get("metadata", {}).get("langgraph_node", active_node)
                 if langgraph_node in ("planner", "retriever", "citation"):
                     continue
@@ -289,7 +274,6 @@ async def _stream_chat_response_impl(
                     streamed_text += token
                     yield sse_token_event(token)
 
-            # Custom events (e.g. provider failover)
             elif kind == "on_custom_event":
                 if name == "provider_switch":
                     yield sse_provider_switch_event(

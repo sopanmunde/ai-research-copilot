@@ -17,7 +17,6 @@ async def citation_node(state: AgentState) -> dict:
     """
     workflow_type = state.get("workflow_type", "research")
 
-    # Coding and data_analysis workflows don't need citations
     if workflow_type in ("coding", "data_analysis"):
         return {"citations": [], "current_node": "citation"}
 
@@ -45,7 +44,6 @@ async def citation_node(state: AgentState) -> dict:
         )
         return {"citations": enriched, "current_node": "citation"}
 
-    # Fallback: extract from raw docs
     citations: list = []
     seen: set = set()
     for i, doc in enumerate(docs):

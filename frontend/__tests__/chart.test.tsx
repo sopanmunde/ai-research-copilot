@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import { ChartContainer, ChartConfig } from '../components/ui/chart'
 import React from 'react'
 
-// Mock recharts ResponsiveContainer to avoid SVG measuring issues in jsdom
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
   Tooltip: () => null,

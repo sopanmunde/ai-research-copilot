@@ -12,8 +12,6 @@ from src.schemas.user import TokenData
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 
-# ── Failed-login lockout tracker (in-memory) ─────────────────────────────────
-# Structure: { email: {"count": int, "locked_until": datetime | None} }
 _LOGIN_ATTEMPTS: dict = {}
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 15
@@ -29,7 +27,6 @@ def _is_locked(email: str) -> tuple[bool, int]:
     if info["locked_until"] and datetime.utcnow() < info["locked_until"]:
         remaining = int((info["locked_until"] - datetime.utcnow()).total_seconds())
         return True, remaining
-    # Auto-clear an expired lockout
     if info["locked_until"] and datetime.utcnow() >= info["locked_until"]:
         _LOGIN_ATTEMPTS[email] = {"count": 0, "locked_until": None}
     return False, 0
@@ -49,7 +46,6 @@ def _reset_attempts(email: str):
     _LOGIN_ATTEMPTS.pop(email, None)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _users():
     return get_database()[COLLECTION_USERS]
@@ -68,10 +64,8 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
     import asyncio
     def _verify():
         try:
-            # Try direct verification first
             if bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8')):
                 return True
-            # Fallback for legacy hashes (SHA-256 -> bcrypt)
             plain_password_hash = hashlib.sha256(plain_password.encode()).hexdigest()
             return bcrypt.checkpw(plain_password_hash.encode('utf-8'), hashed_password.encode('utf-8'))
         except ValueError:
@@ -97,7 +91,6 @@ async def authenticate_user(email: str, password: str):
     Returns False on wrong credentials (caller raises 401).
     Returns the user document on success.
     """
-    # 1. Check lockout BEFORE touching the DB
     locked, seconds_left = _is_locked(email)
     if locked:
         minutes_left = max(1, seconds_left // 60)
@@ -109,7 +102,6 @@ async def authenticate_user(email: str, password: str):
             ),
         )
 
-    # 2. Verify credentials
     user = await get_user(email)
     if not user or not await verify_password(password, user["hashed_password"]):
         remaining = _record_failed_attempt(email)
@@ -127,7 +119,6 @@ async def authenticate_user(email: str, password: str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 3. Success — clear the counter
     _reset_attempts(email)
     return user
 

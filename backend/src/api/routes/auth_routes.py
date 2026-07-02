@@ -33,8 +33,6 @@ async def register(request: Request, user: UserCreate):
 @router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 async def login(request: Request, user: UserLogin):
-    # authenticate_user now raises HTTP 401 or 423 automatically —
-    # no need to check for a False return here.
     authenticated_user = await authenticate_user(user.email, user.password)
     token = create_access_token(data={"sub": authenticated_user["email"]})
     return {"access_token": token, "token_type": "bearer"}

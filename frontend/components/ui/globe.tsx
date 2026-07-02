@@ -56,11 +56,8 @@ const Earth: React.FC<EarthProps> = ({
       opacity: 1,
       offset: [0, 0],
       markers: [
-        // longitude latitude
       ],
       onRender: (state: any) => {
-        // Called on every animation frame.
-        // `state` will be an empty object, return updated params.
         state.phi = phi
         phi += 0.003
       },

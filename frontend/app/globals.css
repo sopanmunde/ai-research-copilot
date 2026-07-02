@@ -46,7 +46,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Keyframe animations ─────────────────────────────────────────────────── */
 
 @keyframes shimmer {
   0% {
@@ -122,7 +121,6 @@
   }
 }
 
-/* ── Custom scrollbar ────────────────────────────────────────────────────── */
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: rgba(161, 161, 170, 0.3) transparent;
@@ -157,7 +155,6 @@
   display: none;
 }
 
-/* ── ShadCN CSS variables ────────────────────────────────────────────────── */
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(240 10% 3.9%);
@@ -243,7 +240,6 @@
   }
 }
 
-/* ── Utility classes ─────────────────────────────────────────────────────── */
 .animate-shimmer-text {
   background: linear-gradient(110deg, #a1a1aa 30%, #ffffff 50%, #a1a1aa 70%);
   background-size: 250% 100%;

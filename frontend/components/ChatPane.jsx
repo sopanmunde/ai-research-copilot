@@ -44,7 +44,6 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import ScrambleHover from "./ui/scramble";
 
-// â”€â”€â”€ File icon helper (mirrors Composer.jsx) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getFileInfo(filename) {
   const ext = filename?.split(".").pop()?.toLowerCase() || "";
   if (ext === "pdf") return { icon: FileType, bg: "bg-red-500", label: "PDF" };
@@ -58,7 +57,6 @@ function getFileInfo(filename) {
   return { icon: FileIcon, bg: "bg-zinc-600", label: ext.toUpperCase() || "File" };
 }
 
-// ——— File card shown on sent user messages ———————————————————————————————————
 function MessageFileCard({ attachedFile }) {
   const info = getFileInfo(attachedFile.name);
   const Icon = info.icon;
@@ -80,7 +78,6 @@ function MessageFileCard({ attachedFile }) {
   );
 }
 
-// â”€â”€â”€ Typing Indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ThinkingMessage({ onPause, agentState }) {
   const getAgentText = (state) => {
     if (state === "planner") return "Planning research strategy...";
@@ -137,7 +134,6 @@ function ThinkingMessage({ onPause, agentState }) {
   );
 }
 
-// â”€â”€â”€ Suggestion Chips â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SUGGESTIONS = [
   { label: "Explain a diagnosis", icon: Stethoscope },
   { label: "Summarize research", icon: BookOpen },
@@ -145,11 +141,9 @@ const SUGGESTIONS = [
 ];
 
 function EmptyState({ onSuggestion }) {
-  // EmptyState is now inlined in the main render tree below for better layout integration
   return null;
 }
 
-// â”€â”€â”€ Main ChatPane â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ChatPane = forwardRef(function ChatPane(
   {
     conversation,
@@ -201,7 +195,6 @@ const ChatPane = forwardRef(function ChatPane(
     [],
   );
 
-  // Track scroll position — show button when not at the bottom
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -209,7 +202,6 @@ const ChatPane = forwardRef(function ChatPane(
     setShowScrollBtn(distFromBottom > 150);
   }, []);
 
-  // Auto-scroll to bottom when messages change (only if already at bottom)
   const messages = Array.isArray(conversation?.messages)
     ? conversation.messages
     : [];
@@ -217,7 +209,6 @@ const ChatPane = forwardRef(function ChatPane(
     const el = scrollContainerRef.current;
     if (!el) return;
     const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    // Only auto-scroll if user is near the bottom (within 250px)
     if (distFromBottom < 250) {
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
@@ -272,7 +263,6 @@ const ChatPane = forwardRef(function ChatPane(
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_75%)] pointer-events-none" />
 
       {messages.length === 0 ? (
-        /* —— Centered Empty State —— */
         <div className="flex flex-1 flex-col justify-between overflow-y-auto px-4 py-8 bg-transparent relative z-10">
           <div className="flex flex-1 flex-col items-center justify-center w-full">
             <div className="w-full max-w-3xl flex flex-col items-center justify-center">
@@ -367,7 +357,6 @@ const ChatPane = forwardRef(function ChatPane(
           </p>
         </div>
       ) : (
-        /* —— Active Conversation Layout —— */
         <>
           {/* Provider Switch Notification Banner */}
           <AnimatePresence>
@@ -413,7 +402,6 @@ const ChatPane = forwardRef(function ChatPane(
                       className="group"
                     >
                       {editingId === m.id ? (
-                        /* ——— Edit Mode (shadcn/ui style) ——— */
                         <motion.div
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -453,7 +441,6 @@ const ChatPane = forwardRef(function ChatPane(
                           </Card>
                         </motion.div>
                       ) : (
-                        /* —— Normal Message —— */
                         <div className="relative">
                           {/* File card above user message */}
                           {m.role === "user" && m.attachedFile && (

@@ -19,13 +19,11 @@ export function ContactSection() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
 
-    // Dynamic AI intent and sentiment simulation as they type
     if (name === "message") {
       if (value.length < 5) {
         setSentiment("Awaiting text...");
         setIntent("Awaiting intent...");
       } else {
-        // Simple client-side simulations to show real-time agent processing
         const lower = value.toLowerCase();
         if (lower.includes("price") || lower.includes("pricing") || lower.includes("cost") || lower.includes("buy")) {
           setIntent("Sales / Commercial");
@@ -56,7 +54,6 @@ export function ContactSection() {
     setSubmitStep(1); // Intent Analysis
   };
 
-  // Simulate Agentic Ingestion Workflow Steps
   useEffect(() => {
     if (!isSubmitting) return;
 

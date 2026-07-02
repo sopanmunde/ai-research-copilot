@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import AuthPage from '../app/(root)/(auth)/login/[[...sign-in]]/page'
 import React from 'react'
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -18,11 +17,9 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-// Mock framer-motion to render elements synchronously without layout engine calls
 vi.mock('framer-motion', () => {
   const motionComp = (Tag: keyof React.JSX.IntrinsicElements) => {
     const Component = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof Tag>) => {
-      // Remove framer-motion specific props that standard tags complain about
       const { initial, animate, exit, transition, whileHover, ...cleanProps } = props as Record<string, unknown>
       return React.createElement(Tag, cleanProps, children)
     }
@@ -40,7 +37,6 @@ vi.mock('framer-motion', () => {
   }
 })
 
-// Mock TriVisionXLogo
 vi.mock('@/components/TriVisionXLogo', () => ({
   TriVisionXLogo: () => <div data-testid="trivisionx-logo">Logo</div>,
 }))
@@ -67,7 +63,6 @@ describe('Login Page', () => {
   })
 
   it('should show loading spinner and disable sign in button during submission', async () => {
-    // Mock fetch to simulate dynamic login check
     const mockFetch = vi.fn().mockImplementation(() => 
       new Promise((resolve) => setTimeout(() => resolve({
         ok: true,

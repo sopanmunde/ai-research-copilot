@@ -217,7 +217,6 @@ function getProviderFromParams(searchParams: any): string {
       return payload.provider || "google"
     }
   } catch (e) {
-    // Fail-safe
   }
   return state === "github" ? "github" : "google"
 }
@@ -232,7 +231,6 @@ function AuthPageContent() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  // Track SSO callback mode in state — independent of URL so replaceState() doesn't reset it
   const [ssoCallbackState, setSsoCallbackState] = useState<{ active: boolean; provider: string }>({
     active: false,
     provider: "google",
@@ -245,12 +243,8 @@ function AuthPageContent() {
     const state = searchParams.get("state")
     let provider = getProviderFromParams(searchParams)
 
-    // Mark SSO callback mode BEFORE cleaning the URL.
-    // This keeps the loader visible after replaceState() clears the URL params
-    // (which would otherwise reset isCallback to false and flash the login form).
     setSsoCallbackState({ active: true, provider })
 
-    // Now safe to clean the URL — the loader state is in React state, not the URL
     window.history.replaceState({}, "", "/login")
     if (typeof window !== "undefined") localStorage.removeItem("oauth_provider")
 

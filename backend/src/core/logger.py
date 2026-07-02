@@ -24,5 +24,4 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-# Root application logger
 logger = get_logger("trivisionx_ai")

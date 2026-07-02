@@ -23,7 +23,6 @@ async def load_pdf(file_bytes: bytes, filename: str) -> List[Document]:
         loader = PyPDFLoader(tmp_path)
         docs = loader.load()
 
-        # Enrich metadata
         for i, doc in enumerate(docs):
             doc.metadata.update({
                 "filename": filename,

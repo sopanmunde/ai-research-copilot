@@ -23,7 +23,6 @@ import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import { API_BASE_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-/* ── tiny shimmer border helper ─────────────────────────────────────────── */
 function ShimmerBorder({ className = "" }) {
   return (
     <span
@@ -38,7 +37,6 @@ function ShimmerBorder({ className = "" }) {
   );
 }
 
-/* ── menu item ───────────────────────────────────────────────────────────── */
 function MenuItem({
   icon: Icon,
   label,
@@ -84,7 +82,6 @@ function MenuItem({
   );
 }
 
-/* ── main component ──────────────────────────────────────────────────────── */
 export default function SettingsPopover({ children, onUserUpdate = () => { } }) {
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

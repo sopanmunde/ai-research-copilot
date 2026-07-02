@@ -22,8 +22,6 @@ def _should_retrieve(state: AgentState) -> str:
 def build_competitive_graph() -> StateGraph:
     workflow = StateGraph(AgentState)
 
-    # Identical topology to research for now, but nodes will branch on mode
-    # Future: could add specialized "competitor_analysis" node
     workflow.add_node("planner", planner_node)
     workflow.add_node("retriever", retriever_node)
     workflow.add_node("citation", citation_node)

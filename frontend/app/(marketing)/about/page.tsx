@@ -22,11 +22,6 @@ const stats = [
 
 const team = [
   { name: "Sopan Munde", role: "CEO & Founder", initials: "SM", color: "bg-grey-500" },
-  // { name: "", role: "CTO & Co-founder", initials: "BS", color: "bg-emerald-500" },
-  // { name: "", role: "Head of AI Research", initials: "CD", color: "bg-purple-500" },
-  // { name: "", role: "Lead Engineer", initials: "DP", color: "bg-orange-500" },
-  // { name: "", role: "Product Manager", initials: "EW", color: "bg-sky-500" },
-  // { name: "", role: "Developer Relations", initials: "FG", color: "bg-rose-500" },
 ];
 
 export default function AboutPage() {

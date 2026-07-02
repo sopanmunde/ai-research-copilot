@@ -9,7 +9,6 @@ from src.core.config import settings
 from src.core.constants import DEFAULT_MODEL_MAP
 
 
-# ── Workflow type definitions ───────────────────────────────────────────────────
 
 WORKFLOW_DEFINITIONS: Dict[str, Dict[str, Any]] = {
     "research": {
@@ -57,7 +56,6 @@ WORKFLOW_DEFINITIONS: Dict[str, Dict[str, Any]] = {
 }
 
 
-# ── Full node registry ──────────────────────────────────────────────────────────
 
 WORKFLOW_NODES: List[Dict[str, Any]] = [
     {
@@ -175,22 +173,18 @@ WORKFLOW_NODES: List[Dict[str, Any]] = [
 ]
 
 
-# ── Workflow topology edges ─────────────────────────────────────────────────────
 
 WORKFLOW_EDGES: List[Dict[str, Any]] = [
-    # Research path
     {"from": "planner",    "to": "retriever",         "condition": "requires_context=True",  "workflows": ["research", "technical", "competitive"]},
     {"from": "planner",    "to": "summarizer",        "condition": "requires_context=False", "workflows": ["research", "technical", "competitive", "summary"]},
     {"from": "retriever",  "to": "citation",          "condition": None,                     "workflows": ["research", "technical", "competitive"]},
     {"from": "citation",   "to": "summarizer",        "condition": None,                     "workflows": ["research", "technical", "competitive"]},
     {"from": "summarizer", "to": "reporter",          "condition": None,                     "workflows": ["research", "technical", "competitive", "summary"]},
     {"from": "reporter",   "to": "END",               "condition": None,                     "workflows": "__all__"},
-    # Coding path
     {"from": "planner",            "to": "code_generation", "condition": None, "workflows": ["coding"]},
     {"from": "code_generation",    "to": "code_review",     "condition": None, "workflows": ["coding"]},
     {"from": "code_review",        "to": "testing",         "condition": None, "workflows": ["coding"]},
     {"from": "testing",            "to": "reporter",        "condition": None, "workflows": ["coding"]},
-    # Data analysis path
     {"from": "planner",       "to": "data_analysis", "condition": None, "workflows": ["data_analysis"]},
     {"from": "data_analysis", "to": "reporter",      "condition": None, "workflows": ["data_analysis"]},
 ]

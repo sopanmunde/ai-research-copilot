@@ -23,14 +23,11 @@ async def stream_rag_response(
       {"type": "token", "data": "..."}         — streamed tokens
       {"type": "done"}                         — signals completion
     """
-    # Step 1: Retrieve (blocking but fast)
     docs, citations = await retrieve_with_citations(query=query, top_k=top_k, filter=user_filter)
     context_str = build_context_string(docs)
 
-    # Step 2: Emit citations immediately so frontend can show them early
     yield {"type": "citations", "data": citations}
 
-    # Step 3: Build messages
     messages = [SystemMessage(content=RAG_SYSTEM_PROMPT.format(context=context_str))]
     for h in (history or [])[-6:]:
         if h["role"] == "user":
@@ -39,7 +36,6 @@ async def stream_rag_response(
             messages.append(AIMessage(content=h["content"]))
     messages.append(HumanMessage(content=query))
 
-    # Step 4: Stream tokens
     full_response = ""
     async for chunk in llm.astream(messages):
         token = chunk.content

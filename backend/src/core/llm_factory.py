@@ -13,7 +13,6 @@ from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Priority order for provider failover
 PROVIDER_PRIORITY = ["anthropic", "google", "groq", "mistral"]
 
 PROVIDER_MODEL_MAP = {

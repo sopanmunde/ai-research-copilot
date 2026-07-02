@@ -90,7 +90,6 @@ def register_signal_handlers():
 
     def handle_signal(sig, frame):
         logger.info(f"Received shutdown signal {sig}. Initiating graceful cleanup...")
-        # Delegate to the original uvicorn/standard signal handler so it exits properly
         orig_handler = original_handlers.get(sig)
         if orig_handler and callable(orig_handler):
             orig_handler(sig, frame)
@@ -101,7 +100,6 @@ def register_signal_handlers():
             signal.signal(sig, handle_signal)
             logger.info(f"Cooperative signal handler registered for signal {sig}")
         except ValueError:
-            # signal.signal only works in the main thread
             pass
 
 print("Importing config...")
@@ -111,7 +109,6 @@ print("Importing mongo indexes...")
 from src.database.mongodb.indexes import create_indexes
 from src.middleware.request_logger import RequestLoggerMiddleware
 
-# ── Routers ───────────────────────────────────────────────────────────────────
 print("Importing routers...")
 from src.api.routes.auth_routes import router as auth_router
 from src.api.routes.google_auth import router as google_auth_router
@@ -137,14 +134,12 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     register_signal_handlers()
 
-    # MongoDB indexes
     try:
         await create_indexes()
         logger.info("[OK] MongoDB indexes ready")
     except Exception as e:
         logger.error(f"MongoDB index creation failed: {e}")
 
-    # Pinecone vector store
     try:
         from src.rag.vectorstores.pinecone_store import get_vector_store
         get_vector_store()
@@ -152,7 +147,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Pinecone connection failed (non-fatal): {e}")
 
-    # LangGraph workflow pre-compilation
     try:
         from src.agents.langgraph.graph import get_graph
         get_graph()
@@ -160,7 +154,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"LangGraph compilation failed (non-fatal): {e}")
 
-    # Redis cache (optional)
     try:
         from src.core.cache import _get_client
         client = await _get_client()
@@ -173,11 +166,9 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application ready [OK]")
     yield
-    # Shutdown steps
     logger.info("Graceful shutdown started...")
     shutdown_start = time.time()
     
-    # 1. Signal active SSE streams
     try:
         from src.services.chat_service import signal_sse_shutdown
         await signal_sse_shutdown()
@@ -185,7 +176,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to signal SSE shutdown: {e}")
 
-    # 2. Wait for in-flight requests to complete (timeout=8s, leaving 2s buffer for DB/client closes)
     try:
         t_start = time.time()
         await drain_inflight_requests(timeout=8.0)
@@ -193,7 +183,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to drain in-flight requests: {e}")
 
-    # 3. Close MongoDB connection
     try:
         t_start = time.time()
         from src.database.mongodb.connection import get_mongo_client
@@ -202,7 +191,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to close MongoDB client: {e}")
 
-    # 4. Close Redis client connection
     try:
         t_start = time.time()
         from src.core.cache import _get_client
@@ -213,7 +201,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to close Redis client: {e}")
 
-    # 5. Close HTTP client
     try:
         t_start = time.time()
         from src.core.http import close_http_client
@@ -243,13 +230,11 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    # ── CORS ──────────────────────────────────────────────────────────────────
     origins = [
         settings.FRONTEND_URL,
         "http://localhost:3000",
         "https://trivisionx-ai.vercel.app",
     ]
-    # Deduplicate while preserving order
     origins = list(dict.fromkeys(o for o in origins if o))
 
     app.add_middleware(
@@ -268,18 +253,15 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(GracefulShutdownMiddleware)
 
-    # ── Routers ───────────────────────────────────────────────────────────────
     app.include_router(auth_router,          prefix="/api/auth",                tags=["auth"])
     app.include_router(google_auth_router,   prefix="/api/auth/google",         tags=["auth-google"])
     app.include_router(github_auth_router,   prefix="/api/auth/github",         tags=["auth-github"])
-    # Legacy alias: /api/me, /api/login, /api/register → same auth routes
     app.include_router(auth_router,          prefix="/api",                     tags=["auth-legacy"])
     app.include_router(conversations_router, prefix="/api/conversations",       tags=["conversations"])
     app.include_router(chat_router,          prefix="/api/chat",                tags=["chat"])
     app.include_router(upload_router,        prefix="/api/documents",           tags=["documents"])
     app.include_router(report_router,        prefix="/api/reports",             tags=["reports"])
     app.include_router(contact_router,       prefix="/api/contact",             tags=["contact"])
-    # Alias: /api/research-sessions → same data as /api/reports/history
     app.include_router(report_router,        prefix="/api/research-sessions",   tags=["research-sessions"])
     app.include_router(models_router,        prefix="/api/models",              tags=["models"])
     app.include_router(health_router,        prefix="/api/health",              tags=["health"])

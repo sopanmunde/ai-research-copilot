@@ -45,13 +45,11 @@ def semantic_chunk(
     chunk_size = chunk_size or settings.CHUNK_SIZE
     chunk_overlap = chunk_overlap or settings.CHUNK_OVERLAP
 
-    # Stage 1: paragraph-level splits
     paragraph_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size * 3,
         chunk_overlap=0,
         separators=["\n\n\n", "\n\n"],
     )
-    # Stage 2: fine-grained splits
     fine_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,

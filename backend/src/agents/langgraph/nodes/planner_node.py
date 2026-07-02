@@ -96,7 +96,6 @@ async def planner_node(state: AgentState) -> dict:
         f"provider={provider}, query='{query[:60]}'"
     )
 
-    # Quick mode → skip LangGraph entirely (handled at service level)
     if mode == "quick":
         return {
             "plan": [],
@@ -105,7 +104,6 @@ async def planner_node(state: AgentState) -> dict:
             "errors": [],
         }
 
-    # Workflow-type routing
     if workflow_type == "coding":
         logger.info("[Planner] Routing to coding workflow (no retrieval)")
         return {
@@ -133,7 +131,6 @@ async def planner_node(state: AgentState) -> dict:
             "errors": [],
         }
 
-    # Fast-path for greetings
     clean_query = query.strip().lower()
     if clean_query in ("hi", "hello", "hey", "hii", "heya", "hola", "sup"):
         logger.info("[Planner] Fast-path greeting detected")
@@ -146,7 +143,6 @@ async def planner_node(state: AgentState) -> dict:
             "errors": [],
         }
 
-    # Build messages once (reused across provider fallback attempts)
     filename = state.get("filename")
     messages = [SystemMessage(content=PLANNER_SYSTEM_V2)]
     for turn in history[-6:]:
@@ -162,7 +158,6 @@ async def planner_node(state: AgentState) -> dict:
         user_content = f"{query}\n\n[Note: User has attached document '{filename}' to this query. It should be used to retrieve context.]"
     messages.append(HumanMessage(content=user_content))
 
-    # ── Provider failover loop ──────────────────────────────────────────────
     from src.core.llm_factory import get_fallback_providers
     fallback_providers = get_fallback_providers(provider)
     logger.info(f"[Planner] fallback chain: {fallback_providers}")

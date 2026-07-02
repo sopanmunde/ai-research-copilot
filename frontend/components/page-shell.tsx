@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
 
-// Convert strings like "cpu" or "shield-check" to "Cpu" or "ShieldCheck"
 function getIconComponent(name: string) {
   const pascalCaseName = name
     .split("-")

@@ -26,21 +26,15 @@ async def upload_document(
     user_id = str(current_user["_id"])
     filename = file.filename
 
-    # Validate before reading to prevent OOM
     validate_file(filename, file.size or 0)
 
     content = await file.read()
 
-    # Load based on extension
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
-    # Image types — store as binary passthrough document (metadata + filename)
     IMAGE_EXTS = {"png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg"}
-    # Spreadsheet types
     SHEET_EXTS = {"xlsx", "xls", "csv"}
-    # Presentation types
     PRES_EXTS = {"pptx", "ppt"}
-    # Text-like types (handled by text loader)
     TEXT_EXTS = {"txt", "md", "mdx", "rst", "html", "htm", "json", "jsonl",
                  "xml", "yaml", "yml", "csv",
                  "py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs",
@@ -51,7 +45,6 @@ async def upload_document(
     elif ext == "docx":
         docs = await load_docx(content, filename)
     elif ext in IMAGE_EXTS:
-        # Store image as a document with binary size metadata; text content is a placeholder
         from langchain_core.documents import Document
         import base64
         docs = [Document(
@@ -60,7 +53,6 @@ async def upload_document(
                       "data_uri": "data:image/" + ext + ";base64," + base64.b64encode(content[:4096]).decode()},
         )]
     elif ext in SHEET_EXTS and ext != "csv":
-        # Excel — use openpyxl to extract cell text
         try:
             import io
             import openpyxl
@@ -75,7 +67,6 @@ async def upload_document(
             logger.warning(f"Excel parse failed ({xlsx_err}), falling back to text loader")
             docs = await load_text(content, filename)
     elif ext in PRES_EXTS:
-        # PowerPoint — extract slide text via python-pptx
         try:
             import io
             from pptx import Presentation as PptxPresentation
@@ -89,10 +80,8 @@ async def upload_document(
             logger.warning(f"PPTX parse failed ({pptx_err}), falling back to text loader")
             docs = await load_text(content, filename)
     else:
-        # Covers: txt, md, json, yaml, html, csv, code files, etc.
         docs = await load_text(content, filename)
 
-    # Run ingestion pipeline (chunk → enrich → index)
     vector_store = get_vector_store()
     chunk_count = await run_ingestion_pipeline(
         documents=docs,
@@ -102,7 +91,6 @@ async def upload_document(
         use_semantic_chunking=True,
     )
 
-    # Persist metadata to MongoDB
     await save_document_metadata(
         user_id=user_id,
         filename=filename,
@@ -134,7 +122,6 @@ async def upload_document_stream(
 
     async def event_generator():
         try:
-            # Step 1: Parsing
             yield f"data: {json.dumps({'stage': 'parsing', 'progress': 10})}\n\n"
             validate_file(filename, len(content))
             ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
@@ -184,31 +171,23 @@ async def upload_document_stream(
             else:
                 docs = await load_text(content, filename)
             
-            # Step 2: Chunking (simulate part of pipeline)
             yield f"data: {json.dumps({'stage': 'chunking', 'progress': 30})}\n\n"
-            # We call the full pipeline which handles chunking and indexing, 
-            # but we can emit progress before and after.
             from src.rag.ingestion.embedding_pipeline import clean_documents, semantic_chunk, enrich_metadata
             from src.rag.vectorstores.pinecone_store import get_vector_store
 
             vector_store = get_vector_store()
             
-            # Clean
             docs = clean_documents(docs)
             
-            # Chunk
             chunks = semantic_chunk(docs)
             yield f"data: {json.dumps({'stage': 'embedding', 'progress': 60, 'chunks': len(chunks)})}\n\n"
             
-            # Enrich & Index
             chunks = enrich_metadata(chunks, user_id=user_id, filename=filename)
             
             yield f"data: {json.dumps({'stage': 'indexing', 'progress': 80})}\n\n"
-            # In real-world, embedding and indexing happens here in one go with Pinecone
             await asyncio.to_thread(vector_store.add_documents, chunks)
             chunk_count = len(chunks)
 
-            # Persist metadata to MongoDB
             await save_document_metadata(
                 user_id=user_id,
                 filename=filename,
@@ -216,7 +195,6 @@ async def upload_document_stream(
                 chunk_count=chunk_count,
             )
 
-            # Done
             yield f"data: {json.dumps({'stage': 'done', 'progress': 100, 'chunks': chunk_count})}\n\n"
 
         except Exception as e:
@@ -240,10 +218,8 @@ async def delete_document(document_id: str, filename: str, current_user=Depends(
     
     user_id = str(current_user["_id"])
     
-    # Delete from MongoDB
     db_success = await delete_document_metadata(user_id, document_id)
     
-    # Delete from Pinecone
     pinecone_success = delete_by_filename(user_id, filename)
     
     if db_success or pinecone_success:

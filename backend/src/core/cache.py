@@ -21,7 +21,6 @@ from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Lazy Redis client — only initialised if REDIS_URL is set
 _redis_client = None
 
 

@@ -21,7 +21,6 @@ from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 
-# ── Text cleaning ────────────────────────────────────────────────────────────
 
 
 def clean_text(text: str) -> str:
@@ -33,11 +32,8 @@ def clean_text(text: str) -> str:
       2. Collapse runs of whitespace / blank lines
       3. Strip leading/trailing whitespace per line
     """
-    # Remove null bytes and non-printable chars except whitespace
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
-    # Collapse 3+ consecutive blank lines to 2
     text = re.sub(r"\n{3,}", "\n\n", text)
-    # Strip trailing spaces on each line
     text = "\n".join(line.rstrip() for line in text.splitlines())
     return text.strip()
 
@@ -46,7 +42,6 @@ def clean_documents(documents: List[Document]) -> List[Document]:
     """Apply text cleaning to all documents in-place."""
     for doc in documents:
         doc.page_content = clean_text(doc.page_content)
-    # Drop empty documents
     cleaned = [d for d in documents if len(d.page_content.strip()) > 50]
     logger.info(
         f"Cleaned {len(documents)} documents → "
@@ -55,7 +50,6 @@ def clean_documents(documents: List[Document]) -> List[Document]:
     return cleaned
 
 
-# ── Ingestion pipeline ────────────────────────────────────────────────────────
 
 
 async def run_ingestion_pipeline(
@@ -90,7 +84,6 @@ async def run_ingestion_pipeline(
         f"(user={user_id}, semantic={use_semantic_chunking})"
     )
 
-    # ── Duplicate guard ──────────────────────────────────────────────────────
     if not allow_reindex:
         try:
             index = vector_store.index
@@ -113,16 +106,13 @@ async def run_ingestion_pipeline(
                     )
                     return 0
         except Exception as e:
-            # Non-fatal: if check fails, proceed with indexing
             logger.debug(f"Duplicate check failed (non-fatal): {e}")
 
-    # Step 1: Clean
     documents = clean_documents(documents)
     if not documents:
         logger.warning(f"No usable content in '{filename}' after cleaning")
         return 0
 
-    # Step 2: Chunk
     if use_semantic_chunking:
         chunks = semantic_chunk(documents)
     else:
@@ -132,10 +122,8 @@ async def run_ingestion_pipeline(
         logger.warning(f"No chunks produced for '{filename}'")
         return 0
 
-    # Step 3: Enrich metadata
     chunks = enrich_metadata(chunks, user_id=user_id, filename=filename)
 
-    # Step 4: Index into Pinecone
     vector_store.add_documents(chunks)
     logger.info(f"Indexed {len(chunks)} chunks for '{filename}' (user={user_id})")
 

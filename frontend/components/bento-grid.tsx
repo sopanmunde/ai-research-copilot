@@ -7,7 +7,6 @@ import {
   GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2
 } from "lucide-react";
 
-// â”€â”€ 1. Advanced Agent Graph Orchestration (SVG Animated) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AgentWorkflowVisual() {
   const [step, setStep] = useState(0);
 
@@ -18,13 +17,6 @@ function AgentWorkflowVisual() {
     return () => clearInterval(interval);
   }, []);
 
-  // Steps:
-  // 0: Idle/Start
-  // 1: Planner active (routes query)
-  // 2: Routing to Retriever
-  // 3: Routing to Code Engine
-  // 4: Summarizer synthesizing
-  // 5: Reporter publishing
 
   const nodes = [
     { id: "planner", label: "Router", x: 40, y: 50, color: "text-purple-400" },
@@ -185,13 +177,11 @@ function AgentWorkflowVisual() {
   );
 }
 
-// â”€â”€ 2. Advanced MMR Search Visualizer (Simulated Search Box) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RetrievalVisual() {
   const [queryText, setQueryText] = useState("");
   const fullQueryText = "Query: 'DeepSeek R1 vs Claude 3.7'";
   const [active, setActive] = useState(0);
 
-  // Typewriting effect
   useEffect(() => {
     let index = 0;
     const interval = setInterval(() => {
@@ -252,7 +242,6 @@ function RetrievalVisual() {
   );
 }
 
-// â”€â”€ 3. Multi-LLM Throughput Chart (Bar Graph) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MultiLlmVisual() {
   const [queryIndex, setQueryIndex] = useState(0);
 
@@ -295,7 +284,6 @@ function MultiLlmVisual() {
   );
 }
 
-// â”€â”€ 4. Structured Report Compiler Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ReportVisual() {
   return (
     <div className="p-3 bg-background/80 rounded-xl border border-border/80 space-y-2.5 font-mono text-[10px] text-muted-foreground shadow-lg">
@@ -338,7 +326,6 @@ function ReportVisual() {
   );
 }
 
-// â”€â”€ 5. Advanced Autonomous Coding compiler loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CodingLoopVisual() {
   const [step, setStep] = useState(0);
   const [codeSnippet, setCodeSnippet] = useState("");
@@ -394,7 +381,6 @@ function CodingLoopVisual() {
   );
 }
 
-// â”€â”€ Grid Container Motion Animation Settings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const containerVariants = {
   hidden: {},
   visible: {

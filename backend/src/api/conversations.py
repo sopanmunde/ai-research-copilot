@@ -116,7 +116,6 @@ async def delete_conversation(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Cascade-delete all messages in this conversation
     deleted_msgs = await _msgs().delete_many({"conversation_id": conversation_id})
     return {
         "message": "Conversation deleted",

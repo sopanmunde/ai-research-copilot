@@ -1,7 +1,4 @@
 services:
-  # ============================================================
-  # Frontend — Render Web Service (Docker)
-  # ============================================================
   - type: web
     name: trivisionx-ai-frontend
     env: docker
@@ -13,9 +10,6 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: "https://trivisionx-ai-backend.onrender.com/api"
 
-  # ============================================================
-  # Backend — Render Web Service (Docker)
-  # ============================================================
   - type: web
     name: trivisionx-ai-backend
     env: docker
@@ -24,24 +18,20 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     envVars:
-      # ── AI Provider ────────────────────────────────────────
       - key: GOOGLE_API_KEY
         sync: false
       - key: GEMINI_MODEL
         value: "gemini-2.5-flash"
-      # ── Vector DB ──────────────────────────────────────────
       - key: PINECONE_API_KEY
         sync: false
       - key: PINECONE_INDEX_NAME
         sync: false
       - key: PINECONE_ENVIRONMENT
         value: "us-east-1"
-      # ── Database ───────────────────────────────────────────
       - key: MONGODB_URL
         sync: false
       - key: DATABASE_NAME
         value: "trivisionx_db"
-      # ── Auth ───────────────────────────────────────────────
       - key: SECRET_KEY
         sync: false
         generateValue: true
@@ -49,7 +39,6 @@ services:
         value: "HS256"
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "1440"
-      # ── App ────────────────────────────────────────────────
       - key: FRONTEND_URL
         value: "https://trivisionx-ai-frontend.onrender.com"
       - key: DEBUG

@@ -79,7 +79,6 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
 
         const nonSpaceChars = positions.filter((p) => !p.isSpace && !p.isRevealed).map((p) => p.char)
 
-        // Shuffle remaining non-revealed, non-space characters
         for (let i = nonSpaceChars.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1))
           ;[nonSpaceChars[i], nonSpaceChars[j]] = [nonSpaceChars[j], nonSpaceChars[i]]

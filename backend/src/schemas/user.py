@@ -5,7 +5,6 @@ from datetime import datetime
 from bson import ObjectId
 
 
-# ── Password policy ──────────────────────────────────────────────────────────
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 12
 PASSWORD_RULES = [

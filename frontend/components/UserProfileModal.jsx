@@ -103,7 +103,6 @@ export function UserProfileModal({ isOpen, onClose, onUpdate = () => {} }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Failed to update profile");
 
-      // Update successful
       setSuccess("Profile updated successfully!");
       onUpdate(); // Trigger refresh in parent
       setTimeout(() => setSuccess(""), 3000);

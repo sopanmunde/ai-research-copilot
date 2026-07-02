@@ -27,9 +27,7 @@ def extract_text(content: Any) -> str:
     if content is None:
         return ""
 
-    # Already a clean string — most common case
     if isinstance(content, str):
-        # Check if the string is actually a serialised JSON list of blocks
         stripped = content.strip()
         if stripped.startswith("[") and '"text"' in stripped:
             try:
@@ -40,11 +38,9 @@ def extract_text(content: Any) -> str:
                 pass
         return content
 
-    # Python list of content blocks (e.g. from Gemini)
     if isinstance(content, list):
         return _join_blocks(content)
 
-    # Fallback — stringify whatever it is
     return str(content)
 
 

@@ -4,8 +4,6 @@ backend/tests/conftest.py — pytest configuration and shared fixtures
 import pytest
 
 
-# Shared fixtures can be added here as the test suite grows.
-# For example: mock MongoDB collection, mock Pinecone store, test user token.
 
 @pytest.fixture
 def sample_document_metadata():

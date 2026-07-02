@@ -109,7 +109,6 @@ import {
 import { API_BASE_URL } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
-// ── Document Types ────────────────────────────────────────────────────────────
 
 interface Document {
   id: string
@@ -131,7 +130,6 @@ interface Conversation {
 
 type TableRowData = Document | Conversation
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getFileIcon(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase() || ""
@@ -157,7 +155,6 @@ function formatDate(dateStr: string) {
   }
 }
 
-// ── Drag Handle ───────────────────────────────────────────────────────────────
 
 function DragHandle({ id }: { id: UniqueIdentifier }) {
   const { attributes, listeners } = useSortable({ id })
@@ -176,8 +173,6 @@ function DragHandle({ id }: { id: UniqueIdentifier }) {
   )
 }
 
-// ── Document Columns Factory ──────────────────────────────────────────────────
-// Returns columns with an onView callback so the table can open DocumentViewer.
 
 function makeDocColumns(onView: (doc: Document) => void): ColumnDef<Document>[] {
   return [
@@ -284,7 +279,6 @@ function makeDocColumns(onView: (doc: Document) => void): ColumnDef<Document>[] 
   ]
 }
 
-// ── Conversation Columns ──────────────────────────────────────────────────────
 
 const convColumns: ColumnDef<Conversation>[] = [
   {
@@ -388,7 +382,6 @@ const convColumns: ColumnDef<Conversation>[] = [
   },
 ]
 
-// ── Draggable Row ─────────────────────────────────────────────────────────────
 
 function DraggableRow({ row }: { row: any }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
@@ -415,7 +408,6 @@ function DraggableRow({ row }: { row: any }) {
   )
 }
 
-// ── Pagination Controls ───────────────────────────────────────────────────────
 
 function TablePagination({ table }: { table: any }) {
   return (
@@ -499,7 +491,6 @@ function TablePagination({ table }: { table: any }) {
   )
 }
 
-// ── Data Table ────────────────────────────────────────────────────────────────
 
 function useAuthHeaders(): Record<string, string> {
   const token =
@@ -525,7 +516,6 @@ function DocumentDataTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  // ── DocumentViewer state ──────────────────────────────────────────────────
   const [viewerOpen, setViewerOpen] = React.useState(false)
   const [viewerDoc, setViewerDoc] = React.useState<Document | null>(null)
 
@@ -564,7 +554,6 @@ function DocumentDataTable({
     [data]
   )
 
-  // Build columns with viewer callback (memoised so it doesn't re-create on every render)
   const docColumns = React.useMemo(() => makeDocColumns(openViewer), [])
 
   const table = useReactTable({
@@ -824,7 +813,6 @@ function ConversationDataTable() {
   )
 }
 
-// ── Chart Data ────────────────────────────────────────────────────────────────
 
 const uploadChartData = [
   { month: "January", documents: 12, conversations: 8 },
@@ -846,7 +834,6 @@ const uploadChartConfig = {
   },
 } satisfies ChartConfig
 
-// ── Main Export ───────────────────────────────────────────────────────────────
 
 interface DashboardDocsTableProps {
   showChart?: boolean
@@ -914,7 +901,6 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
                   toast.loading(`Indexing... ${eventData.progress}%`, { id: toastId })
                 }
               } catch (e) {
-                // Ignore incomplete json chunks
               }
             }
           }

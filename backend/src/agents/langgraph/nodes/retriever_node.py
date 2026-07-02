@@ -26,7 +26,6 @@ async def retriever_node(state: AgentState) -> dict:
     model_name = state.get("selected_llm_model", "")
     workflow_type = state.get("workflow_type", "research")
 
-    # If planner said no context needed, return empty
     if not state.get("requires_context", True):
         logger.info("[Retrieval] requires_context=False — skipping retrieval")
         return {

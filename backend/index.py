@@ -8,7 +8,6 @@ import os
 import sys
 import warnings
 
-# Suppress harmless startup warnings from LangChain and third-party libraries
 try:
     from langchain_core.exceptions import LangChainPendingDeprecationWarning
     warnings.filterwarnings("ignore", category=LangChainPendingDeprecationWarning)
@@ -20,7 +19,6 @@ warnings.filterwarnings("ignore", module="langgraph")
 warnings.filterwarnings("ignore", module="sentence_transformers")
 warnings.filterwarnings("ignore", message=".*allowed_objects.*")
 
-# Fix Windows cp1252 encoding — allows unicode chars in log output
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     try:
@@ -29,7 +27,6 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     except Exception:
         pass
 
-# Fix asyncio Proactor connection reset errors on Windows
 if sys.platform == "win32":
     import asyncio
     from functools import wraps

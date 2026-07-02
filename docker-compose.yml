@@ -8,7 +8,6 @@ volumes:
   backend_data:
 
 services:
-  # ── FastAPI Backend ────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -38,7 +37,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # ── Next.js Frontend ──────────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend

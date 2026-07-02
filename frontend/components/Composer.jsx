@@ -168,7 +168,6 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
 
   const handleSend = useCallback(async () => {
     if (busy) {
-      // Trigger callback with empty query to let the parent handle cancel/stop action
       await onSend?.("", mode, null);
       return;
     }

@@ -104,7 +104,6 @@ async def summarizer_node(state: AgentState) -> dict:
         f"docs={len(docs)}, history={len(history)} turns"
     )
 
-    # Select system prompt based on workflow (built once, reused across fallbacks)
     if workflow_type == "coding":
         system_prompt = SUMMARIZER_SYSTEM_CODING
         history_turns = 6
@@ -131,7 +130,6 @@ async def summarizer_node(state: AgentState) -> dict:
 
     messages.append(HumanMessage(content=query))
 
-    # ── Provider failover loop ──────────────────────────────────────────────
     fallback_providers = get_fallback_providers(provider)
     logger.info(f"[Summarizer] fallback chain: {fallback_providers}")
 
@@ -181,7 +179,6 @@ async def summarizer_node(state: AgentState) -> dict:
 
             break
 
-    # Fallback error message when all providers failed
     if not summary_text and last_error is not None:
         err = str(last_error).lower()
         if "quota" in err or "429" in err:

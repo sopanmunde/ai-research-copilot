@@ -11,7 +11,6 @@ import certifi
 
 try:
     import dns.resolver
-    # Override/fallback broken local nameservers with public DNS resolvers for mongodb+srv resolution
     custom_resolver = dns.resolver.Resolver()
     custom_resolver.nameservers = ["8.8.8.8", "1.1.1.1"]
     dns.resolver.default_resolver = custom_resolver
@@ -43,6 +42,5 @@ def get_database() -> AsyncIOMotorDatabase:
     return get_mongo_client()[settings.MONGO_DB_NAME]
 
 
-# Convenience collection accessor
 def get_collection(name: str):
     return get_database()[name]

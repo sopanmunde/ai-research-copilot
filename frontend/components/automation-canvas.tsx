@@ -69,7 +69,6 @@ export function AutomationCanvas() {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
-  // Auto-run simulation sequence representing pipeline runs
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 6);
