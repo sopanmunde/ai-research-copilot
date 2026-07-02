@@ -100,6 +100,18 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
         <button title="Folders" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
           <FolderIcon className="h-4 w-4" />
         </button>
+        <button
+          onClick={() => onSelect("email")}
+          title="Email Dashboard"
+          className={cls(
+            "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
+            selectedId === "email"
+              ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
+              : "border-white/10 bg-white/[0.05] text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+          )}
+        >
+          <Mail className="h-4 w-4" />
+        </button>
       </div>
       <div className="flex flex-col items-center gap-2 pb-3 px-1.5">
         <SettingsPopover onUserUpdate={onUserUpdate}>
@@ -192,6 +204,10 @@ export default function Sidebar({
     const t = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(t);
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const toggleFolders = () => setFoldersOpen(v => {
     const next = !v;
@@ -333,12 +349,16 @@ export default function Sidebar({
               </SearchPopover>
               <button
                 onClick={() => {
-                  setRotatedEmail(prev => !prev);
+                  onSelect("email");
                 }}
-                className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+                className={cls(
+                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                  selectedId === "email"
+                    ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                )}
               >
                 <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-muted-foreground" /><span>Email</span></span>
-                <Plus className={cls("h-3 w-3 opacity-60 hover:opacity-100 transition-transform duration-300 ease-in-out", rotatedEmail ? "rotate-90" : "rotate-0")} />
               </button>
               <button onClick={toggleTools} className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                 <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-muted-foreground" /><span>Tools</span></span>
@@ -355,9 +375,20 @@ export default function Sidebar({
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="flex flex-col space-y-0.5 overflow-hidden pl-2"
                   >
-                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <Brain className="h-4 w-4" /><span>Brain</span>
-                    </button>
+                     <button
+                        onClick={() => {
+                          onSelect("brain");
+                          onClose?.();
+                        }}
+                        className={cls(
+                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                          selectedId === "brain"
+                            ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                        )}
+                      >
+                        <Brain className="h-4 w-4" /><span>Brain</span>
+                      </button>
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <Calendar className="h-4 w-4" /><span>Calendar</span>
                     </button>

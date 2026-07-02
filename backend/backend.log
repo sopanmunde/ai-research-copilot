@@ -1,0 +1,794 @@
+Starting index.py...
+Importing main.py... Fastapi
+Importing config...
+Importing mongo indexes...
+2026-07-02 01:13:08 | INFO     | src.database.mongodb.connection | Custom DNS resolver configured for MongoDB (Google/Cloudflare DNS)
+Importing routers...
+main.py imports complete.
+Imported create_app, creating app...
+App created successfully.
+Freed port 8000 (killed PID 26296)
+Running uvicorn...
+INFO:     Started server process [9028]
+INFO:     Waiting for application startup.
+Starting index.py...
+Imported create_app, creating app...
+App created successfully.
+2026-07-02 01:16:22 | INFO     | src.main | Starting TriVisionX v3.0.0
+2026-07-02 01:16:22 | INFO     | src.main.signals | Cooperative signal handler registered for signal 15
+2026-07-02 01:16:22 | INFO     | src.main.signals | Cooperative signal handler registered for signal 2
+2026-07-02 01:16:22 | INFO     | src.database.mongodb.connection | Connecting to MongoDB: mongodb+srv://sopan_db:sopan8767@cluster...
+2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: users.email (unique)
+2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: conversations.user_id, updated_at
+2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: messages.conversation_id, created_at (compound)
+2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: documents.user_id, uploaded_at
+2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: reports.user_id, conversation_id, created_at
+2026-07-02 01:16:25 | INFO     | src.main | [OK] MongoDB indexes ready
+2026-07-02 01:16:25 | INFO     | src.rag.vectorstores.pinecone_store | Connecting to Pinecone index: trivisionx (embedding_provider=google)
+2026-07-02 01:16:25 | INFO     | src.rag.embeddings.google_embeddings | Initializing embeddings: provider=google, model=models/gemini-embedding-001, dim=384
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1782935191.555813   27324 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
+E0000 00:00:1782935191.584356   27324 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
+2026-07-02 01:16:35 | INFO     | src.main | [OK] Pinecone vector store connected
+2026-07-02 01:16:35 | INFO     | src.agents.langgraph.graph | [Graph] Research workflow compiled successfully
+2026-07-02 01:16:35 | INFO     | src.main | [OK] LangGraph 5-agent workflow compiled
+2026-07-02 01:16:35 | INFO     | src.main | Redis cache disabled (REDIS_URL not set)
+2026-07-02 01:16:35 | INFO     | src.main | Application ready [OK]
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-07-02 01:16:41 | INFO     | http | GET /v1/models -> 404 (1.9ms)
+INFO:     127.0.0.1:56735 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:17:41 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:49947 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:18:42 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:64398 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:19:42 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:51249 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:20:43 | INFO     | http | GET /v1/models -> 404 (1.7ms)
+INFO:     127.0.0.1:59762 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:21:43 | INFO     | http | GET /v1/models -> 404 (0.7ms)
+INFO:     127.0.0.1:54848 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:22:43 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:61644 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:23:44 | INFO     | http | GET /v1/models -> 404 (0.7ms)
+INFO:     127.0.0.1:54544 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:24:44 | INFO     | http | GET /v1/models -> 404 (0.9ms)
+INFO:     127.0.0.1:51610 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:25:45 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:59113 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:26:46 | INFO     | http | GET /v1/models -> 404 (0.7ms)
+INFO:     127.0.0.1:53964 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:27:46 | INFO     | http | GET /v1/models -> 404 (0.9ms)
+INFO:     127.0.0.1:57938 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:28:19 | INFO     | http | OPTIONS /api/me -> 200 (1.1ms)
+INFO:     127.0.0.1:50262 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | OPTIONS /api/conversations -> 200 (1.9ms)
+INFO:     127.0.0.1:60744 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | OPTIONS /api/me -> 200 (0.7ms)
+INFO:     127.0.0.1:50262 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | OPTIONS /api/me -> 200 (0.6ms)
+INFO:     127.0.0.1:60744 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | GET /api/me -> 200 (91.5ms)
+INFO:     127.0.0.1:50262 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | GET /api/me -> 200 (29.9ms)
+INFO:     127.0.0.1:50262 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:19 | INFO     | http | GET /api/me -> 200 (28.0ms)
+INFO:     127.0.0.1:50262 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:28:20 | INFO     | http | GET /api/conversations -> 200 (758.6ms)
+INFO:     127.0.0.1:60744 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:28:47 | INFO     | http | GET /v1/models -> 404 (0.7ms)
+INFO:     127.0.0.1:61553 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:29:26 | INFO     | http | OPTIONS /api/documents -> 200 (1.0ms)
+INFO:     127.0.0.1:58803 - "OPTIONS /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:29:26 | INFO     | http | OPTIONS /api/documents -> 200 (1.4ms)
+INFO:     127.0.0.1:55899 - "OPTIONS /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:29:26 | INFO     | http | GET /api/documents -> 200 (83.3ms)
+INFO:     127.0.0.1:55899 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:29:27 | INFO     | http | GET /api/documents -> 200 (67.0ms)
+INFO:     127.0.0.1:55899 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:29:47 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:54226 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:30:49 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:53307 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:31:50 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:57710 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:32:50 | INFO     | http | GET /v1/models -> 404 (2.3ms)
+INFO:     127.0.0.1:62790 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:33:51 | INFO     | http | GET /v1/models -> 404 (2.0ms)
+INFO:     127.0.0.1:50378 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:34:52 | INFO     | http | GET /v1/models -> 404 (1.7ms)
+INFO:     127.0.0.1:50427 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:35:20 | INFO     | http | GET /api/me -> 200 (37.5ms)
+INFO:     127.0.0.1:62313 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:35:20 | INFO     | http | GET /api/me -> 200 (44.2ms)
+INFO:     127.0.0.1:62313 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:35:20 | INFO     | http | GET /api/me -> 200 (35.2ms)
+INFO:     127.0.0.1:62313 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:35:21 | INFO     | http | GET /api/conversations -> 200 (370.2ms)
+INFO:     127.0.0.1:51766 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:35:53 | INFO     | http | GET /v1/models -> 404 (1.5ms)
+INFO:     127.0.0.1:52345 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:36:53 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:51774 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:37:54 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:52033 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:38:54 | INFO     | http | GET /v1/models -> 404 (2.1ms)
+INFO:     127.0.0.1:61727 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:39:43 | INFO     | http | OPTIONS /api/me -> 200 (0.9ms)
+INFO:     127.0.0.1:61399 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | OPTIONS /api/conversations -> 200 (2.7ms)
+INFO:     127.0.0.1:59869 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | OPTIONS /api/me -> 200 (1.0ms)
+INFO:     127.0.0.1:61399 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | OPTIONS /api/me -> 200 (0.9ms)
+INFO:     127.0.0.1:59869 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | GET /api/me -> 200 (47.1ms)
+INFO:     127.0.0.1:59869 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | GET /api/me -> 200 (41.4ms)
+INFO:     127.0.0.1:59869 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:43 | INFO     | http | GET /api/me -> 200 (25.9ms)
+INFO:     127.0.0.1:59869 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:39:44 | INFO     | http | GET /api/conversations -> 200 (399.2ms)
+INFO:     127.0.0.1:61399 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:39:55 | INFO     | http | GET /v1/models -> 404 (2.1ms)
+INFO:     127.0.0.1:53914 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:40:55 | INFO     | http | GET /v1/models -> 404 (2.1ms)
+INFO:     127.0.0.1:53949 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:41:56 | INFO     | http | GET /v1/models -> 404 (1.6ms)
+INFO:     127.0.0.1:55635 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:42:57 | INFO     | http | GET /v1/models -> 404 (2.1ms)
+INFO:     127.0.0.1:55331 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:43:57 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:56179 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:44:57 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:58773 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:45:58 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:61070 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:46:58 | INFO     | http | GET /v1/models -> 404 (2.6ms)
+INFO:     127.0.0.1:61096 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:47:59 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:53013 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:48:59 | INFO     | http | GET /v1/models -> 404 (1.6ms)
+INFO:     127.0.0.1:58843 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:50:00 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:50080 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:51:00 | INFO     | http | GET /v1/models -> 404 (2.6ms)
+INFO:     127.0.0.1:60877 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:52:02 | INFO     | http | GET /v1/models -> 404 (2.8ms)
+INFO:     127.0.0.1:62843 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:53:03 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:61583 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:54:03 | INFO     | http | GET /v1/models -> 404 (1.7ms)
+INFO:     127.0.0.1:64597 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:55:07 | INFO     | http | GET /v1/models -> 404 (2.5ms)
+INFO:     127.0.0.1:54259 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:55:23 | INFO     | http | OPTIONS /api/me -> 200 (2.8ms)
+INFO:     127.0.0.1:64287 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 01:55:23 | INFO     | http | OPTIONS /api/conversations -> 200 (3.7ms)
+INFO:     127.0.0.1:63653 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:55:23 | INFO     | http | GET /api/me -> 200 (521.1ms)
+INFO:     127.0.0.1:63653 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:55:24 | INFO     | http | GET /api/conversations -> 200 (944.6ms)
+INFO:     127.0.0.1:64287 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:56:09 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:54465 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:57:07 | INFO     | http | GET /api/me -> 200 (47.9ms)
+INFO:     127.0.0.1:52022 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:57:07 | INFO     | http | GET /api/me -> 200 (71.7ms)
+INFO:     127.0.0.1:52022 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:57:07 | INFO     | http | GET /api/me -> 200 (53.4ms)
+INFO:     127.0.0.1:52022 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 01:57:08 | INFO     | http | GET /api/conversations -> 200 (588.3ms)
+INFO:     127.0.0.1:58976 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 01:57:10 | INFO     | http | GET /v1/models -> 404 (2.4ms)
+INFO:     127.0.0.1:53573 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:58:12 | INFO     | http | GET /v1/models -> 404 (1.9ms)
+INFO:     127.0.0.1:61713 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:58:37 | INFO     | http | OPTIONS /api/documents -> 200 (0.5ms)
+INFO:     127.0.0.1:63522 - "OPTIONS /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:58:37 | INFO     | http | OPTIONS /api/documents -> 200 (0.6ms)
+INFO:     127.0.0.1:63522 - "OPTIONS /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:58:37 | INFO     | http | GET /api/documents -> 200 (87.8ms)
+INFO:     127.0.0.1:55782 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:58:37 | INFO     | http | GET /api/documents -> 200 (81.3ms)
+INFO:     127.0.0.1:55782 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:59:13 | INFO     | http | GET /v1/models -> 404 (2.2ms)
+INFO:     127.0.0.1:50926 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 01:59:51 | INFO     | http | GET /api/documents -> 200 (76.7ms)
+INFO:     127.0.0.1:50060 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 01:59:51 | INFO     | http | GET /api/documents -> 200 (74.9ms)
+INFO:     127.0.0.1:50060 - "GET /api/documents HTTP/1.1" 200 OK
+2026-07-02 02:00:14 | INFO     | http | GET /v1/models -> 404 (1.7ms)
+INFO:     127.0.0.1:60200 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:01:14 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:56443 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:02:15 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:56481 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:02:36 | INFO     | http | GET /api/me -> 200 (53.9ms)
+INFO:     127.0.0.1:57688 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:02:36 | INFO     | http | GET /api/me -> 200 (41.3ms)
+INFO:     127.0.0.1:57688 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:03:15 | INFO     | http | GET /v1/models -> 404 (2.4ms)
+INFO:     127.0.0.1:63430 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:04:16 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:55765 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:05:16 | INFO     | http | GET /v1/models -> 404 (1.6ms)
+INFO:     127.0.0.1:60614 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:05:54 | INFO     | http | OPTIONS /api/me -> 200 (105.5ms)
+INFO:     127.0.0.1:65502 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:05:54 | INFO     | http | OPTIONS /api/me -> 200 (7.1ms)
+INFO:     127.0.0.1:51770 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:05:54 | INFO     | http | OPTIONS /api/conversations -> 200 (6.5ms)
+INFO:     127.0.0.1:65365 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:05:54 | INFO     | http | GET /api/me -> 200 (65.4ms)
+INFO:     127.0.0.1:65365 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:05:54 | INFO     | http | GET /api/me -> 200 (42.9ms)
+INFO:     127.0.0.1:65365 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:05:54 | INFO     | http | GET /api/conversations -> 200 (583.1ms)
+INFO:     127.0.0.1:51770 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:06:04 | INFO     | http | GET /api/me -> 200 (64.5ms)
+INFO:     127.0.0.1:64373 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:06:04 | INFO     | http | GET /api/me -> 200 (36.7ms)
+INFO:     127.0.0.1:52058 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:06:04 | INFO     | http | GET /api/conversations -> 200 (450.6ms)
+INFO:     127.0.0.1:64373 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:06:17 | INFO     | http | GET /v1/models -> 404 (2.0ms)
+INFO:     127.0.0.1:56375 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:07:18 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:62180 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:08:18 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:56355 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:09:19 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:50743 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:10:19 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:64266 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:11:20 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:61526 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:12:03 | INFO     | http | GET /api/me -> 200 (36.8ms)
+INFO:     127.0.0.1:64816 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:12:03 | INFO     | http | GET /api/me -> 200 (35.3ms)
+INFO:     127.0.0.1:64816 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:12:03 | INFO     | http | GET /api/conversations -> 200 (368.3ms)
+INFO:     127.0.0.1:54697 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:12:20 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:56698 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:13:21 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:49628 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:14:21 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:63034 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:15:21 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:65311 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:16:22 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:63409 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:17:22 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:56000 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:18:23 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:53097 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:18:56 | INFO     | http | OPTIONS /api/me -> 200 (0.5ms)
+INFO:     127.0.0.1:53864 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:18:56 | INFO     | http | OPTIONS /api/me -> 200 (1.9ms)
+INFO:     127.0.0.1:53864 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:18:56 | INFO     | http | OPTIONS /api/conversations -> 200 (5.2ms)
+INFO:     127.0.0.1:56195 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:18:56 | INFO     | http | GET /api/me -> 200 (40.2ms)
+INFO:     127.0.0.1:63692 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:18:56 | INFO     | http | GET /api/me -> 200 (26.4ms)
+INFO:     127.0.0.1:63692 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:18:56 | INFO     | http | GET /api/conversations -> 200 (485.8ms)
+INFO:     127.0.0.1:56195 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:19:24 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:59458 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:20:24 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:52218 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:21:25 | INFO     | http | GET /v1/models -> 404 (1.5ms)
+INFO:     127.0.0.1:52069 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:21:43 | INFO     | http | GET /api/me -> 200 (1511.8ms)
+INFO:     127.0.0.1:65394 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:21:44 | INFO     | http | GET /api/me -> 200 (1427.1ms)
+INFO:     127.0.0.1:65394 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:21:46 | INFO     | http | GET /api/me -> 200 (1503.5ms)
+INFO:     127.0.0.1:65394 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:21:58 | INFO     | http | GET /api/conversations -> 200 (16820.7ms)
+INFO:     127.0.0.1:61819 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:22:25 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:64173 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:23:26 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:64906 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:24:26 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:59892 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:25:27 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:52981 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:26:27 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:63887 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:27:27 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:55312 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:28:27 | INFO     | http | GET /api/me -> 200 (46.6ms)
+INFO:     127.0.0.1:60627 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:27 | INFO     | http | GET /api/me -> 200 (27.0ms)
+INFO:     127.0.0.1:60627 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:27 | INFO     | http | GET /api/me -> 200 (38.7ms)
+INFO:     127.0.0.1:60627 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:28 | INFO     | http | GET /api/conversations -> 200 (391.8ms)
+INFO:     127.0.0.1:52591 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:28:28 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:52918 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:28:35 | INFO     | http | GET /api/me -> 200 (41.3ms)
+INFO:     127.0.0.1:52917 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:35 | INFO     | http | GET /api/me -> 200 (114.2ms)
+INFO:     127.0.0.1:51164 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:35 | INFO     | http | GET /api/me -> 200 (30.4ms)
+INFO:     127.0.0.1:51164 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:28:36 | INFO     | http | GET /api/conversations -> 200 (588.5ms)
+INFO:     127.0.0.1:52917 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:29:28 | INFO     | http | GET /v1/models -> 404 (3.3ms)
+INFO:     127.0.0.1:58193 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:30:29 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:59131 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:30:31 | INFO     | http | OPTIONS /api/me -> 200 (2.8ms)
+INFO:     127.0.0.1:52451 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | OPTIONS /api/conversations -> 200 (3.4ms)
+INFO:     127.0.0.1:57457 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | OPTIONS /api/me -> 200 (1.3ms)
+INFO:     127.0.0.1:52451 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | OPTIONS /api/me -> 200 (2.1ms)
+INFO:     127.0.0.1:57457 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | GET /api/me -> 200 (36.4ms)
+INFO:     127.0.0.1:52451 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | GET /api/me -> 200 (33.8ms)
+INFO:     127.0.0.1:52451 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | GET /api/me -> 200 (45.9ms)
+INFO:     127.0.0.1:52451 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:31 | INFO     | http | GET /api/conversations -> 200 (390.2ms)
+INFO:     127.0.0.1:57457 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:30:41 | INFO     | http | GET /api/me -> 200 (34.3ms)
+INFO:     127.0.0.1:61194 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:41 | INFO     | http | GET /api/me -> 200 (36.4ms)
+INFO:     127.0.0.1:61194 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:30:46 | INFO     | http | OPTIONS /api/conversations/6a40211ea5dbf58496c7808b/messages -> 200 (0.4ms)
+INFO:     127.0.0.1:52008 - "OPTIONS /api/conversations/6a40211ea5dbf58496c7808b/messages HTTP/1.1" 200 OK
+2026-07-02 02:30:47 | INFO     | http | GET /api/conversations/6a40211ea5dbf58496c7808b/messages -> 200 (171.8ms)
+INFO:     127.0.0.1:52008 - "GET /api/conversations/6a40211ea5dbf58496c7808b/messages HTTP/1.1" 200 OK
+2026-07-02 02:31:01 | INFO     | http | GET /api/me -> 200 (31.3ms)
+INFO:     127.0.0.1:61805 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:31:03 | INFO     | http | GET /api/me -> 200 (39.8ms)
+INFO:     127.0.0.1:61805 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:31:30 | INFO     | http | GET /v1/models -> 404 (2.1ms)
+INFO:     127.0.0.1:54307 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:32:31 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:57945 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:33:31 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:55334 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:34:32 | INFO     | http | GET /v1/models -> 404 (1.9ms)
+INFO:     127.0.0.1:60174 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:35:32 | INFO     | http | GET /v1/models -> 404 (2.2ms)
+INFO:     127.0.0.1:59092 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:36:33 | INFO     | http | GET /v1/models -> 404 (1.5ms)
+INFO:     127.0.0.1:59132 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:37:33 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:60971 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:38:33 | INFO     | http | GET /v1/models -> 404 (2.4ms)
+INFO:     127.0.0.1:56430 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:39:34 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:56488 - "GET /v1/models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65426 - "GET /api/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\uvicorn\protocols\http\httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\uvicorn\middleware\proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\main.py", line 56, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\middleware\fastapi_compression.py", line 32, in __call__
+    await self.gzip_middleware(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 130, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\middleware\request_logger.py", line 13, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 125, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 111, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 381, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\dependencies\utils.py", line 644, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\core\security.py", line 157, in get_current_user
+    user = await get_user(email=token_data.email)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\core\security.py", line 86, in get_user
+    return await _users().find_one({"email": email})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\collection.py", line 1755, in find_one
+    for result in cursor.limit(-1):
+                  ^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1285, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1261, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1209, in _refresh
+    self._send_message(q)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1104, in _send_message
+    response = client._run_operation(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 1932, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2041, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2008, in _retry_internal
+    ).run()
+      ^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2745, in run
+    return self._read() if self._is_read else self._write()
+           ^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2890, in _read
+    self._server = self._get_server()
+                   ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2838, in _get_server
+    return self._client._select_server(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 1827, in _select_server
+    server = topology.select_server(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 409, in select_server
+    server = self._select_server(
+             ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 387, in _select_server
+    servers = self.select_servers(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 294, in select_servers
+    server_descriptions = self._select_servers_loop(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 344, in _select_servers_loop
+    raise ServerSelectionTimeoutError(
+pymongo.errors.ServerSelectionTimeoutError: ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms),ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms),ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms), Timeout: 5.0s, Topology Description: <TopologyDescription id: 6a456e8e7ece2197d85403a8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>, <ServerDescription ('ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>, <ServerDescription ('ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>]>
+INFO:     127.0.0.1:53126 - "GET /api/me HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\uvicorn\protocols\http\httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\uvicorn\middleware\proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\main.py", line 56, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\middleware\fastapi_compression.py", line 32, in __call__
+    await self.gzip_middleware(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 130, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\middleware\request_logger.py", line 13, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\trustedhost.py", line 36, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 125, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 111, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\routing.py", line 381, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\fastapi\dependencies\utils.py", line 644, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\core\security.py", line 157, in get_current_user
+    user = await get_user(email=token_data.email)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\Desktop\trivisionx-ai\backend\src\core\security.py", line 86, in get_user
+    return await _users().find_one({"email": email})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\collection.py", line 1755, in find_one
+    for result in cursor.limit(-1):
+                  ^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1285, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1261, in next
+    if len(self._data) or self._refresh():
+                          ^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1209, in _refresh
+    self._send_message(q)
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\cursor.py", line 1104, in _send_message
+    response = client._run_operation(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 1932, in _run_operation
+    return self._retryable_read(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2041, in _retryable_read
+    return self._retry_internal(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\_csot.py", line 125, in csot_wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2008, in _retry_internal
+    ).run()
+      ^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2745, in run
+    return self._read() if self._is_read else self._write()
+           ^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2890, in _read
+    self._server = self._get_server()
+                   ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 2838, in _get_server
+    return self._client._select_server(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\mongo_client.py", line 1827, in _select_server
+    server = topology.select_server(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 409, in select_server
+    server = self._select_server(
+             ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 387, in _select_server
+    servers = self.select_servers(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 294, in select_servers
+    server_descriptions = self._select_servers_loop(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sopan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\pymongo\synchronous\topology.py", line 344, in _select_servers_loop
+    raise ServerSelectionTimeoutError(
+pymongo.errors.ServerSelectionTimeoutError: ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms),ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms),ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms), Timeout: 5.0s, Topology Description: <TopologyDescription id: 6a456e8e7ece2197d85403a8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-00.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>, <ServerDescription ('ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-01.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>, <ServerDescription ('ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('ac-fxw7d4a-shard-00-02.7nccvxv.mongodb.net:27017: [Errno 11001] getaddrinfo failed (configured timeouts: socketTimeoutMS: 5000.0ms, connectTimeoutMS: 5000.0ms)')>]>
+2026-07-02 02:40:35 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:55308 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:41:35 | INFO     | http | GET /v1/models -> 404 (1.5ms)
+INFO:     127.0.0.1:50158 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:42:36 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:56605 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:43:38 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:51160 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:44:25 | INFO     | http | OPTIONS /api/me -> 200 (4.3ms)
+INFO:     127.0.0.1:60629 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:25 | INFO     | http | OPTIONS /api/conversations -> 200 (10.8ms)
+INFO:     127.0.0.1:59221 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:44:25 | INFO     | http | OPTIONS /api/me -> 200 (4.4ms)
+INFO:     127.0.0.1:60629 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:25 | INFO     | http | OPTIONS /api/me -> 200 (5.2ms)
+INFO:     127.0.0.1:59221 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:26 | INFO     | http | GET /api/me -> 200 (532.0ms)
+INFO:     127.0.0.1:60629 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:26 | INFO     | http | GET /api/me -> 200 (49.5ms)
+INFO:     127.0.0.1:60629 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:26 | INFO     | http | GET /api/me -> 200 (28.2ms)
+INFO:     127.0.0.1:60629 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:44:26 | INFO     | http | GET /api/conversations -> 200 (903.5ms)
+INFO:     127.0.0.1:59221 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:44:39 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:50448 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:45:39 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:50496 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:46:40 | INFO     | http | GET /v1/models -> 404 (1.2ms)
+INFO:     127.0.0.1:59734 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:47:40 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:65062 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:48:41 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:61935 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:49:42 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:53842 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:50:00 | INFO     | http | GET /api/me -> 200 (120.9ms)
+INFO:     127.0.0.1:55542 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:50:00 | INFO     | http | GET /api/me -> 200 (163.4ms)
+INFO:     127.0.0.1:55542 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:50:00 | INFO     | http | GET /api/me -> 200 (61.7ms)
+INFO:     127.0.0.1:55542 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:50:01 | INFO     | http | GET /api/conversations -> 200 (837.1ms)
+INFO:     127.0.0.1:54711 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:50:42 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:59291 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:51:14 | INFO     | http | GET /api/me -> 200 (118.2ms)
+INFO:     127.0.0.1:59582 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:51:14 | INFO     | http | GET /api/me -> 200 (62.0ms)
+INFO:     127.0.0.1:59582 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:51:18 | INFO     | http | GET /api/me -> 200 (52.9ms)
+INFO:     127.0.0.1:59582 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:51:18 | INFO     | http | GET /api/me -> 200 (28.9ms)
+INFO:     127.0.0.1:59582 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:51:18 | INFO     | http | GET /api/me -> 200 (69.3ms)
+INFO:     127.0.0.1:59582 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:51:19 | INFO     | http | GET /api/conversations -> 200 (859.0ms)
+INFO:     127.0.0.1:60817 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:51:43 | INFO     | http | GET /v1/models -> 404 (1.4ms)
+INFO:     127.0.0.1:56289 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:52:43 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:61745 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:53:44 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:58165 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:54:23 | INFO     | http | GET /api/me -> 200 (42.0ms)
+INFO:     127.0.0.1:58513 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:23 | INFO     | http | GET /api/me -> 200 (28.6ms)
+INFO:     127.0.0.1:58513 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:24 | INFO     | http | GET /api/me -> 200 (59.3ms)
+INFO:     127.0.0.1:58513 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:24 | INFO     | http | GET /api/conversations -> 200 (841.7ms)
+INFO:     127.0.0.1:52473 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:54:42 | INFO     | http | OPTIONS /api/me -> 200 (0.7ms)
+INFO:     127.0.0.1:64928 - "OPTIONS /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:42 | INFO     | http | OPTIONS /api/conversations -> 200 (3.0ms)
+INFO:     127.0.0.1:64928 - "OPTIONS /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:54:42 | INFO     | http | GET /api/me -> 200 (26.1ms)
+INFO:     127.0.0.1:64928 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:42 | INFO     | http | GET /api/me -> 200 (178.8ms)
+INFO:     127.0.0.1:63517 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:42 | INFO     | http | GET /api/me -> 200 (73.8ms)
+INFO:     127.0.0.1:63517 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:43 | INFO     | http | GET /api/conversations -> 200 (1033.4ms)
+INFO:     127.0.0.1:64928 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:54:45 | INFO     | http | GET /v1/models -> 404 (1.7ms)
+INFO:     127.0.0.1:49641 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:54:52 | INFO     | http | GET /api/me -> 200 (208.7ms)
+INFO:     127.0.0.1:65264 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:52 | INFO     | http | GET /api/me -> 200 (76.5ms)
+INFO:     127.0.0.1:65264 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:52 | INFO     | http | GET /api/me -> 200 (39.6ms)
+INFO:     127.0.0.1:65264 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:54:53 | INFO     | http | GET /api/conversations -> 200 (816.7ms)
+INFO:     127.0.0.1:59530 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:55:12 | INFO     | http | GET /api/me -> 200 (44.8ms)
+INFO:     127.0.0.1:49636 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:55:12 | INFO     | http | GET /api/me -> 200 (29.3ms)
+INFO:     127.0.0.1:64317 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:55:12 | INFO     | http | GET /api/me -> 200 (70.5ms)
+INFO:     127.0.0.1:64317 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:55:12 | INFO     | http | GET /api/conversations -> 200 (413.8ms)
+INFO:     127.0.0.1:49636 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:55:45 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:58069 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:56:46 | INFO     | http | GET /v1/models -> 404 (1.1ms)
+INFO:     127.0.0.1:58009 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:57:22 | INFO     | http | GET /api/me -> 200 (57.3ms)
+INFO:     127.0.0.1:56318 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:27 | INFO     | http | GET /api/me -> 200 (39.7ms)
+INFO:     127.0.0.1:55458 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:46 | INFO     | http | GET /api/me -> 200 (299.3ms)
+INFO:     127.0.0.1:50572 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:46 | INFO     | http | GET /api/me -> 200 (33.9ms)
+INFO:     127.0.0.1:50572 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:46 | INFO     | http | GET /api/me -> 200 (23.7ms)
+INFO:     127.0.0.1:50572 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:46 | INFO     | http | GET /api/me -> 200 (39.6ms)
+INFO:     127.0.0.1:50572 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:57:46 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:60286 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:57:46 | INFO     | http | GET /api/conversations -> 200 (939.8ms)
+INFO:     127.0.0.1:51685 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:57:48 | INFO     | http | GET /api/conversations -> 200 (1258.8ms)
+INFO:     127.0.0.1:51685 - "GET /api/conversations HTTP/1.1" 200 OK
+2026-07-02 02:58:47 | INFO     | http | GET /v1/models -> 404 (1.8ms)
+INFO:     127.0.0.1:57361 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:59:48 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:53345 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 02:59:51 | INFO     | http | GET /api/me -> 200 (27.5ms)
+INFO:     127.0.0.1:52761 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 02:59:51 | INFO     | http | GET /api/me -> 200 (34.6ms)
+INFO:     127.0.0.1:52761 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 03:00:12 | INFO     | http | GET /api/me -> 200 (92.5ms)
+INFO:     127.0.0.1:65389 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 03:00:20 | INFO     | http | GET /api/me -> 200 (69.1ms)
+INFO:     127.0.0.1:65246 - "GET /api/me HTTP/1.1" 200 OK
+2026-07-02 03:00:48 | INFO     | http | GET /v1/models -> 404 (1.3ms)
+INFO:     127.0.0.1:57475 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-07-02 03:01:49 | INFO     | http | GET /v1/models -> 404 (1.0ms)
+INFO:     127.0.0.1:52938 - "GET /v1/models HTTP/1.1" 404 Not Found

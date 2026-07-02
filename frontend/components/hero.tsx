@@ -1,11 +1,18 @@
-﻿"use client";
+"use client";
 
+import { useState } from "react";
 import { motion, cubicBezier } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
-import { TextAnimate } from "@/components/ui/text-animate"
-
+import { TextAnimate } from "@/components/ui/text-animate";
+import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
+// const avatars = [
+//   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+//   "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
 const textRevealVariants = {
   hidden: { y: "100%" },
   visible: (i: number) => ({
@@ -19,6 +26,8 @@ const textRevealVariants = {
 };
 
 export function Hero() {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-24 pb-16 overflow-hidden">
       {/* Background gradient */}
@@ -112,17 +121,26 @@ export function Hero() {
             className="relative overflow-hidden shimmer-btn bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-100 rounded-full px-8 h-12 text-base font-semibold shadow-lg shadow-zinc-900/5 dark:shadow-white/10 transition-all hover:shadow-zinc-900/10 dark:hover:shadow-white/20"
           >
             <span className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_infinite] bg-gradient-to-r from-transparent via-zinc-200/40 to-transparent" />
-            <span ><a className="relative" href="/dashboard" >Get Started</a></span>
+            <span><a className="relative" href="/dashboard">Get Started</a></span>
             <ArrowRight className="relative ml-2 w-4 h-4" />
           </Button>
           <Button
             variant="outline"
             size="lg"
+            onClick={() => setIsVideoOpen(true)}
             className="rounded-full px-8 h-12 text-base font-medium border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700 bg-transparent transition-all duration-200"
           >
             View Demo
           </Button>
         </motion.div>
+
+        {/* Video Dialog (triggered by View Demo button) */}
+        <HeroVideoDialog
+          animationStyle="from-bottom"
+          hideTrigger={true}
+          isOpen={isVideoOpen}
+          onOpenChange={setIsVideoOpen}
+        />
 
         {/* Social Proof */}
         {/* <motion.div
