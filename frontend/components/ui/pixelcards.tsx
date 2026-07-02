@@ -26,7 +26,6 @@ export function PixelCard({ label, canvasProps, number, icon, desc, color }: Pix
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Simple animated pixel effect
     let animationId: number
     let time = 0
 

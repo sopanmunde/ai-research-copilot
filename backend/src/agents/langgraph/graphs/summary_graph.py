@@ -19,7 +19,6 @@ def _should_continue(state: AgentState) -> str:
 def build_summary_graph() -> StateGraph:
     workflow = StateGraph(AgentState)
 
-    # Simplified pipeline for summary mode
     workflow.add_node("planner", planner_node)
     workflow.add_node("summarizer", summarizer_node)
     workflow.add_node("reporter", report_node)

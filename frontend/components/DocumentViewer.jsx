@@ -45,15 +45,10 @@ import {
   SheetTitle,
 } from "./ui/sheet";
 
-// ── File type detection ────────────────────────────────────────────────────────
 const EXT_MAP = {
-  // Images
   image: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg", "ico", "avif"],
-  // PDF
   pdf: ["pdf"],
-  // Markdown
   markdown: ["md", "mdx", "rst"],
-  // Text / Code
   text: [
     "txt", "log", "ini", "cfg", "conf", "env", "gitignore", "htaccess",
     "py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs",
@@ -61,13 +56,9 @@ const EXT_MAP = {
     "scala", "lua", "pl", "asm", "html", "htm", "css", "scss", "sass", "less",
     "xml", "yaml", "yml", "toml",
   ],
-  // JSON
   json: ["json", "jsonl"],
-  // CSV / Spreadsheets (text-viewable)
   csv: ["csv", "tsv"],
-  // Video
   video: ["mp4", "webm", "ogg", "mov", "avi", "mkv"],
-  // Audio
   audio: ["mp3", "wav", "ogg", "aac", "flac", "m4a"],
 };
 
@@ -100,7 +91,6 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ── CSV table parser ────────────────────────────────────────────────────────────
 function parseCsv(text) {
   const lines = text.trim().split("\n");
   if (!lines.length) return { headers: [], rows: [] };
@@ -109,7 +99,6 @@ function parseCsv(text) {
   return { headers, rows };
 }
 
-// ── Sub-viewers ────────────────────────────────────────────────────────────────
 
 function ImageViewer({ src, name }) {
   const [zoom, setZoom] = useState(1);
@@ -370,7 +359,6 @@ function UnsupportedViewer({ name, src, size }) {
   );
 }
 
-// ── Loading skeleton ────────────────────────────────────────────────────────────
 function LoadingSkeleton() {
   return (
     <div className="flex-1 p-6 space-y-3">
@@ -387,21 +375,6 @@ function LoadingSkeleton() {
   );
 }
 
-// ── Main DocumentViewer ────────────────────────────────────────────────────────
-/**
- * DocumentViewer
- *
- * Props:
- *  - open: boolean            — controls sheet visibility
- *  - onClose: () => void      — called when user closes
- *  - file: {
- *      name: string,          — filename with extension
- *      url?: string,          — direct URL to serve the file (for PDF/Image/Video/Audio)
- *      content?: string,      — pre-loaded text content (for text/markdown/json/csv)
- *      size?: number,         — bytes
- *      uploadedAt?: string,   — ISO date string
- *    }
- */
 export default function DocumentViewer({ open, onClose, file }) {
   const [textContent, setTextContent] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -428,7 +401,6 @@ export default function DocumentViewer({ open, onClose, file }) {
       .catch(e => { setError(e.message); setLoading(false); });
   }, [open, file?.url, needsTextFetch]);
 
-  // Reset state on new file
   useEffect(() => {
     setTextContent(null);
     setError(null);

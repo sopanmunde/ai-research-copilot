@@ -5,7 +5,6 @@ import SettingsPopover from '../components/SettingsPopover'
 import { UserProfileModal } from '../components/UserProfileModal'
 import React from 'react'
 
-// Mock next-themes
 vi.mock('next-themes', () => ({
   useTheme: () => ({
     theme: 'dark',
@@ -14,7 +13,6 @@ vi.mock('next-themes', () => ({
   }),
 }))
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -26,7 +24,6 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => {
@@ -41,7 +38,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
-// Mocks for Popover and Dialog are provided globally in vitest.setup.ts
 
 describe('Popovers & Modals Components', () => {
   describe('ComposerActionsPopover', () => {
@@ -68,13 +64,11 @@ describe('Popovers & Modals Components', () => {
 
   describe('UserProfileModal', () => {
     it('should render form fields when isOpen is true', async () => {
-      // Mock localstorage token
       vi.stubGlobal('localStorage', {
         getItem: vi.fn().mockReturnValue('fake-jwt-token'),
         setItem: vi.fn(),
       })
 
-      // Mock fetch for /me endpoint
       const mockFetch = vi.fn().mockImplementation(() =>
         Promise.resolve({
           ok: true,

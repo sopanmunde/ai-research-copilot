@@ -27,7 +27,6 @@ export default function SearchPopover({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  // Global keyboard shortcut: Ctrl+K or Cmd+K
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {

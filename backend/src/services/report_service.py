@@ -31,7 +31,6 @@ async def create_report(
         user_filter=user_filter,
     )
 
-    # Persist to MongoDB
     report_id = await save_research_session(
         reports_collection=reports_collection,
         user_id=user_id,

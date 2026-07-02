@@ -2,7 +2,6 @@ import '@testing-library/jest-dom'
 import React from 'react'
 import { vi } from 'vitest'
 
-// Mock localStorage globally to avoid issues with Node's native experimental localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
   return {
@@ -30,7 +29,6 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 })
 
-// Mock browser APIs not supported by jsdom
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '';
@@ -76,14 +74,12 @@ Object.defineProperty(window, 'matchMedia', {
 window.HTMLElement.prototype.scrollIntoView = vi.fn()
 window.HTMLElement.prototype.scrollTo = vi.fn()
 
-// Mock requestAnimationFrame and cancelAnimationFrame to run synchronously in tests
 window.requestAnimationFrame = vi.fn().mockImplementation((cb) => {
   cb(0)
   return 0
 })
 window.cancelAnimationFrame = vi.fn()
 
-// Mock Radix components globally to avoid setup context errors in tests
 vi.mock('@/components/ui/popover', () => ({
   Popover: ({ children }: any) => React.createElement('div', { 'data-testid': 'popover-root' }, children),
   PopoverTrigger: ({ children }: any) => React.createElement('div', { 'data-testid': 'popover-trigger' }, children),

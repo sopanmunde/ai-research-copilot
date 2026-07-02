@@ -28,24 +28,15 @@ import { createPortal } from "react-dom";
 import RagPipelineVisualizer from "./RagPipelineVisualizer";
 import ModernConfirmDialog from "./ModernConfirmDialog";
 
-// â”€â”€ Accepted file types (mirrors backend ALLOWED_EXTENSIONS) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ACCEPTED_TYPES = [
-  // Documents
   ".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt",
-  // Spreadsheets
   ".xlsx", ".xls", ".csv",
-  // Presentations
   ".pptx", ".ppt",
-  // Web / markup
   ".html", ".htm", ".md", ".mdx", ".rst",
-  // Data
   ".json", ".jsonl", ".xml", ".yaml", ".yml",
-  // Code
   ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".cs",
   ".go", ".rs", ".rb", ".php", ".sh", ".sql",
-  // Images
   ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg",
-  // Archives
   ".zip",
 ];
 
@@ -209,7 +200,6 @@ export default function DocumentLibrary({ open, onClose }) {
                   }, 2000);
                 }
               } catch (e) {
-                // Ignore incomplete JSON
               }
             }
           }
@@ -221,7 +211,6 @@ export default function DocumentLibrary({ open, onClose }) {
       setUploadingStage(null);
     }
 
-    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 

@@ -19,7 +19,6 @@ async def get_conversation_history(
         docs = await messages_collection.find(
             {"conversation_id": conversation_id}
         ).sort("created_at", -1).limit(limit).to_list(limit)
-        # Reverse to get chronological order
         docs = list(reversed(docs))
         return [{"role": d["role"], "content": d["content"]} for d in docs]
     except Exception as e:

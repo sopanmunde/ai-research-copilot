@@ -14,11 +14,9 @@ import pytest
 import sys
 import os
 
-# Make src importable from tests/
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
-# ── Chunking tests ────────────────────────────────────────────────────────────
 
 class TestChunking:
     """Validate the recursive and semantic chunking strategies."""
@@ -52,7 +50,6 @@ class TestChunking:
             assert chunk.metadata.get("filename") == "test.pdf"
 
 
-# ── Text cleaning tests ───────────────────────────────────────────────────────
 
 class TestTextCleaning:
     """Validate the text cleaning pipeline."""
@@ -78,11 +75,9 @@ class TestTextCleaning:
             Document(page_content="This is a substantial content piece. " * 5),
         ]
         result = clean_documents(docs)
-        # "Short" (5 chars) should be dropped as < 50 chars
         assert len(result) == 1
 
 
-# ── Citation node tests ───────────────────────────────────────────────────────
 
 class TestCitationNode:
     """Validate citation deduplication and confidence scoring."""
@@ -109,11 +104,9 @@ class TestCitationNode:
         state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
         result = citation_node(state)
         confs = [c["confidence"] for c in result["citations"]]
-        # Confidence should be non-increasing (decaying with rank)
         assert confs == sorted(confs, reverse=True), "Confidence should decay with rank"
 
 
-# ── Report node tests ─────────────────────────────────────────────────────────
 
 class TestReportNode:
     """Validate final output assembly."""
@@ -166,7 +159,6 @@ class TestReportNode:
         assert "semantic MMR retrieval" in result["final_output"]
 
 
-# ── Workflow registry tests ───────────────────────────────────────────────────
 
 class TestWorkflowRegistry:
     """Validate the workflow metadata registry."""

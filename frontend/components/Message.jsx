@@ -6,7 +6,6 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { Copy, Check } from "lucide-react";
 
-// Code block with copy button
 function CodeBlock({ children, className, ...props }) {
   const [copied, setCopied] = useState(false);
   const code = typeof children === "string" ? children : "";

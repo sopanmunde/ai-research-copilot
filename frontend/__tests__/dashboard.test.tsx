@@ -5,7 +5,6 @@ import Header from '../components/Header'
 import DocumentLibrary from '../components/DocumentLibrary'
 import React from 'react'
 
-// Mock next/navigation
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -18,7 +17,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
 }))
 
-// Mock next-themes
 vi.mock('next-themes', () => ({
   useTheme: () => ({
     theme: 'dark',
@@ -27,7 +25,6 @@ vi.mock('next-themes', () => ({
   }),
 }))
 
-// Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: any) => {
@@ -46,7 +43,6 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
-// Mock sub-components to prevent warnings or crashes
 vi.mock('../components/TriVisionXLogo', () => ({
   TriVisionXLogo: () => <div data-testid="sidebar-logo">Logo</div>,
 }))
@@ -94,7 +90,6 @@ describe('Dashboard Components', () => {
 
   describe('DocumentLibrary', () => {
     it('should render the library container with upload button', async () => {
-      // Mock fetch
       vi.stubGlobal('fetch', vi.fn().mockImplementation(() =>
         Promise.resolve({
           ok: true,

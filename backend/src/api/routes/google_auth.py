@@ -46,10 +46,8 @@ class CachedGoogleRequest(google_requests.Request):
         return super().__call__(url, method, body, headers, timeout, **kwargs)
 
 
-# In-memory cached request to prevent fetching certificates on every SSO callback
 cached_google_request = CachedGoogleRequest()
 
-# Google OAuth2 endpoints
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
@@ -70,7 +68,6 @@ async def google_login(request: Request):
             detail="Google OAuth is not configured (GOOGLE_CLIENT_ID missing)",
         )
 
-    # Determine dynamic redirect URI based on referer/origin
     redirect_uri = settings.REDIRECT_URI
     referer = request.headers.get("referer")
     if referer:
@@ -81,7 +78,6 @@ async def google_login(request: Request):
         except Exception:
             pass
 
-    # Generate a cryptographically signed state parameter to prevent CSRF
     from datetime import timedelta
     import os
     state_payload = {
@@ -125,7 +121,6 @@ async def google_callback(payload: dict):
             detail="State parameter is required to prevent CSRF",
         )
 
-    # Verify signed state parameter to prevent CSRF
     try:
         decoded_state = jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if decoded_state.get("provider") != "google":
@@ -140,7 +135,6 @@ async def google_callback(payload: dict):
             detail="Invalid or expired OAuth state parameter (anti-CSRF failure)",
         )
 
-    # ── Exchange code for tokens ──────────────────────────────────────────
     token_data = {
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
@@ -168,7 +162,6 @@ async def google_callback(payload: dict):
             detail="No ID token received from Google",
         )
 
-    # ── Verify ID token cryptographically using Google public certificates ─────────────────────────
     try:
         import asyncio
         loop = asyncio.get_running_loop()
@@ -194,14 +187,12 @@ async def google_callback(payload: dict):
             detail="Email not provided by Google",
         )
 
-    # Verify that the Google email is verified to prevent account takeover hijacking
     if not id_info.get("email_verified"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Google account email is not verified",
         )
 
-    # ── Upsert user in MongoDB ────────────────────────────────────────────
     google_id = id_info.get("sub")
     first_name = id_info.get("given_name", "")
     last_name = id_info.get("family_name", "")
@@ -210,7 +201,6 @@ async def google_callback(payload: dict):
     existing_user = await _users().find_one({"email": email})
 
     if existing_user:
-        # Update Google-specific fields if missing
         update_fields = {"updated_at": datetime.utcnow()}
         if not existing_user.get("google_id"):
             update_fields["google_id"] = google_id
@@ -225,7 +215,6 @@ async def google_callback(payload: dict):
         )
         logger.info(f"Google SSO: existing user logged in — {email}")
     else:
-        # Create new SSO user (no password)
         new_user = {
             "email": email,
             "username": email.split("@")[0],
@@ -239,6 +228,5 @@ async def google_callback(payload: dict):
         await _users().insert_one(new_user)
         logger.info(f"Google SSO: new user created — {email}")
 
-    # ── Issue JWT ─────────────────────────────────────────────────────────
     access_token = create_access_token(data={"sub": email})
     return {"access_token": access_token, "token_type": "bearer"}

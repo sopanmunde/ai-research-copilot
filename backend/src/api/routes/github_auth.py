@@ -21,7 +21,6 @@ from src.database.mongodb.connection import get_database
 logger = get_logger(__name__)
 router = APIRouter()
 
-# GitHub OAuth2 endpoints
 GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_USER_URL = "https://api.github.com/user"
@@ -44,7 +43,6 @@ async def github_login(request: Request):
             detail="GitHub OAuth is not configured (GITHUB_CLIENT_ID missing)",
         )
 
-    # Determine dynamic redirect URI based on referer/origin
     redirect_uri = settings.REDIRECT_URI
     referer = request.headers.get("referer")
     if referer:
@@ -55,7 +53,6 @@ async def github_login(request: Request):
         except Exception:
             pass
 
-    # Generate a cryptographically signed state parameter to prevent CSRF
     from datetime import timedelta
     import os
     state_payload = {
@@ -95,7 +92,6 @@ async def github_callback(payload: dict):
             detail="State parameter is required to prevent CSRF",
         )
 
-    # Verify signed state parameter to prevent CSRF
     try:
         decoded_state = jwt.decode(state, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         if decoded_state.get("provider") != "github":
@@ -110,7 +106,6 @@ async def github_callback(payload: dict):
             detail="Invalid or expired OAuth state parameter (anti-CSRF failure)",
         )
 
-    # ── Exchange code for access token ────────────────────────────────────
     token_data = {
         "client_id": settings.GITHUB_CLIENT_ID,
         "client_secret": settings.GITHUB_CLIENT_SECRET,
@@ -143,7 +138,6 @@ async def github_callback(payload: dict):
             detail=f"GitHub OAuth error: {error_desc}",
         )
 
-    # ── Fetch user profile and emails concurrently from GitHub API ────────
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
@@ -164,16 +158,13 @@ async def github_callback(payload: dict):
 
     github_user = user_response.json()
 
-    # ── Get verified email from GitHub API ────────────────────────────────
     email = None
     if emails_response.status_code == 200:
         emails = emails_response.json()
-        # Prefer primary verified email
         for e in emails:
             if e.get("primary") and e.get("verified"):
                 email = e["email"]
                 break
-        # Fallback to any verified email
         if not email:
             for e in emails:
                 if e.get("verified"):
@@ -186,13 +177,11 @@ async def github_callback(payload: dict):
             detail="Could not retrieve a verified email from GitHub. Please verify your email address on GitHub.",
         )
 
-    # ── Upsert user in MongoDB ────────────────────────────────────────────
     github_id = str(github_user.get("id", ""))
     username = github_user.get("login", "")
     name = github_user.get("name", "")
     avatar_url = github_user.get("avatar_url", "")
 
-    # Split name into first/last
     name_parts = name.split(" ", 1) if name else ["", ""]
     first_name = name_parts[0]
     last_name = name_parts[1] if len(name_parts) > 1 else ""
@@ -200,7 +189,6 @@ async def github_callback(payload: dict):
     existing_user = await _users().find_one({"email": email})
 
     if existing_user:
-        # Update GitHub-specific fields if missing
         update_fields = {"updated_at": datetime.utcnow()}
         if not existing_user.get("github_id"):
             update_fields["github_id"] = github_id
@@ -215,7 +203,6 @@ async def github_callback(payload: dict):
         )
         logger.info(f"GitHub SSO: existing user logged in — {email}")
     else:
-        # Create new SSO user (no password)
         new_user = {
             "email": email,
             "username": username or email.split("@")[0],
@@ -229,6 +216,5 @@ async def github_callback(payload: dict):
         await _users().insert_one(new_user)
         logger.info(f"GitHub SSO: new user created — {email}")
 
-    # ── Issue JWT ─────────────────────────────────────────────────────────
     jwt_token = create_access_token(data={"sub": email})
     return {"access_token": jwt_token, "token_type": "bearer"}

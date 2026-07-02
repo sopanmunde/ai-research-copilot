@@ -24,7 +24,6 @@ async def report_node(state: AgentState) -> dict:
 
     final_output = summary
 
-    # Coding workflow: append code block
     if workflow_type == "coding" and generated_code:
         code_review = state.get("code_review", "")
         test_results = state.get("test_results", "")
@@ -36,7 +35,6 @@ async def report_node(state: AgentState) -> dict:
         if test_results:
             final_output += f"\n\n**Test Results:**\n{test_results}\n"
 
-    # Data analysis workflow: append results
     elif workflow_type == "data_analysis" and analysis_results:
         final_output = summary
         final_output += f"\n\n{analysis_results}\n"
@@ -44,7 +42,6 @@ async def report_node(state: AgentState) -> dict:
         if viz_data:
             final_output += f"\n\n**Visualization data available.**\n"
 
-    # Research workflow: append citations
     elif citations:
         final_output += "\n\n---\n\n## 📚 References\n\n"
         for cit in citations:
@@ -70,7 +67,6 @@ async def report_node(state: AgentState) -> dict:
                 f"across {len(citations)} document source(s)._\n"
             )
 
-    # Quality score
     quality_score = {}
     if citations:
         coverage = min(100, len(citations) * 15 + 40)

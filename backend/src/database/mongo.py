@@ -19,7 +19,6 @@ def _db():
     return get_database()
 
 
-# Lazy collection accessors — evaluated at call time, never at import time
 class _LazyCollection:
     """Proxy that forwards all attribute/method access to the real Motor collection."""
     def __init__(self, name: str):

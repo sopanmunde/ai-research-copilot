@@ -20,12 +20,10 @@ class CompressionMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] == "http":
             path = scope.get("path", "")
-            # Normalize paths by stripping trailing slashes for robust matching
             normalized_path = path.rstrip("/")
             normalized_excludes = [p.rstrip("/") for p in self.exclude_paths]
             
             if any(normalized_path.startswith(ex_path) for ex_path in normalized_excludes if ex_path):
-                # Skip compression and bypass the gzip middleware entirely
                 await self.app(scope, receive, send)
                 return
                 

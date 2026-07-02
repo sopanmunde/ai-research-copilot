@@ -55,7 +55,6 @@ export default function AIAssistantUI() {
     } catch { }
   }, []);
 
-  // Auth guard: redirect to login if no token is present
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
@@ -179,9 +178,7 @@ export default function AIAssistantUI() {
               ...c,
               updatedAt:
                 c.updated_at || c.updatedAt || new Date().toISOString(),
-              // messages are NOT included in the list response — they're lazy-loaded
               messages: [],
-              // Use the messageCount returned by the API (not c.messages.length which is always 0)
               messageCount: c.messageCount || 0,
               preview: c.preview || "",
             })),
@@ -197,7 +194,6 @@ export default function AIAssistantUI() {
 
   useEffect(() => {
     if (isConversationsLoaded && !selectedId) {
-      // Always open a new conversation on login
       setSelectedId("new");
     }
   }, [isConversationsLoaded, selectedId]);
@@ -205,7 +201,6 @@ export default function AIAssistantUI() {
   useEffect(() => {
     if (!selectedId || selectedId === "new") return;
     const conv = conversations.find((c) => c.id === selectedId);
-    // Load messages when: conversation exists, has no messages loaded yet, and has messages in DB
     if (conv && conv.messages.length === 0 && conv.messageCount > 0) {
       const fetchMessages = async () => {
         const token = localStorage.getItem("token");
@@ -338,7 +333,6 @@ export default function AIAssistantUI() {
 
   function deleteFolder(name) {
     setFolders((prev) => prev.filter((f) => f.name !== name));
-    // Move conversations in that folder back to root (clear their folder)
     setConversations((prev) =>
       prev.map((c) => (c.folder === name ? { ...c, folder: null } : c)),
     );
@@ -370,7 +364,6 @@ export default function AIAssistantUI() {
       ...(fileRef ? { attachedFile: fileRef } : {}),
     };
 
-    // 1. Handle New Chat creation
     if (convId === "new") {
       try {
         const apiUrl = API_BASE_URL;
@@ -408,7 +401,6 @@ export default function AIAssistantUI() {
         return;
       }
     } else {
-      // 2. Regular message handling for existing chat
       const targetConv = conversations.find((c) => c.id === convId);
       if (targetConv && targetConv.title === "New Chat") {
         let newTitle = content.trim().split(/\s+/).slice(0, 5).join(" ");
@@ -431,7 +423,6 @@ export default function AIAssistantUI() {
       );
     }
 
-    // 3. Start Streaming
     const asstMsgId = Math.random().toString(36).slice(2);
     if (selectedBot !== "Fast") {
       setIsThinking(true);
@@ -480,16 +471,11 @@ export default function AIAssistantUI() {
               try {
                 const data = JSON.parse(dataStr);
 
-                // ── Error ──────────────────────────────────────────────────
                 if (data.error) {
                   throw new Error(data.error);
                 }
 
-                // ── Token stream: {type: "token", data: "<text>"} ──────────
-                // Backend streams tokens via on_chat_model_stream events.
-                // NOTE: the field is data.data NOT data.text.
                 if (data.type === "token" && data.data) {
-                  // Turn off thinking spinner once first token arrives
                   setIsThinking(false);
                   setThinkingConvId(null);
 
@@ -500,7 +486,6 @@ export default function AIAssistantUI() {
                       const hasAsstMsg = c.messages.some((m) => m.id === asstMsgId);
                       let msgs;
                       if (!hasAsstMsg) {
-                        // First token — insert the assistant message
                         msgs = [
                           ...c.messages,
                           {
@@ -511,7 +496,6 @@ export default function AIAssistantUI() {
                           },
                         ];
                       } else {
-                        // Subsequent tokens — update in place
                         msgs = c.messages.map((m) =>
                           m.id === asstMsgId ? { ...m, content: textContent } : m,
                         );
@@ -521,17 +505,13 @@ export default function AIAssistantUI() {
                   );
                 }
 
-                // ── Agent node activity: {node: "planner"|…, status: "running"|"completed"} ──
                 if (data.node) {
                   setAgentState(data.node);
                 }
 
-                // ── Citations: {type: "citations", data: [...]} ─────────────
                 if (data.type === "citations" && data.data) {
-                  // Citations will be attached to the message on done
                 }
 
-                // ── Quality Score: {type: "quality_score", data: {...}} ─────
                 if (data.type === "quality_score" && data.data) {
                   setConversations((prev) =>
                     prev.map((c) => {
@@ -544,12 +524,10 @@ export default function AIAssistantUI() {
                   );
                 }
 
-                // ── Provider Switch: {type: "provider_switch", from, to, reason} ──
                 if (data.type === "provider_switch") {
                   setProviderSwitchEvent({ from: data.from, to: data.to, reason: data.reason });
                 }
 
-                // ── Done: {done: true, sources: [...]} ──────────────────────
                 if (data.done) {
                   setConversations((prev) =>
                     prev.map((c) => {
@@ -561,14 +539,12 @@ export default function AIAssistantUI() {
                     }),
                   );
                   setAgentState(null);
-                  // Also clear thinking in case no tokens arrived (edge case)
                   setIsThinking(false);
                   setThinkingConvId(null);
                   setIsResponding(false);
                   setProviderSwitchEvent(null);
                 }
               } catch (e) {
-                // Ignore incomplete JSON parses as chunks might break mid-string, although unlikely with \n\n boundaries
               }
             }
           }
@@ -629,8 +605,6 @@ export default function AIAssistantUI() {
   }
 
   function handleUseTemplate(template) {
-    // This will be passed down to the Composer component
-    // The Composer will handle inserting the template content
     if (composerRef.current) {
       composerRef.current.insertTemplate(template.content);
     }

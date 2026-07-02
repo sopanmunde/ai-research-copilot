@@ -6,7 +6,6 @@ from src.core.logger import get_logger
 
 logger = get_logger("security")
 
-# Patterns that indicate prompt injection attempts
 INJECTION_PATTERNS = [
     r"ignore\s+previous\s+instructions",
     r"disregard\s+all\s+prior",
@@ -29,8 +28,6 @@ def scan_text(text: str) -> bool:
 
 def sanitize(text: str) -> str:
     """Remove potentially harmful control sequences."""
-    # Strip null bytes and excessive whitespace
     text = text.replace("\x00", "").strip()
-    # Collapse >3 consecutive newlines
     text = re.sub(r"\n{4,}", "\n\n\n", text)
     return text

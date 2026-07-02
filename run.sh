@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Setup backend venv if not existing
 if [ ! -d "backend/.venv" ]; then
     echo "Creating Python virtual environment..."
     python3 -m venv backend/.venv
@@ -8,7 +7,6 @@ if [ ! -d "backend/.venv" ]; then
     backend/.venv/bin/pip install -r backend/requirements.txt
 fi
 
-# Setup frontend node_modules if not existing
 if [ ! -d "frontend/node_modules" ]; then
     echo "Installing frontend dependencies..."
     cd frontend
@@ -20,7 +18,6 @@ if [ ! -d "frontend/node_modules" ]; then
     cd ..
 fi
 
-# Function to clean up background processes on exit
 cleanup() {
     echo "Stopping all services..."
     kill $BACKEND_PID 2>/dev/null
@@ -44,5 +41,4 @@ else
 fi
 FRONTEND_PID=$!
 
-# Wait for background processes to finish
 wait

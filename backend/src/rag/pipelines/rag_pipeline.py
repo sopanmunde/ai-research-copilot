@@ -75,7 +75,6 @@ async def run_rag_pipeline(
 
     messages = [SystemMessage(content=RAG_SYSTEM_PROMPT.format(context=context_str))]
 
-    # Inject conversation history (last 6 turns)
     for turn in (history or [])[-6:]:
         role = turn.get("role", "")
         content = turn.get("content", "")
