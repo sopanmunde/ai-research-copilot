@@ -85,6 +85,7 @@ COLLECTION_REPORTS = "reports"
 COLLECTION_CONTACTS = "contacts"
 COLLECTION_TASKS = "tasks"
 COLLECTION_EVENTS = "events"
+COLLECTION_EMAILS = "emails"
 
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
 CACHE_RAG_PREFIX = "rag:query:"
