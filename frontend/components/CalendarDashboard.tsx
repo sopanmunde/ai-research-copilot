@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -29,6 +29,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { formatDateRange } from 'little-date'
+import { API_BASE_URL } from "@/lib/api"
+import { toast } from "sonner"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface CalendarEvent {
@@ -102,44 +104,31 @@ export function CalendarDashboard() {
   )
 
   // Events list state
-  const [events, setEvents] = useState<CalendarEvent[]>([
-    {
-      id: 'e1',
-      title: 'AI Agent Architecture Sync',
-      from: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
-      to: new Date(new Date().setHours(10, 0, 0, 0)).toISOString(),
-      type: 'blue',
-      description: 'Discuss Gemini integration plans and local provider endpoints.',
-      location: 'Conference Room Alpha'
-    },
-    {
-      id: 'e2',
-      title: 'Design Review: Dashboard Mockups',
-      from: new Date(new Date().setHours(11, 30, 0, 0)).toISOString(),
-      to: new Date(new Date().setHours(12, 30, 0, 0)).toISOString(),
-      type: 'purple',
-      description: 'Go over frontend layout adjustments and dark mode settings.',
-      location: 'Huddle Room B'
-    },
-    {
-      id: 'e3',
-      title: 'Client Demo: TriVisionX Alpha v1',
-      from: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(),
-      to: new Date(new Date().setHours(15, 0, 0, 0)).toISOString(),
-      type: 'green',
-      description: 'Live demonstration of automated pipeline execution.',
-      location: 'Virtual Meet Link'
-    },
-    {
-      id: 'e4',
-      title: 'Product Launch Planning',
-      from: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
-      to: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
-      type: 'orange',
-      description: 'Strategic planning session for marketing and developer outreach.',
-      location: 'Executive Boardroom'
+  const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${API_BASE_URL}/events`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setEvents(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch events", e)
+    } finally {
+      setIsLoading(false)
     }
-  ])
+  }
+
+  useEffect(() => {
+    fetchEvents()
+  }, [])
 
   // Dialog / Modal Form States
   const [isAddEventOpen, setIsAddEventOpen] = useState(false)
@@ -311,7 +300,7 @@ export function CalendarDashboard() {
   }
 
   // Handle manual event creation (Save handler)
-  const handleSaveNewEvent = () => {
+  const handleSaveNewEvent = async () => {
     if (!newEventTitle.trim()) return
 
     const [startH, startM] = convert12hTo24h(newEventStartTime)
@@ -323,8 +312,7 @@ export function CalendarDashboard() {
     const toDate = new Date(newEventEndDate)
     toDate.setHours(endH, endM, 0, 0)
 
-    const newEv: CalendarEvent = {
-      id: Math.random().toString(36).substring(7),
+    const newEv = {
       title: newEventTitle,
       from: fromDate.toISOString(),
       to: toDate.toISOString(),
@@ -334,27 +322,57 @@ export function CalendarDashboard() {
       allDay: newEventAllDay
     }
 
-    setEvents(prev => [...prev, newEv])
-    setIsAddEventOpen(false)
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${API_BASE_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newEv)
+      })
+      if (!res.ok) throw new Error("Failed to create event")
+      const createdEvent = await res.json()
+      setEvents(prev => [...prev, createdEvent])
+      setIsAddEventOpen(false)
 
-    // Add color-coded log
-    const timeLog = new Date().toLocaleTimeString()
-    setLogs(prev => [
-      { id: Math.random().toString(), text: `${timeLog} - Created Block: "${newEventTitle}"`, type: newEventEtiquette },
-      ...prev
-    ])
+      // Add color-coded log
+      const timeLog = new Date().toLocaleTimeString()
+      setLogs(prev => [
+        { id: Math.random().toString(), text: `${timeLog} - Created Block: "${newEventTitle}"`, type: newEventEtiquette },
+        ...prev
+      ])
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to create event")
+    }
   }
 
   // Delete event handler
-  function handleDeleteEvent(id: string) {
+  async function handleDeleteEvent(id: string) {
     const ev = events.find(e => e.id === id)
-    setEvents(prev => prev.filter(e => e.id !== id))
-    if (ev) {
+    if (!ev) return
+
+    try {
+      const token = localStorage.getItem("token")
+      const res = await fetch(`${API_BASE_URL}/events/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if (!res.ok) throw new Error("Failed to delete event")
+
+      setEvents(prev => prev.filter(e => e.id !== id))
       const timeLog = new Date().toLocaleTimeString()
       setLogs(prev => [
         { id: Math.random().toString(), text: `${timeLog} - Removed: "${ev.title}"`, type: ev.type },
         ...prev
       ])
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to delete event")
     }
   }
 
@@ -391,20 +409,35 @@ export function CalendarDashboard() {
         const endTomorrow = new Date(tomorrow)
         endTomorrow.setHours(15, 0, 0, 0)
 
-        const newEv: CalendarEvent = {
-          id: Math.random().toString(36).substring(7),
+        const newEv = {
           title: 'AI Booking: Integration Call',
           from: tomorrow.toISOString(),
           to: endTomorrow.toISOString(),
           type: 'blue',
           description: 'Scheduled automatically by AI Agent.'
         }
-        setEvents(prev => [...prev, newEv])
-        
-        setLogs(prev => [
-          { id: Math.random().toString(), text: `${new Date().toLocaleTimeString()} - Autopilot Auto-Scheduled: "AI Booking: Integration Call"`, type: 'blue' },
-          ...prev
-        ])
+        const token = localStorage.getItem("token")
+        fetch(`${API_BASE_URL}/events`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(newEv)
+        }).then(res => {
+          if (res.ok) {
+            return res.json()
+          }
+          throw new Error("Failed to save autopilot event")
+        }).then(createdEvent => {
+          setEvents(prev => [...prev, createdEvent])
+          setLogs(prev => [
+            { id: Math.random().toString(), text: `${new Date().toLocaleTimeString()} - Autopilot Auto-Scheduled: "AI Booking: Integration Call"`, type: 'blue' },
+            ...prev
+          ])
+        }).catch(err => {
+          console.error(err)
+        })
       }
     }, 1000)
   }
@@ -445,6 +478,17 @@ export function CalendarDashboard() {
       const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1)
       setSelectedDate(nextMonth)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full min-h-[500px] bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <RefreshCw className="size-6 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-semibold">Loading calendar pipelines...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
