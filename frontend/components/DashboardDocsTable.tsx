@@ -692,9 +692,11 @@ function DocumentDataTable({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xl shrink-0">{emoji}</span>
-                      <Badge variant="outline" className={cn("px-1.5 text-[9px] font-mono font-bold uppercase", color, bg)}>
-                        {doc.file_type}
-                      </Badge>
+                      {table.getColumn("file_type")?.getIsVisible() && (
+                        <Badge variant="outline" className={cn("px-1.5 text-[9px] font-mono font-bold uppercase", color, bg)}>
+                          {doc.file_type}
+                        </Badge>
+                      )}
                     </div>
                     
                     {/* Actions Dropdown */}
@@ -722,8 +724,16 @@ function DocumentDataTable({
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-                    <span>{doc.chunk_count} chunks</span>
-                    <span>{formatDate(doc.uploaded_at)}</span>
+                    {table.getColumn("chunk_count")?.getIsVisible() ? (
+                      <span>{doc.chunk_count} chunks</span>
+                    ) : (
+                      <span />
+                    )}
+                    {table.getColumn("uploaded_at")?.getIsVisible() ? (
+                      <span>{formatDate(doc.uploaded_at)}</span>
+                    ) : (
+                      <span />
+                    )}
                   </div>
                 </div>
               );
@@ -1133,26 +1143,28 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-80 p-2">
                 <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 px-2.5 py-1 uppercase tracking-wider">Toggle Columns</div>
                 <DropdownMenuSeparator className="my-1" />
-                {tableInstance ? (
-                  tableInstance
-                    .getAllColumns()
-                    .filter((column: any) => column.getCanHide())
-                    .map((column: any) => (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize text-xs font-semibold"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id === "file_type" ? "Type" : column.id === "chunk_count" ? "Chunks" : column.id === "uploaded_at" ? "Uploaded" : column.id}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                ) : (
-                  <div className="p-2 text-xs text-muted-foreground text-center">No columns available</div>
-                )}
+                <div className="grid grid-cols-2 gap-1.5 p-1">
+                  {tableInstance ? (
+                    tableInstance
+                      .getAllColumns()
+                      .filter((column: any) => column.getCanHide())
+                      .map((column: any) => (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize text-xs font-semibold cursor-pointer"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {column.id === "file_type" ? "Type" : column.id === "chunk_count" ? "Chunks" : column.id === "uploaded_at" ? "Uploaded" : column.id}
+                        </DropdownMenuCheckboxItem>
+                      ))
+                  ) : (
+                    <div className="p-2 text-xs text-muted-foreground text-center col-span-2">No columns available</div>
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
