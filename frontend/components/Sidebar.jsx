@@ -100,6 +100,18 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           <FolderIcon className="h-4 w-4" />
         </button>
         <button
+          onClick={() => onSelect("notes")}
+          title="Notes"
+          className={cls(
+            "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
+            selectedId === "notes"
+              ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
+              : "border-white/10 bg-white/[0.05] text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+          )}
+        >
+          <FileText className="h-4 w-4" />
+        </button>
+        <button
           onClick={() => onSelect("email")}
           title="Email Dashboard"
           className={cls(
@@ -457,16 +469,24 @@ export default function Sidebar({
                           >
                             <ImageIcon className="h-4 w-4" /><span>Gallery</span>
                           </button>
-                          <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                          <button
+                            onClick={() => {
+                              onSelect("notes");
+                              onClose?.();
+                            }}
+                            className={cls(
+                              "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                              selectedId === "notes"
+                                ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                            )}
+                          >
                             <FileText className="h-4 w-4" /><span>Notes</span>
                           </button>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <CheckSquare className="h-4 w-4" /><span>Tasks</span>
-                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>

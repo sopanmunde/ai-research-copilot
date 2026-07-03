@@ -86,6 +86,10 @@ COLLECTION_CONTACTS = "contacts"
 COLLECTION_TASKS = "tasks"
 COLLECTION_EVENTS = "events"
 COLLECTION_EMAILS = "emails"
+COLLECTION_PROVIDERS = "llm_providers"
+COLLECTION_API_KEYS = "api_keys"
+COLLECTION_PLAYGROUND_MESSAGES = "playground_messages"
+COLLECTION_NOTES = "notes"
 
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
 CACHE_RAG_PREFIX = "rag:query:"

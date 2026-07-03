@@ -57,6 +57,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/api";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProviderType = "cloud" | "local";
@@ -109,79 +111,7 @@ interface ModelMetric {
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const CLOUD_PROVIDERS: LLMProvider[] = [
-  {
-    id: "openai", name: "OpenAI", type: "cloud", logo: "OA",
-    description: "GPT-4o, o1 — leading reasoning models",
-    models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1-preview", "o1-mini"],
-    status: "connected", isActive: true, usageTokens: 2_480_000, usageCost: 12.4, latency: 280, tokensPerSec: 85,
-  },
-  {
-    id: "anthropic", name: "Anthropic", type: "cloud", logo: "AN",
-    description: "Claude 3.5 Sonnet, Claude 3 Opus — safety-first AI",
-    models: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-haiku-20240307"],
-    status: "disconnected", isActive: false, usageTokens: 0, usageCost: 0, latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "google", name: "Google AI", type: "cloud", logo: "GG",
-    description: "Gemini 1.5 Pro, Gemini Flash — multimodal",
-    models: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"],
-    status: "disconnected", isActive: false, usageTokens: 0, usageCost: 0, latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "mistral", name: "Mistral AI", type: "cloud", logo: "MI",
-    description: "Mistral Large, Codestral — European efficiency",
-    models: ["mistral-large-latest", "codestral-latest", "open-mistral-7b"],
-    status: "error", isActive: false, usageTokens: 120_000, usageCost: 0.18, latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "groq", name: "Groq", type: "cloud", logo: "GQ",
-    description: "Ultra-fast LPU inference — Llama, Mixtral",
-    models: ["llama-3.1-70b-versatile", "mixtral-8x7b-32768", "gemma2-9b-it"],
-    status: "disconnected", isActive: false, usageTokens: 0, usageCost: 0, latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "cohere", name: "Cohere", type: "cloud", logo: "CO",
-    description: "Command R+ — enterprise RAG and search",
-    models: ["command-r-plus", "command-r", "command"],
-    status: "disconnected", isActive: false, usageTokens: 0, usageCost: 0, latency: 0, tokensPerSec: 0,
-  },
-];
 
-const LOCAL_PROVIDERS: LLMProvider[] = [
-  {
-    id: "ollama", name: "Ollama", type: "local", logo: "OL",
-    description: "Run Llama, Mistral, Phi locally — zero cost",
-    models: ["llama3.2", "mistral", "phi3", "codellama"],
-    status: "disconnected", isActive: false, endpoint: "http://localhost:11434", latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "lmstudio", name: "LM Studio", type: "local", logo: "LM",
-    description: "GUI for local models — OpenAI-compatible API",
-    models: ["any-gguf-model"],
-    status: "disconnected", isActive: false, endpoint: "http://localhost:1234/v1", latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "vllm", name: "vLLM", type: "local", logo: "VL",
-    description: "High-throughput local serving — production ready",
-    models: ["any-huggingface-model"],
-    status: "disconnected", isActive: false, endpoint: "http://localhost:8000/v1", latency: 0, tokensPerSec: 0,
-  },
-  {
-    id: "custom", name: "Custom Endpoint", type: "local", logo: "CX",
-    description: "Any OpenAI-compatible REST API endpoint",
-    models: ["custom"],
-    status: "disconnected", isActive: false, endpoint: "https://your-api.example.com/v1", latency: 0, tokensPerSec: 0,
-  },
-];
-
-const INITIAL_KEYS: ApiKey[] = [
-  {
-    id: "k1", providerId: "openai", label: "Production Key",
-    key: "sk-proj-T8mVLxKqQ3wP9nBz4cRdGhYoEfJiNaDs7uCe2vXkAb1FmHrLyt",
-    createdAt: "Jun 1, 2025", lastUsed: "2 mins ago", isActive: true,
-  },
-];
 
 const WEEKLY_TOKEN_DATA = [
   { day: "Mon", tokens: 210000 },
@@ -311,9 +241,10 @@ function ProviderLogo({ logo, active, size = "md" }: { logo: string; active: boo
 export function BrainDashboard() {
   const [activeTab,          setActiveTab]          = useState<"cloud" | "local">("cloud");
   const [selectedProviderId, setSelectedProviderId] = useState<string>("openai");
-  const [cloudProviders,     setCloudProviders]     = useState<LLMProvider[]>(CLOUD_PROVIDERS);
-  const [localProviders,     setLocalProviders]     = useState<LLMProvider[]>(LOCAL_PROVIDERS);
-  const [apiKeys,            setApiKeys]            = useState<ApiKey[]>(INITIAL_KEYS);
+  const [cloudProviders,     setCloudProviders]     = useState<LLMProvider[]>([]);
+  const [localProviders,     setLocalProviders]     = useState<LLMProvider[]>([]);
+  const [apiKeys,            setApiKeys]            = useState<ApiKey[]>([]);
+  const [isLoading,          setIsLoading]          = useState(true);
 
   // Tabs: configure | playground | matrix
   const [mainTab, setMainTab] = useState<"configure" | "playground" | "matrix">("configure");
@@ -325,9 +256,7 @@ export function BrainDashboard() {
   const [systemPrompt, setSystemPrompt] = useState<string>("You are an advanced AI assistant powered by TriVisionX.");
 
   // Playground Chat State
-  const [chatMessages, setChatMessages] = useState<Message[]>([
-    { role: "assistant", content: "Playground ready. Choose a model, configure settings, and type a prompt below to see streaming outputs.", timestamp: "Just now" }
-  ]);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamedText, setStreamedText] = useState("");
@@ -357,13 +286,63 @@ export function BrainDashboard() {
 
   const allProviders = [...cloudProviders, ...localProviders];
   const listProviders = activeTab === "cloud" ? cloudProviders : localProviders;
-  const provider = allProviders.find((p) => p.id === selectedProviderId) ?? allProviders[0];
+  const provider = allProviders.find((p) => p.id === selectedProviderId) ?? allProviders[0] ?? {
+    id: "openai",
+    name: "OpenAI",
+    type: "cloud",
+    logo: "OA",
+    description: "",
+    models: ["gpt-4o"],
+    status: "disconnected" as ProviderStatus,
+    isActive: false,
+    endpoint: "",
+    usageTokens: 0,
+    usageCost: 0,
+    latency: 0,
+    tokensPerSec: 0
+  };
   const providerKeys = apiKeys.filter((k) => k.providerId === selectedProviderId);
   const activeProvider = allProviders.find((p) => p.isActive);
 
   const totalTokens = cloudProviders.reduce((a, p) => a + (p.usageTokens ?? 0), 0);
   const totalCost   = cloudProviders.reduce((a, p) => a + (p.usageCost   ?? 0), 0);
   const endpoint    = endpointEdited ? localEndpoint : (provider?.endpoint ?? "");
+
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [resProviders, resKeys, resMessages] = await Promise.all([
+        fetch(`${API_BASE_URL}/brain/providers`, { headers }),
+        fetch(`${API_BASE_URL}/brain/keys`, { headers }),
+        fetch(`${API_BASE_URL}/brain/playground/messages`, { headers })
+      ]);
+
+      if (resProviders.ok) {
+        const data = await resProviders.json();
+        setCloudProviders(data.filter((p: any) => p.type === "cloud"));
+        setLocalProviders(data.filter((p: any) => p.type === "local"));
+      }
+      if (resKeys.ok) {
+        const data = await resKeys.json();
+        setApiKeys(data);
+      }
+      if (resMessages.ok) {
+        const data = await resMessages.json();
+        setChatMessages(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch brain configs", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Auto scroll playground chat
   useEffect(() => {
@@ -373,23 +352,59 @@ export function BrainDashboard() {
   }, [chatMessages, streamedText]);
 
   // Handle active provider selection
-  const activateProvider = (id: string) => {
-    setCloudProviders((p) => p.map((x) => ({ ...x, isActive: x.id === id })));
-    setLocalProviders((p) => p.map((x) => ({ ...x, isActive: x.id === id })));
+  const activateProvider = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      };
+      // Optimistically update frontend
+      setCloudProviders((p) => p.map((x) => ({ ...x, isActive: x.id === id })));
+      setLocalProviders((p) => p.map((x) => ({ ...x, isActive: x.id === id })));
+
+      // Sync active state to DB
+      await Promise.all(allProviders.map(p => 
+        fetch(`${API_BASE_URL}/brain/providers/${p.id}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({ isActive: p.id === id })
+        })
+      ));
+    } catch (e) {
+      console.error("Failed to sync provider active state", e);
+    }
   };
 
   // Simulated Connection Ping
-  const testConnection = (id: string) => {
+  const testConnection = async (id: string) => {
     setTestingId(id);
     const setT = (p: LLMProvider) => p.id === id ? { ...p, status: "testing" as ProviderStatus } : p;
     setCloudProviders((p) => p.map(setT));
     setLocalProviders((p) => p.map(setT));
-    setTimeout(() => {
+    
+    // Simulate connection check, then update in DB & UI
+    setTimeout(async () => {
       setTestingId(null);
       const hasKey = apiKeys.some((k) => k.providerId === id && k.isActive);
       const prov   = allProviders.find((p) => p.id === id);
       const ok     = prov?.type === "local" ? true : hasKey;
       const status: ProviderStatus = ok ? "connected" : "error";
+      
+      try {
+        const token = localStorage.getItem("token");
+        await fetch(`${API_BASE_URL}/brain/providers/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status })
+        });
+      } catch (e) {
+        console.error("Failed to sync connection status", e);
+      }
+
       const setF = (p: LLMProvider) => p.id === id ? { ...p, status } : p;
       setCloudProviders((p) => p.map(setF));
       setLocalProviders((p) => p.map(setF));
@@ -424,6 +439,17 @@ export function BrainDashboard() {
         setBenchmarkSpeed(finalSpeed);
         setBenchmarkLatency(finalLatency);
         
+        // Sync final values back to DB
+        const token = localStorage.getItem("token");
+        fetch(`${API_BASE_URL}/brain/providers/${provider.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ latency: finalLatency, tokensPerSec: finalSpeed })
+        });
+
         const updateP = (p: LLMProvider) => p.id === provider.id ? { ...p, latency: finalLatency, tokensPerSec: finalSpeed } : p;
         setCloudProviders(c => c.map(updateP));
         setLocalProviders(l => l.map(updateP));
@@ -432,13 +458,35 @@ export function BrainDashboard() {
   };
 
   // Playground Chat Simulation
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim() || isGenerating) return;
     const userPrompt = inputMessage.trim();
     setInputMessage("");
 
-    const newMsgs = [...chatMessages, { role: "user" as const, content: userPrompt, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }];
-    setChatMessages(newMsgs);
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = { role: "user" as const, content: userPrompt, timestamp };
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      };
+      
+      // Save User Message to DB
+      const resUser = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(userMsg)
+      });
+      if (resUser.ok) {
+        const savedUserMsg = await resUser.json();
+        setChatMessages((prev) => [...prev, savedUserMsg]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     setIsGenerating(true);
 
     const providerResponses = SIMULATED_RESPONSES[provider.id] || SIMULATED_RESPONSES.general;
@@ -456,36 +504,118 @@ export function BrainDashboard() {
       setStreamedText(fullResponse.slice(0, index));
       if (index >= fullResponse.length) {
         clearInterval(interval);
-        setChatMessages(prev => [
-          ...prev, 
-          { 
-            role: "assistant", 
-            content: fullResponse, 
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            modelUsed: selectedModel 
+        
+        const assistantMsg = { 
+          role: "assistant" as const, 
+          content: fullResponse, 
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          modelUsed: selectedModel 
+        };
+
+        // Save Assistant Message to DB
+        const token = localStorage.getItem("token");
+        fetch(`${API_BASE_URL}/brain/playground/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(assistantMsg)
+        }).then(async (res) => {
+          if (res.ok) {
+            const savedAssistantMsg = await res.json();
+            setChatMessages(prev => [...prev, savedAssistantMsg]);
           }
-        ]);
+        }).catch(err => console.error(err));
+
         setStreamedText("");
         setIsGenerating(false);
       }
     }, 20);
   };
 
-  const saveKey = () => {
+  const saveKey = async () => {
     if (!newLabel.trim() || !newKeyVal.trim()) return;
-    setApiKeys((prev) => [...prev, {
-      id: Date.now().toString(), providerId: selectedProviderId,
-      label: newLabel.trim(), key: newKeyVal.trim(),
-      createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      lastUsed: "Never", isActive: true,
-    }]);
-    setNewLabel(""); setNewKeyVal(""); setAddKeyMode(false);
-    const setC = (p: LLMProvider) => p.id === selectedProviderId ? { ...p, status: "connected" as ProviderStatus } : p;
-    setCloudProviders((p) => p.map(setC));
+    const payload = {
+      providerId: selectedProviderId,
+      label: newLabel.trim(),
+      key: newKeyVal.trim(),
+      isActive: true
+    };
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const createdKey = await res.json();
+        setApiKeys((prev) => [...prev, createdKey]);
+        setNewLabel("");
+        setNewKeyVal("");
+        setAddKeyMode(false);
+
+        // Update provider status to connected in DB & UI
+        await fetch(`${API_BASE_URL}/brain/providers/${selectedProviderId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: "connected" })
+        });
+        const setC = (p: LLMProvider) => p.id === selectedProviderId ? { ...p, status: "connected" as ProviderStatus } : p;
+        setCloudProviders((p) => p.map(setC));
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to save key");
+    }
   };
 
-  const deleteKey = (id: string) => setApiKeys((prev) => prev.filter((k) => k.id !== id));
-  const toggleKey = (id: string) => setApiKeys((prev) => prev.map((k) => k.id === id ? { ...k, isActive: !k.isActive } : k));
+  const deleteKey = async (id: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/keys/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        setApiKeys((prev) => prev.filter((k) => k.id !== id));
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete key");
+    }
+  };
+
+  const toggleKey = async (id: string) => {
+    const target = apiKeys.find((k) => k.id === id);
+    if (!target) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/keys/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ isActive: !target.isActive })
+      });
+      if (res.ok) {
+        const updatedKey = await res.json();
+        setApiKeys((prev) => prev.map((k) => k.id === id ? updatedKey : k));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const selectProvider = (id: string, type: ProviderType) => {
     setSelectedProviderId(id);
@@ -596,6 +726,17 @@ export function BrainDashboard() {
             </TooltipTrigger>
             <TooltipContent>Delete key</TooltipContent>
           </Tooltip>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-grow flex items-center justify-center h-full min-h-[500px] bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <RefreshCw className="size-6 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-semibold">Loading brain configurations...</span>
         </div>
       </div>
     );
