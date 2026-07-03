@@ -17,7 +17,6 @@ import {
   Key,
   Brain,
   Calendar,
-  GitCompare,
   BookOpen,
   Globe,
   ImageIcon,
@@ -389,11 +388,33 @@ export default function Sidebar({
                       >
                         <Brain className="h-4 w-4" /><span>Brain</span>
                       </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                    <button
+                      onClick={() => {
+                        onSelect("calendar");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "calendar"
+                          ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                      )}
+                    >
                       <Calendar className="h-4 w-4" /><span>Calendar</span>
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
-                      <GitCompare className="h-4 w-4" /><span>Compare</span>
+                    <button
+                      onClick={() => {
+                        onSelect("tasks");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "tasks"
+                          ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                      )}
+                    >
+                      <CheckSquare className="h-4 w-4" /><span>Tasks</span>
                     </button>
                     <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                       <BookOpen className="h-4 w-4" /><span>Cookbook</span>
@@ -434,9 +455,6 @@ export default function Sidebar({
                                 : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
                             )}
                           >
-                            <Globe className="h-4 w-4" /><span>Documentation</span>
-                          </button>
-                          <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
                             <ImageIcon className="h-4 w-4" /><span>Gallery</span>
                           </button>
                           <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">

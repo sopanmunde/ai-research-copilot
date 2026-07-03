@@ -19,6 +19,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@magicui": "https://magicui.design/r/{name}"
+    "@magicui": "https://magicui.design/r/{name}",
+    "@ss-components": "https://shadcnstudio.com/r/new-york-v4/{name}.json"
   }
 }

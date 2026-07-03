@@ -35,6 +35,8 @@ import {
   Plus,
   MoreVertical,
   TrendingUp,
+  SlidersHorizontal,
+  List,
 } from "lucide-react"
 import {
   flexRender,
@@ -503,10 +505,16 @@ function DocumentDataTable({
   refreshKey,
   onUploadTrigger,
   uploading,
+  docTypeFilter,
+  onTableInstance,
+  layoutMode,
 }: {
   refreshKey: number
   onUploadTrigger: () => void
   uploading: boolean
+  docTypeFilter: string
+  onTableInstance: (table: any) => void
+  layoutMode: "table" | "grid"
 }) {
   const [data, setData] = React.useState<Document[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
@@ -549,15 +557,30 @@ function DocumentDataTable({
     fetchDocs()
   }, [refreshKey])
 
+  const filteredData = React.useMemo(() => {
+    if (!docTypeFilter || docTypeFilter === "all-docs") return data;
+    return data.filter((d) => {
+      const ext = d.filename.split(".").pop()?.toLowerCase() || "";
+      if (docTypeFilter === "pdf-docs") return ext === "pdf";
+      if (docTypeFilter === "txt-docs") return ["txt", "md", "rtf", "odt", "rst"].includes(ext);
+      if (docTypeFilter === "image-docs") return ["png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg"].includes(ext);
+      if (docTypeFilter === "spreadsheet-docs") return ["xlsx", "xls", "csv"].includes(ext);
+      if (docTypeFilter === "presentation-docs") return ["pptx", "ppt"].includes(ext);
+      if (docTypeFilter === "word-docs") return ["docx", "doc"].includes(ext);
+      if (docTypeFilter === "code-docs") return ["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "html", "css", "sh", "sql"].includes(ext);
+      return true;
+    });
+  }, [data, docTypeFilter]);
+
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map((d) => d.id) || [],
-    [data]
+    () => filteredData?.map((d) => d.id) || [],
+    [filteredData]
   )
 
   const docColumns = React.useMemo(() => makeDocColumns(openViewer), [])
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns: docColumns,
     getRowId: (row) => row.id,
     state: { sorting, columnVisibility, rowSelection, columnFilters, pagination },
@@ -574,6 +597,12 @@ function DocumentDataTable({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
+
+  React.useEffect(() => {
+    if (onTableInstance) {
+      onTableInstance(table)
+    }
+  }, [table, onTableInstance])
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -627,46 +656,105 @@ function DocumentDataTable({
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <DndContext
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          onDragEnd={handleDragEnd}
-          sensors={sensors}
-          id={sortableId}
-        >
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-muted">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody className="**:data-[slot=table-cell]:first:w-8">
-              {table.getRowModel().rows.length ? (
-                <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                  {table.getRowModel().rows.map((row) => (
-                    <DraggableRow key={row.id} row={row} />
-                  ))}
-                </SortableContext>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={docColumns.length} className="h-24 text-center text-muted-foreground">
-                    No documents found. Upload files to get started.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </DndContext>
-      </div>
+      {layoutMode === "grid" ? (
+        table.getRowModel().rows.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
+            {table.getRowModel().rows.map((row) => {
+              const doc = row.original;
+              const { emoji, color, bg } = getFileIcon(doc.filename);
+              return (
+                <div
+                  key={doc.id}
+                  className="bg-card border border-border hover:border-zinc-400 dark:hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between gap-3 shadow-xs relative group h-36 cursor-pointer animate-in fade-in duration-200"
+                  onClick={() => openViewer(doc)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl shrink-0">{emoji}</span>
+                      <Badge variant="outline" className={cn("px-1.5 text-[9px] font-mono font-bold uppercase", color, bg)}>
+                        {doc.file_type}
+                      </Badge>
+                    </div>
+                    
+                    {/* Actions Dropdown */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:bg-muted rounded-md">
+                            <MoreVertical className="size-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-32 text-xs">
+                          <DropdownMenuItem onClick={() => openViewer(doc)}>View details</DropdownMenuItem>
+                          <DropdownMenuItem>Re-index</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                      {doc.filename}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                    <span>{doc.chunk_count} chunks</span>
+                    <span>{formatDate(doc.uploaded_at)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-xl text-xs text-muted-foreground bg-muted/10">
+            No documents found. Upload files to get started.
+          </div>
+        )
+      ) : (
+        <div className="overflow-hidden rounded-lg border">
+          <DndContext
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
+            id={sortableId}
+          >
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody className="**:data-[slot=table-cell]:first:w-8">
+                {table.getRowModel().rows.length ? (
+                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                    {table.getRowModel().rows.map((row) => (
+                      <DraggableRow key={row.id} row={row} />
+                    ))}
+                  </SortableContext>
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={docColumns.length} className="h-24 text-center text-muted-foreground text-xs font-medium">
+                      No documents found. Upload files to get started.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </DndContext>
+        </div>
+      )}
 
       <TablePagination table={table} />
     </div>
@@ -846,6 +934,34 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const headers = useAuthHeaders()
 
+  const [activeTab, setActiveTab] = React.useState("documents")
+  const [selectedFilter, setSelectedFilter] = React.useState("all-docs")
+  const [tableInstance, setTableInstance] = React.useState<any>(null)
+  const [layoutMode, setLayoutMode] = React.useState<"table" | "grid">("table")
+
+  const handleFilterChange = (val: string) => {
+    setSelectedFilter(val)
+    if (val === "conversations") {
+      setActiveTab("conversations")
+    } else {
+      setActiveTab("documents")
+    }
+  }
+
+  const getFilterLabel = (filter: string) => {
+    switch (filter) {
+      case "all-docs": return "All";
+      case "pdf-docs": return "PDF";
+      case "txt-docs": return "Text";
+      case "image-docs": return "Images";
+      case "spreadsheet-docs": return "Spreadsheets";
+      case "presentation-docs": return "Presentations";
+      case "word-docs": return "Word";
+      case "code-docs": return "Code";
+      default: return "All";
+    }
+  }
+
   const handleUpload = async (file: File) => {
     if (!file) return
 
@@ -917,7 +1033,8 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
 
   return (
     <Tabs
-      defaultValue="documents"
+      value={activeTab}
+      onValueChange={setActiveTab}
       className="w-full flex-col justify-start gap-6"
     >
       <input
@@ -933,41 +1050,91 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select defaultValue="documents">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
+        <Select value={selectedFilter} onValueChange={handleFilterChange}>
+          <SelectTrigger className="flex w-fit gap-1.5 text-xs font-semibold bg-transparent border border-border" size="sm">
+            <SelectValue>
+              {selectedFilter === "conversations" ? "Conversations" : `Documents (${getFilterLabel(selectedFilter)})`}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="documents">Documents</SelectItem>
+          <SelectContent className="text-xs">
+            <SelectItem value="all-docs">All Documents</SelectItem>
+            <SelectItem value="pdf-docs">PDFs (.pdf)</SelectItem>
+            <SelectItem value="txt-docs">Text Files (.txt, .md)</SelectItem>
+            <SelectItem value="image-docs">Images (.png, .jpg, .webp)</SelectItem>
+            <SelectItem value="spreadsheet-docs">Spreadsheets (.xlsx, .csv)</SelectItem>
+            <SelectItem value="presentation-docs">Presentations (.pptx)</SelectItem>
+            <SelectItem value="word-docs">Word Documents (.docx)</SelectItem>
+            <SelectItem value="code-docs">Code Files (.py, .js, .ts)</SelectItem>
+            <DropdownMenuSeparator className="my-1 bg-border/60" />
             <SelectItem value="conversations">Conversations</SelectItem>
           </SelectContent>
         </Select>
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="documents">
+          <TabsTrigger value="documents" onClick={() => handleFilterChange("all-docs")}>
             Documents <Badge variant="secondary">Docs</Badge>
           </TabsTrigger>
-          <TabsTrigger value="conversations">
+          <TabsTrigger value="conversations" onClick={() => handleFilterChange("conversations")}>
             Conversations <Badge variant="secondary">Chats</Badge>
           </TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <LayoutGrid className="h-4 w-4" />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <ChevronDown className="h-4 w-4" />
+          {/* Layout Mode Toggle (Table vs Grid) */}
+          {activeTab === "documents" && (
+            <div className="flex items-center gap-1.5 bg-muted p-0.5 rounded-lg border border-border h-8.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLayoutMode("table")}
+                className={cn("h-7.5 w-7.5 rounded-md", layoutMode === "table" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground")}
+                title="Table View"
+              >
+                <List className="size-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>Toggle columns</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLayoutMode("grid")}
+                className={cn("h-7.5 w-7.5 rounded-md", layoutMode === "grid" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground")}
+                title="Grid View"
+              >
+                <LayoutGrid className="size-4" />
+              </Button>
+            </div>
+          )}
+
+          {activeTab === "documents" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="hidden lg:inline">Customize Columns</span>
+                  <span className="lg:hidden">Columns</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 px-2.5 py-1 uppercase tracking-wider">Toggle Columns</div>
+                <DropdownMenuSeparator className="my-1" />
+                {tableInstance ? (
+                  tableInstance
+                    .getAllColumns()
+                    .filter((column: any) => column.getCanHide())
+                    .map((column: any) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize text-xs font-semibold"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id === "file_type" ? "Type" : column.id === "chunk_count" ? "Chunks" : column.id === "uploaded_at" ? "Uploaded" : column.id}
+                      </DropdownMenuCheckboxItem>
+                    ))
+                ) : (
+                  <div className="p-2 text-xs text-muted-foreground text-center">No columns available</div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -990,6 +1157,9 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
           refreshKey={docsRefreshKey}
           onUploadTrigger={() => fileInputRef.current?.click()}
           uploading={uploading}
+          docTypeFilter={selectedFilter}
+          onTableInstance={setTableInstance}
+          layoutMode={layoutMode}
         />
       </TabsContent>
 
