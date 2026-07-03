@@ -65,6 +65,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { API_BASE_URL } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Email {
   id: string;
@@ -87,151 +89,39 @@ interface ChatMessage {
   text: string;
 }
 
-const initialEmails: Email[] = [
-  {
-    id: "1",
-    name: "Sopan Munde",
-    email: "sopan@example.com",
-    subject: "Meeting Tomorrow",
-    date: "4 months ago",
-    fullDate: "Oct 22, 2023, 9:00:00 AM",
-    snippet:
-      "Hi, let's have a meeting tomorrow to discuss the project. I've been reviewing the project details and have some ideas I'd like to share. It's crucial that we align on our next steps...",
-    body: "Hi, let's have a meeting tomorrow to discuss the project. I've been reviewing the project details and have some ideas I'd like to share. It's crucial that we align on our next steps to ensure the project's success.\n\nPlease come prepared with any questions or insights you may have. Looking forward to our meeting!\n\nBest regards,\nWilliam",
-    tags: ["meeting", "work", "important"],
-    unread: false,
-    favorite: true,
-    folder: "inbox",
-  },
-  {
-    id: "2",
-    name: "Vicky Jadhav",
-    email: "vicky@example.com",
-    subject: "Re: Project Update",
-    date: "4 months ago",
-    fullDate: "Oct 20, 2023, 2:15:00 PM",
-    snippet:
-      "Thank you for the project update. It looks great! I've gone through the report, and the progress is impressive. The team has done a fantastic job of meeting our milestones...",
-    body: "Thank you for the project update. It looks great! I've gone through the report, and the progress is impressive. The team has done a fantastic job of meeting our milestones on time.\n\nI have a few small comments on the dashboard component spacing, but overall it is ready for review. Let's schedule a brief sync to finalize deployment.\n\nThanks,\nAlice",
-    tags: ["work", "important"],
-    unread: true,
-    favorite: false,
-    folder: "inbox",
-  },
-  {
-    id: "3",
-    name: "Krushana Kalamkar",
-    email: "krushana@example.com",
-    subject: "Weekend Plans",
-    date: "about 3 years ago",
-    fullDate: "Jun 12, 2021, 11:30:00 AM",
-    snippet:
-      "Any plans for the weekend? I was thinking of going hiking in the nearby mountains. It's been a while since we had some outdoor fun. If you're interested, let me know, and we...",
-    body: "Any plans for the weekend? I was thinking of going hiking in the nearby mountains. It's been a while since we had some outdoor fun. If you're interested, let me know, and we can plan the details.\n\nI was looking at the Mount Mitchell trail which has excellent views. Weather forecast looks sunny!\n\nCheers,\nBob",
-    tags: ["personal"],
-    unread: false,
-    favorite: true,
-    folder: "inbox",
-  },
-  {
-    id: "4",
-    name: "Aditya Bhayar",
-    email: "aditya@example.com",
-    subject: "Re: Question about Budget",
-    date: "over 3 years ago",
-    fullDate: "Apr 5, 2021, 4:45:00 PM",
-    snippet:
-      "I have a question about the budget for the upcoming project. It seems like there's a discrepancy in the allocation of resources. I've reviewed the budget report and noticed...",
-    body: "I have a question about the budget for the upcoming project. It seems like there's a discrepancy in the allocation of resources. I've reviewed the budget report and noticed that design engineering is allocated 15% less than originally agreed.\n\nCould we review the spreadsheet together sometime tomorrow morning?\n\nBest,\nEmily",
-    tags: ["work", "budget"],
-    unread: false,
-    favorite: false,
-    folder: "inbox",
-  },
-  {
-    id: "5",
-    name: "Piyush Manmode",
-    email: "piyush@example.com",
-    subject: "Important Announcement",
-    date: "over 3 years ago",
-    fullDate: "Mar 10, 2021, 3:00:00 PM",
-    snippet:
-      "I have an important announcement to make during our team meeting. It pertains to a strategic shift in our approach to the upcoming product launch. We've received valuable...",
-    body: "I have an important announcement to make during our team meeting. It pertains to a strategic shift in our approach to the upcoming product launch. We've received valuable feedback from our beta testers, and I believe it's time to make some adjustments to better meet our customers' needs.\n\nThis change is crucial to our success, and I look forward to discussing it with the team. Please be prepared to share your insights during the meeting.\n\nRegards,\nMichael",
-    tags: ["work"],
-    unread: true,
-    favorite: false,
-    folder: "inbox",
-  },
-  {
-    id: "6",
-    name: "Aditya Jadhav",
-    email: "aditya@example.com",
-    subject: "Draft: Spacing issues on dashboard",
-    date: "1 day ago",
-    fullDate: "Yesterday, 6:00:00 PM",
-    snippet:
-      "This is a draft containing notes on UI spacing issues that we need to fix before the presentation tomorrow...",
-    body: "This is a draft containing notes on UI spacing issues that we need to fix before the presentation tomorrow.\n\nMake sure Tailwind config is set up correctly and padding is consistent.",
-    tags: ["work"],
-    unread: false,
-    favorite: false,
-    folder: "drafts",
-  },
-  {
-    id: "7",
-    name: "Ajit Thale",
-    email: "ajit@sky.net",
-    subject: "Sent: Re: Project Milestones",
-    date: "2 weeks ago",
-    fullDate: "Oct 5, 2023, 10:00:00 AM",
-    snippet:
-      "I have successfully pushed the latest modifications. The system is functional and ready for testing. Please confirm receipt...",
-    body: "I have successfully pushed the latest modifications. The system is functional and ready for testing. Please confirm receipt.",
-    tags: ["work", "important"],
-    unread: false,
-    favorite: false,
-    folder: "sent",
-  },
-  {
-    id: "8",
-    name: "Pratik Shimpi",
-    email: "pratik@example.com",
-    subject: "Claim your free account upgrade",
-    date: "3 weeks ago",
-    fullDate: "Sep 28, 2023, 11:00:00 AM",
-    snippet:
-      "Congratulations! You have been selected to win a free account upgrade. Click this link immediately to claim...",
-    body: "Congratulations! You have been selected to win a free account upgrade. Click this link immediately to claim your reward.",
-    tags: ["personal"],
-    unread: false,
-    favorite: false,
-    folder: "trash",
-  },
-  {
-    id: "9",
-    name: "HR Department",
-    email: "hr@company.com",
-    subject: "Performance Review Q3",
-    date: "6 months ago",
-    fullDate: "Jun 1, 2023, 9:30:00 AM",
-    snippet:
-      "Attached is the summary of your Q3 performance review. Thank you for your continued dedication and excellent contribution to the team...",
-    body: "Attached is the summary of your Q3 performance review. Thank you for your continued dedication and excellent contribution to the team this year.",
-    tags: ["work"],
-    unread: false,
-    favorite: false,
-    folder: "archive",
-  },
-];
+
 
 export function EmailDashboard() {
-  const [emails, setEmails] = useState<Email[]>(initialEmails);
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("inbox");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEmailId, setSelectedEmailId] = useState("1");
+  const [selectedEmailId, setSelectedEmailId] = useState("");
   const [composeMode, setComposeMode] = useState<"new" | "reply" | null>(null);
+
+  const fetchEmails = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/emails`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEmails(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch emails", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmails();
+  }, []);
 
   const [composeTo, setComposeTo] = useState("");
   const [composeSubject, setComposeSubject] = useState("");
@@ -389,6 +279,17 @@ export function EmailDashboard() {
 
   const activeFolderIcon = folderItems.find((f) => f.id === activeNav)?.icon || Inbox;
   const ActiveIcon = activeFolderIcon;
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full min-h-[500px] bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <RefreshCw className="size-6 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-semibold">Loading email pipeline...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -826,15 +727,12 @@ export function EmailDashboard() {
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          onClick={() => {
+                          onClick={async () => {
                             if (composeTo.trim()) {
-                              const newMail: Email = {
-                                id: String(emails.length + 1),
+                              const newMail = {
                                 name: composeTo.split("@")[0].replace(/[^a-zA-Z]/g, " "),
                                 email: composeTo,
                                 subject: composeSubject || "(No Subject)",
-                                date: "Just now",
-                                fullDate: new Date().toLocaleString(),
                                 snippet: composeBody.substring(0, 100) + "...",
                                 body: composeBody,
                                 tags: ["work"],
@@ -842,8 +740,24 @@ export function EmailDashboard() {
                                 favorite: false,
                                 folder: "sent",
                               };
-                              setEmails([newMail, ...emails]);
-                              setSelectedEmailId(newMail.id);
+                              try {
+                                const token = localStorage.getItem("token");
+                                const res = await fetch(`${API_BASE_URL}/emails`, {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`
+                                  },
+                                  body: JSON.stringify(newMail)
+                                });
+                                if (res.ok) {
+                                  const created = await res.json();
+                                  setEmails([created, ...emails]);
+                                  setSelectedEmailId(created.id);
+                                }
+                              } catch (err) {
+                                console.error("Failed to send email", err);
+                              }
                             }
                             setComposeMode(null);
                           }}
@@ -867,13 +781,30 @@ export function EmailDashboard() {
                             size="icon-sm"
                             variant="ghost"
                             className="text-muted-foreground"
-                            onClick={() => {
-                              setEmails(
-                                emails.map((e) =>
-                                  e.id === selectedEmailId ? { ...e, folder: "archive" } : e
-                                )
-                              );
-                            }}
+                             onClick={async () => {
+                               if (!selectedEmailId) return;
+                               try {
+                                 const token = localStorage.getItem("token");
+                                 const res = await fetch(`${API_BASE_URL}/emails/${selectedEmailId}`, {
+                                   method: "PUT",
+                                   headers: {
+                                     "Content-Type": "application/json",
+                                     Authorization: `Bearer ${token}`
+                                   },
+                                   body: JSON.stringify({ folder: "archive" })
+                                 });
+                                 if (res.ok) {
+                                   const updated = await res.json();
+                                   setEmails(
+                                     emails.map((e) =>
+                                       e.id === selectedEmailId ? updated : e
+                                     )
+                                   );
+                                 }
+                               } catch (err) {
+                                 console.error("Failed to archive email", err);
+                               }
+                             }}
                           >
                             <Archive className="size-4" />
                           </Button>
@@ -886,13 +817,30 @@ export function EmailDashboard() {
                             size="icon-sm"
                             variant="ghost"
                             className="text-muted-foreground hover:text-destructive"
-                            onClick={() => {
-                              setEmails(
-                                emails.map((e) =>
-                                  e.id === selectedEmailId ? { ...e, folder: "trash" } : e
-                                )
-                              );
-                            }}
+                             onClick={async () => {
+                               if (!selectedEmailId) return;
+                               try {
+                                 const token = localStorage.getItem("token");
+                                 const res = await fetch(`${API_BASE_URL}/emails/${selectedEmailId}`, {
+                                   method: "PUT",
+                                   headers: {
+                                     "Content-Type": "application/json",
+                                     Authorization: `Bearer ${token}`
+                                   },
+                                   body: JSON.stringify({ folder: "trash" })
+                                 });
+                                 if (res.ok) {
+                                   const updated = await res.json();
+                                   setEmails(
+                                     emails.map((e) =>
+                                       e.id === selectedEmailId ? updated : e
+                                     )
+                                   );
+                                 }
+                               } catch (err) {
+                                 console.error("Failed to trash email", err);
+                               }
+                             }}
                           >
                             <Trash2 className="size-4" />
                           </Button>
@@ -905,13 +853,30 @@ export function EmailDashboard() {
                           <Button
                             size="icon-sm"
                             variant="ghost"
-                            onClick={() => {
-                              setEmails(
-                                emails.map((e) =>
-                                  e.id === selectedEmailId ? { ...e, favorite: !e.favorite } : e
-                                )
-                              );
-                            }}
+                             onClick={async () => {
+                               if (!selectedEmailId || !selectedEmail) return;
+                               try {
+                                 const token = localStorage.getItem("token");
+                                 const res = await fetch(`${API_BASE_URL}/emails/${selectedEmailId}`, {
+                                   method: "PUT",
+                                   headers: {
+                                     "Content-Type": "application/json",
+                                     Authorization: `Bearer ${token}`
+                                   },
+                                   body: JSON.stringify({ favorite: !selectedEmail.favorite })
+                                 });
+                                 if (res.ok) {
+                                   const updated = await res.json();
+                                   setEmails(
+                                     emails.map((e) =>
+                                       e.id === selectedEmailId ? updated : e
+                                     )
+                                   );
+                                 }
+                               } catch (err) {
+                                 console.error("Failed to toggle favorite email", err);
+                               }
+                             }}
                             className="text-muted-foreground"
                           >
                             <Star
