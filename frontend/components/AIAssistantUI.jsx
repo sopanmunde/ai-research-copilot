@@ -16,6 +16,8 @@ import { API_BASE_URL } from "@/lib/api";
 import { DashboardDocsTable } from "./DashboardDocsTable";
 import { EmailDashboard } from "./EmailDashboard";
 import { BrainDashboard } from "./BrainDashboard";
+import { CalendarDashboard } from "./CalendarDashboard";
+import { TaskDashboard } from "./TaskDashboard";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -109,6 +111,30 @@ export default function AIAssistantUI() {
   const [conversations, setConversations] = useState([]);
   const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    try {
+      const saved = localStorage.getItem("dashboard-selected-id");
+      if (saved) {
+        setSelectedId(saved);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    try {
+      if (selectedId) {
+        localStorage.setItem("dashboard-selected-id", selectedId);
+      } else {
+        localStorage.removeItem("dashboard-selected-id");
+      }
+    } catch { }
+  }, [selectedId, isMounted]);
+
+
   const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
   const [folders, setFolders] = useState(INITIAL_FOLDERS);
 
@@ -194,10 +220,18 @@ export default function AIAssistantUI() {
   }, []);
 
   useEffect(() => {
-    if (isConversationsLoaded && !selectedId) {
-      setSelectedId("new");
+    if (isConversationsLoaded) {
+      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks"];
+      if (!selectedId) {
+        setSelectedId("new");
+      } else if (!specialIds.includes(selectedId)) {
+        const exists = conversations.some((c) => c.id === selectedId);
+        if (!exists) {
+          setSelectedId("new");
+        }
+      }
     }
-  }, [isConversationsLoaded, selectedId]);
+  }, [isConversationsLoaded, selectedId, conversations]);
 
   useEffect(() => {
     if (!selectedId || selectedId === "new") return;
@@ -625,6 +659,14 @@ export default function AIAssistantUI() {
     return conversations.find((c) => c.id === selectedId) || null;
   }, [selectedId, conversations]);
 
+  if (!isMounted) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-zinc-950">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       {/* Background radial glows to match landing page */}
@@ -702,20 +744,24 @@ export default function AIAssistantUI() {
                     </div>
                   </div>
                   <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                    Document Library
+                    Gallery
                   </h1>
                   <p className="max-w-2xl text-base text-muted-foreground">
-                    Browse and manage your uploaded documents and conversations. Use the
-                    tables below to search, sort, and organize your research data.
+                    Browse and manage your uploaded documents, images, and conversations. Use the
+                    tables below to search, sort, and organize your files.
                   </p>
                 </div>
                 <DashboardDocsTable />
               </div>
             </div>
+          ) : selectedId === "calendar" ? (
+            <CalendarDashboard />
           ) : selectedId === "email" ? (
             <EmailDashboard />
           ) : selectedId === "brain" ? (
             <BrainDashboard />
+          ) : selectedId === "tasks" ? (
+            <TaskDashboard />
           ) : (
             <ChatPane
               ref={composerRef}
