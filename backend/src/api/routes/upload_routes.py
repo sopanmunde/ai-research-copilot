@@ -96,6 +96,7 @@ async def upload_document(
         filename=filename,
         file_type=ext,
         chunk_count=chunk_count,
+        file_bytes=content,
     )
 
     return {
@@ -193,6 +194,7 @@ async def upload_document_stream(
                 filename=filename,
                 file_type=ext,
                 chunk_count=chunk_count,
+                file_bytes=content,
             )
 
             yield f"data: {json.dumps({'stage': 'done', 'progress': 100, 'chunks': chunk_count})}\n\n"
@@ -211,19 +213,86 @@ async def list_documents(current_user=Depends(get_current_user)):
     return await get_user_documents(user_id)
 
 
+@router.get("/{document_id}/download")
+async def download_document(document_id: str, current_user=Depends(get_current_user)):
+    from bson.objectid import ObjectId
+    from fastapi.responses import Response
+    from fastapi import HTTPException
+    from src.database.mongodb.connection import get_database
+    from src.core.constants import COLLECTION_DOCUMENTS
+
+    user_id = str(current_user["_id"])
+    db = get_database()
+    
+    doc = await db[COLLECTION_DOCUMENTS].find_one({
+        "_id": ObjectId(document_id),
+        "user_id": user_id
+    })
+    
+    if not doc or "file_bytes" not in doc:
+        raise HTTPException(status_code=404, detail="Document file not found")
+        
+    filename = doc.get("filename", "document")
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    
+    media_types = {
+        "pdf": "application/pdf",
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "gif": "image/gif",
+        "webp": "image/webp",
+        "svg": "image/svg+xml",
+        "txt": "text/plain",
+        "md": "text/plain",
+        "csv": "text/csv",
+        "json": "application/json",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+    media_type = media_types.get(ext, "application/octet-stream")
+    
+    return Response(
+        content=doc["file_bytes"],
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"'
+        }
+    )
+
+
 @router.delete("/{document_id}")
-async def delete_document(document_id: str, filename: str, current_user=Depends(get_current_user)):
+async def delete_document(document_id: str, current_user=Depends(get_current_user)):
+    from bson.objectid import ObjectId
+    from fastapi import HTTPException
+    from src.database.mongodb.connection import get_database
+    from src.core.constants import COLLECTION_DOCUMENTS
     from src.database.mongodb.repositories.document_repository import delete_document_metadata
     from src.rag.vectorstores.pinecone_store import delete_by_filename
     
     user_id = str(current_user["_id"])
+    db = get_database()
+    
+    doc = await db[COLLECTION_DOCUMENTS].find_one({
+        "_id": ObjectId(document_id),
+        "user_id": user_id
+    })
+    
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    filename = doc.get("filename")
     
     db_success = await delete_document_metadata(user_id, document_id)
     
-    pinecone_success = delete_by_filename(user_id, filename)
+    pinecone_success = False
+    if filename:
+        try:
+            pinecone_success = delete_by_filename(user_id, filename)
+        except Exception as pine_err:
+            logger.warning(f"Could not delete {filename} from Pinecone: {pine_err}")
     
     if db_success or pinecone_success:
         return {"message": "Document deleted"}
-    
-    from fastapi import HTTPException
-    raise HTTPException(status_code=404, detail="Document not found or could not be deleted")
+        
+    raise HTTPException(status_code=404, detail="Document could not be deleted")

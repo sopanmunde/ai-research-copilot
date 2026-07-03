@@ -17,16 +17,23 @@ async def save_document_metadata(
     filename: str,
     file_type: str,
     chunk_count: int,
+    file_bytes: bytes = None,
     extra: Dict = None,
 ) -> str:
-    result = await _db()[COLLECTION_DOCUMENTS].insert_one({
+    from bson.binary import Binary
+    payload = {
         "user_id": user_id,
         "filename": filename,
         "file_type": file_type,
         "chunk_count": chunk_count,
         "uploaded_at": datetime.now(timezone.utc),
-        **(extra or {}),
-    })
+    }
+    if file_bytes is not None:
+        payload["file_bytes"] = Binary(file_bytes)
+    if extra:
+        payload.update(extra)
+
+    result = await _db()[COLLECTION_DOCUMENTS].insert_one(payload)
     logger.info(f"Saved document metadata: {filename} ({chunk_count} chunks)")
     return str(result.inserted_id)
 
