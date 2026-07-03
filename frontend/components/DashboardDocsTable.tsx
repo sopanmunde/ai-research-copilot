@@ -176,7 +176,7 @@ function DragHandle({ id }: { id: UniqueIdentifier }) {
 }
 
 
-function makeDocColumns(onView: (doc: Document) => void): ColumnDef<Document>[] {
+function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Document) => void): ColumnDef<Document>[] {
   return [
     {
       id: "drag",
@@ -273,7 +273,7 @@ function makeDocColumns(onView: (doc: Document) => void): ColumnDef<Document>[] 
             <DropdownMenuItem onClick={() => onView(row.original)}>View details</DropdownMenuItem>
             <DropdownMenuItem>Re-index</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -508,6 +508,7 @@ function DocumentDataTable({
   docTypeFilter,
   onTableInstance,
   layoutMode,
+  onDeleteSuccess,
 }: {
   refreshKey: number
   onUploadTrigger: () => void
@@ -515,9 +516,29 @@ function DocumentDataTable({
   docTypeFilter: string
   onTableInstance: (table: any) => void
   layoutMode: "table" | "grid"
+  onDeleteSuccess?: () => void
 }) {
   const [data, setData] = React.useState<Document[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+
+  async function handleDeleteDoc(doc: Document) {
+    const token = localStorage.getItem("token")
+    const toastId = toast.loading(`Deleting "${doc.filename}"...`)
+    try {
+      const res = await fetch(`${API_BASE_URL}/documents/${doc.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if (!res.ok) throw new Error("Failed to delete document")
+      toast.success(`Deleted "${doc.filename}" successfully`, { id: toastId })
+      if (onDeleteSuccess) onDeleteSuccess()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to delete document", { id: toastId })
+    }
+  }
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -577,7 +598,7 @@ function DocumentDataTable({
     [filteredData]
   )
 
-  const docColumns = React.useMemo(() => makeDocColumns(openViewer), [])
+  const docColumns = React.useMemo(() => makeDocColumns(openViewer, handleDeleteDoc), [openViewer])
 
   const table = useReactTable({
     data: filteredData,
@@ -688,7 +709,7 @@ function DocumentDataTable({
                           <DropdownMenuItem onClick={() => openViewer(doc)}>View details</DropdownMenuItem>
                           <DropdownMenuItem>Re-index</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onClick={() => handleDeleteDoc(doc)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -1160,6 +1181,7 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
           docTypeFilter={selectedFilter}
           onTableInstance={setTableInstance}
           layoutMode={layoutMode}
+          onDeleteSuccess={() => setDocsRefreshKey(prev => prev + 1)}
         />
       </TabsContent>
 
