@@ -18,6 +18,7 @@ import { EmailDashboard } from "./EmailDashboard";
 import { BrainDashboard } from "./BrainDashboard";
 import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
+import { NotesDashboard } from "./NotesDashboard";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -221,7 +222,7 @@ export default function AIAssistantUI() {
 
   useEffect(() => {
     if (isConversationsLoaded) {
-      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks"];
+      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks", "notes"];
       if (!selectedId) {
         setSelectedId("new");
       } else if (!specialIds.includes(selectedId)) {
@@ -762,6 +763,8 @@ export default function AIAssistantUI() {
             <BrainDashboard />
           ) : selectedId === "tasks" ? (
             <TaskDashboard />
+          ) : selectedId === "notes" ? (
+            <NotesDashboard />
           ) : (
             <ChatPane
               ref={composerRef}
