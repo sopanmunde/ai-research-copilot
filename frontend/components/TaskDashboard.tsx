@@ -63,6 +63,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cls } from "./utils";
 import * as ShadcnTaskUI from "@/components/ui/task";
+import { API_BASE_URL } from "@/lib/api";
+import { toast } from "sonner";
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 interface SubTask {
@@ -95,391 +97,50 @@ interface Task {
   history: TaskHistory[];
 }
 
-// ─── Initial Mock Data ─── (25 items to show pagination) ──────────────────────
-const INITIAL_TASKS: Task[] = [
-  {
-    id: "task-1",
-    code: "TASK-8782",
-    type: "Documentation",
-    title: "You can't compress the program without quantifying the open-source SSD...",
-    description: "Set up security keys, endpoint redirects, and active token budgets inside the Brain Dashboard.",
-    status: "in-progress",
-    priority: "medium",
-    tags: ["LLM", "Backend"],
-    dueDate: "2026-07-05",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 60,
-    subtasks: [
-      { id: "sub-1-1", title: "Retrieve API Keys from developer console", completed: true },
-      { id: "sub-1-2", title: "Add environment variable overrides", completed: true },
-      { id: "sub-1-3", title: "Test playground latency metrics", completed: false },
-    ],
-    history: [{ timestamp: "10:30 AM", action: "Task initialized by AI autopilot" }]
-  },
-  {
-    id: "task-2",
-    code: "TASK-7878",
-    type: "Documentation",
-    title: "Try to calculate the EXE feed, maybe it will index the multi-byte pixel!",
-    description: "Refactor dynamic font calculations inside the markdown parser to handle responsive headers correctly.",
-    status: "backlog",
-    priority: "medium",
-    tags: ["Frontend", "Editor"],
-    dueDate: "2026-07-08",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 0,
-    subtasks: [],
-    history: [{ timestamp: "Yesterday", action: "Task created manually" }]
-  },
-  {
-    id: "task-3",
-    code: "TASK-7839",
-    type: "Bug",
-    title: "We need to bypass the neural TCP card!",
-    description: "Investigate socket pool starvation under high volume API payload triggers.",
-    status: "todo",
-    priority: "high",
-    tags: ["Network", "Security"],
-    dueDate: "2026-07-10",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-4",
-    code: "TASK-5562",
-    type: "Feature",
-    title: "The SAS interface is down, bypass the open-source pixel so we can back up...",
-    description: "Add backup routing links to bypass failing cloud interfaces during network downtime.",
-    status: "backlog",
-    priority: "medium",
-    tags: ["Infrastructure"],
-    dueDate: "2026-07-04",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-5",
-    code: "TASK-8686",
-    type: "Feature",
-    title: "I'll parse the wireless SSL protocol, that should driver the API panel!",
-    description: "Write custom decryption logic for incoming SSL socket connections in mock gateway.",
-    status: "canceled",
-    priority: "medium",
-    tags: ["Security", "SSL"],
-    dueDate: "2026-07-03",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-6",
-    code: "TASK-1280",
-    type: "Bug",
-    title: "Use the digital TLS panel, then you can transmit the haptic system!",
-    description: "Fix security handshakes inside client-side websocket integrations.",
-    status: "done",
-    priority: "high",
-    tags: ["Websockets", "TLS"],
-    dueDate: "2026-07-01",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 100,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-7",
-    code: "TASK-7262",
-    type: "Feature",
-    title: "The UTF8 application is down, parse the neural bandwidth so we can back up...",
-    description: "Integrate compression formats to reduce payload size during large string parses.",
-    status: "done",
-    priority: "high",
-    tags: ["UTF8", "Optimization"],
-    dueDate: "2026-07-02",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 100,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-8",
-    code: "TASK-1138",
-    type: "Feature",
-    title: "Generating the driver won't do anything, we need to quantify the 1080p SM...",
-    description: "Verify media format uploads inside the email dashboard attachments component.",
-    status: "in-progress",
-    priority: "medium",
-    tags: ["Media", "Frontend"],
-    dueDate: "2026-07-06",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 30,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-9",
-    code: "TASK-7184",
-    type: "Feature",
-    title: "We need to program the back-end THX pixel!",
-    description: "Update canvas element scaling triggers inside pipeline visualizer view.",
-    status: "todo",
-    priority: "low",
-    tags: ["Visualizer"],
-    dueDate: "2026-07-15",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-10",
-    code: "TASK-5160",
-    type: "Documentation",
-    title: "Calculating the bus won't do anything, we need to navigate the back-end J...",
-    description: "Write technical reference docs detailing memory allocations in the V8 engine.",
-    status: "in-progress",
-    priority: "high",
-    tags: ["Docs", "Performance"],
-    dueDate: "2026-07-05",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 50,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-11",
-    code: "TASK-1020",
-    type: "Bug",
-    title: "Fix responsive layout overflow in sidebar navigation...",
-    description: "The sidebar items clip at 768px view width. Optimize padding sizes.",
-    status: "todo",
-    priority: "medium",
-    tags: ["UI", "Responsive"],
-    dueDate: "2026-07-11",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-12",
-    code: "TASK-4491",
-    type: "Feature",
-    title: "Optimize SVG loader animation triggers...",
-    description: "Smooth out canvas marquee loaders to prevent micro-stuttering during assets caching.",
-    status: "backlog",
-    priority: "low",
-    tags: ["Performance"],
-    dueDate: "2026-07-18",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-13",
-    code: "TASK-8371",
-    type: "Documentation",
-    title: "Draft system security policy outlines...",
-    description: "Document JWT token expiration standards and rotation details.",
-    status: "done",
-    priority: "low",
-    tags: ["Security", "Docs"],
-    dueDate: "2026-06-28",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 100,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-14",
-    code: "TASK-2290",
-    type: "Bug",
-    title: "Resolve session storage leaks during chat disconnects...",
-    description: "Ensure cleanup functions trigger on beforeunload inside ChatPane component.",
-    status: "in-progress",
-    priority: "high",
-    tags: ["State", "Bug"],
-    dueDate: "2026-07-07",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 80,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-15",
-    code: "TASK-6271",
-    type: "Feature",
-    title: "Build client onboarding templates interface...",
-    description: "Create modal view holding quick start markdown prompts.",
-    status: "todo",
-    priority: "medium",
-    tags: ["Templates"],
-    dueDate: "2026-07-14",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-16",
-    code: "TASK-9921",
-    type: "Bug",
-    title: "Correct date-fns parsing offsets on timezone configurations...",
-    description: "Ensure calendar events utilize localized time strings instead of UTC fallback.",
-    status: "canceled",
-    priority: "high",
-    tags: ["Calendar", "Bug"],
-    dueDate: "2026-07-02",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-17",
-    code: "TASK-1120",
-    type: "Documentation",
-    title: "Write instructions for local endpoint deployments...",
-    description: "Describe how to mount Ollama models using Docker Compose.",
-    status: "todo",
-    priority: "low",
-    tags: ["LLM", "Local"],
-    dueDate: "2026-07-16",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-18",
-    code: "TASK-3810",
-    type: "Feature",
-    title: "Implement multi-select action toolbars for message deletes...",
-    description: "Allow deleting multiple conversations inside Sidebar panel layout.",
-    status: "backlog",
-    priority: "medium",
-    tags: ["UI", "Sidebar"],
-    dueDate: "2026-07-22",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-19",
-    code: "TASK-9902",
-    type: "Feature",
-    title: "Deploy static landing components to testing subdomains...",
-    description: "Setup target workflows to push build artifacts directly to preview branches.",
-    status: "done",
-    priority: "medium",
-    tags: ["DevOps"],
-    dueDate: "2026-06-30",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 100,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-20",
-    code: "TASK-4512",
-    type: "Bug",
-    title: "Fix avatar fallback lettering overflows...",
-    description: "Limit fallback characters to a maximum of two letters in headers.",
-    status: "todo",
-    priority: "low",
-    tags: ["UI", "Fix"],
-    dueDate: "2026-07-09",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-21",
-    code: "TASK-1992",
-    type: "Feature",
-    title: "Integrate vector index pipelines for document searches...",
-    description: "Set up ingestion streams using pdf loaders to calculate embedding metadata.",
-    status: "in-progress",
-    priority: "high",
-    tags: ["RAG", "Backend"],
-    dueDate: "2026-07-06",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 40,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-22",
-    code: "TASK-3180",
-    type: "Documentation",
-    title: "Write developer guidelines for code formatting and hooks...",
-    description: "Draft guidelines detailing custom hooks usages.",
-    status: "todo",
-    priority: "low",
-    tags: ["Guidelines"],
-    dueDate: "2026-07-25",
-    assignee: { name: "Vicky Jadhav", avatarInitials: "VJ" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-23",
-    code: "TASK-5120",
-    type: "Bug",
-    title: "Correct email preview text trim lengths...",
-    description: "Ensure snippets truncate at 80 characters cleanly instead of cutting off middle words.",
-    status: "done",
-    priority: "medium",
-    tags: ["Email", "Fix"],
-    dueDate: "2026-06-25",
-    assignee: { name: "Krushana Kalamkar", avatarInitials: "KK" },
-    progress: 100,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-24",
-    code: "TASK-7711",
-    type: "Feature",
-    title: "Refactor theme toggler animations using smooth rotations...",
-    description: "Improve animated SVG path transformations on dark-mode clicks.",
-    status: "todo",
-    priority: "medium",
-    tags: ["UI", "Theme"],
-    dueDate: "2026-07-12",
-    assignee: { name: "Aditya Bhayar", avatarInitials: "AB" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  },
-  {
-    id: "task-25",
-    code: "TASK-1182",
-    type: "Bug",
-    title: "Handle API gateway timeouts during large uploads...",
-    description: "Increase server ingress limits on route controllers.",
-    status: "backlog",
-    priority: "high",
-    tags: ["Backend", "Ingress"],
-    dueDate: "2026-07-30",
-    assignee: { name: "Sopan Munde", avatarInitials: "SM" },
-    progress: 0,
-    subtasks: [],
-    history: []
-  }
-];
-
 export function TaskDashboard() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/tasks`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch tasks", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const syncTaskWithBackend = async (updatedTask: Task) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks/${updatedTask.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedTask)
+      });
+      if (!res.ok) throw new Error("Failed to sync task with backend");
+    } catch (err) {
+      console.error("Failed to sync task with backend:", err);
+    }
+  };
+
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -544,6 +205,7 @@ export function TaskDashboard() {
 
   // Toggle single subtask checkbox
   const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    let targetTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
         const subtasks = t.subtasks.map((s) =>
@@ -552,58 +214,80 @@ export function TaskDashboard() {
         const updatedTask = updateTaskProgress(t, subtasks);
         updatedTask.history = [
           {
-            timestamp: "Just now",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             action: `Toggled subtask: "${t.subtasks.find((s) => s.id === subtaskId)?.title}"`
           },
           ...updatedTask.history
         ];
-        // Keep selected task in sync
         if (selectedTask && selectedTask.id === taskId) {
           setSelectedTask(updatedTask);
         }
+        targetTask = updatedTask;
         return updatedTask;
       }
       return t;
     });
     setTasks(updated);
+    if (targetTask) {
+      syncTaskWithBackend(targetTask);
+    }
   };
 
   // Move task status
   const handleMoveStatus = (taskId: string, nextStatus: any) => {
+    let targetTask: Task | null = null;
     const updated = tasks.map((t) => {
       if (t.id === taskId) {
         const updatedTask = {
           ...t,
           status: nextStatus,
           progress: nextStatus === "done" ? 100 : nextStatus === "todo" && t.progress === 100 ? 0 : t.progress,
-          // If status is moved to done, set all subtasks completed
           subtasks: nextStatus === "done" ? t.subtasks.map(s => ({ ...s, completed: true })) : t.subtasks,
           history: [
-            { timestamp: "Just now", action: `Moved task to ${nextStatus.toUpperCase()}` },
+            { timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: `Moved task to ${nextStatus.toUpperCase()}` },
             ...t.history
           ]
         };
         if (selectedTask && selectedTask.id === taskId) {
           setSelectedTask(updatedTask);
         }
+        targetTask = updatedTask;
         return updatedTask;
       }
       return t;
     });
     setTasks(updated);
+    if (targetTask) {
+      syncTaskWithBackend(targetTask);
+    }
   };
 
   // Delete a task
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter((t) => t.id !== taskId));
-    setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
-    if (selectedTask && selectedTask.id === taskId) {
-      setSelectedTask(null);
+  const handleDeleteTask = async (taskId: string) => {
+    const token = localStorage.getItem("token");
+    const toastId = toast.loading("Deleting task...");
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Failed to delete task");
+      setTasks(tasks.filter((t) => t.id !== taskId));
+      setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
+      if (selectedTask && selectedTask.id === taskId) {
+        setSelectedTask(null);
+      }
+      toast.success("Task deleted successfully", { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to delete task", { id: toastId });
     }
   };
 
   // Handle manual task creation
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     if (!newTitle.trim()) return;
 
     const tags = newTagsStr
@@ -621,8 +305,7 @@ export function TaskDashboard() {
       .filter((st) => st.title.length > 0);
 
     const codeNum = 5000 + Math.floor(Math.random() * 4999);
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
+    const newTaskData = {
       code: `TASK-${codeNum}`,
       type: newType,
       title: newTitle.trim(),
@@ -630,23 +313,41 @@ export function TaskDashboard() {
       status: "todo",
       priority: newPriority,
       tags: tags.length > 0 ? tags : ["General"],
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // default 1 week
-      assignee: { name: "You", avatarInitials: "U" },
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      assignee: { name: "You", avatarInitials: "Y" },
       progress: 0,
       subtasks,
-      history: [{ timestamp: "Just now", action: "Task created manually" }]
+      history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task created manually" }]
     };
 
-    setTasks([newTask, ...tasks]);
-    setIsNewTaskOpen(false);
+    const token = localStorage.getItem("token");
+    const toastId = toast.loading("Creating task...");
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newTaskData)
+      });
+      if (!res.ok) throw new Error("Failed to create task");
+      const createdTask = await res.json();
+      setTasks([createdTask, ...tasks]);
+      setIsNewTaskOpen(false);
+      toast.success("Task created successfully", { id: toastId });
 
-    // Reset Form
-    setNewTitle("");
-    setNewDesc("");
-    setNewType("Feature");
-    setNewPriority("medium");
-    setNewTagsStr("");
-    setNewSubtasksStr("");
+      // Reset Form
+      setNewTitle("");
+      setNewDesc("");
+      setNewType("Feature");
+      setNewPriority("medium");
+      setNewTagsStr("");
+      setNewSubtasksStr("");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to create task", { id: toastId });
+    }
   };
 
   // Add a new subtask dynamically inside details view
@@ -663,13 +364,14 @@ export function TaskDashboard() {
     const updatedSubtasks = [...selectedTask.subtasks, newSub];
     const updatedTask = updateTaskProgress(selectedTask, updatedSubtasks);
     updatedTask.history = [
-      { timestamp: "Just now", action: `Added subtask: "${newSub.title}"` },
+      { timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: `Added subtask: "${newSub.title}"` },
       ...updatedTask.history
     ];
 
     setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
     setSelectedTask(updatedTask);
     setInlineSubtaskText("");
+    syncTaskWithBackend(updatedTask);
   };
 
   // AI Task Copilot simulator
@@ -721,7 +423,7 @@ export function TaskDashboard() {
                   { id: "sub-ai-2", title: "Integrate AWS S3 upload cli commands", completed: false },
                   { id: "sub-ai-3", title: "Schedule crontab configuration tests", completed: false }
                 ],
-                history: [{ timestamp: "Just now", action: "Task generated by AI Copilot Agent" }]
+                history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task generated by AI Copilot Agent" }]
               },
               {
                 id: `task-ai-${Date.now()}-2`,
@@ -739,7 +441,7 @@ export function TaskDashboard() {
                   { id: "sub-ai-4", title: "Identify slow queries via pg_stat_statements", completed: false },
                   { id: "sub-ai-5", title: "Create migration query statement scripts", completed: false }
                 ],
-                history: [{ timestamp: "Just now", action: "Task generated by AI Copilot Agent" }]
+                history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task generated by AI Copilot Agent" }]
               }
             ];
           } else if (prompt.includes("ui") || prompt.includes("css") || prompt.includes("design") || prompt.includes("style")) {
@@ -760,7 +462,7 @@ export function TaskDashboard() {
                   { id: "sub-ai-6", title: "Verify sidebar text contrast", completed: false },
                   { id: "sub-ai-7", title: "Fix transparent button hover borders", completed: false }
                 ],
-                history: [{ timestamp: "Just now", action: "Task generated by AI Copilot Agent" }]
+                history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task generated by AI Copilot Agent" }]
               },
               {
                 id: `task-ai-${Date.now()}-2`,
@@ -778,7 +480,7 @@ export function TaskDashboard() {
                   { id: "sub-ai-8", title: "Add LayoutId configuration transitions", completed: false },
                   { id: "sub-ai-9", title: "Tune transition duration metrics", completed: false }
                 ],
-                history: [{ timestamp: "Just now", action: "Task generated by AI Copilot Agent" }]
+                history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task generated by AI Copilot Agent" }]
               }
             ];
           } else {
@@ -799,15 +501,36 @@ export function TaskDashboard() {
                   { id: "sub-ai-10", title: "Draft implementation architecture overview", completed: false },
                   { id: "sub-ai-11", title: "Implement code changes & test suite scripts", completed: false }
                 ],
-                history: [{ timestamp: "Just now", action: "Task generated by AI Copilot Agent" }]
+                history: [{ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), action: "Task generated by AI Copilot Agent" }]
               }
             ];
           }
 
-          setTasks((prev) => [...generated, ...prev]);
-          setSimulationLogs((prev) => [...prev, "✔ Success! Dynamic tasks registered successfully."]);
-          setIsSimulatingAI(false);
-          setCopilotPrompt("");
+          // Persist generated tasks to backend
+          const token = localStorage.getItem("token");
+          Promise.all(generated.map(async (task) => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/tasks`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(task)
+              });
+              if (res.ok) {
+                return await res.json();
+              }
+            } catch (e) {
+              console.error("Failed to persist generated task", e);
+            }
+            return task;
+          })).then((persistedTasks) => {
+            setTasks((prev) => [...persistedTasks, ...prev]);
+            setSimulationLogs((prev) => [...prev, "✔ Success! Dynamic tasks registered successfully."]);
+            setIsSimulatingAI(false);
+            setCopilotPrompt("");
+          });
         }, 800);
       }
     }, 450);
@@ -933,6 +656,17 @@ export function TaskDashboard() {
         return <ArrowUp className="size-3 mr-1.5 text-zinc-800 dark:text-zinc-200 shrink-0" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center h-full bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <RefreshCw className="size-6 animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-semibold">Loading task pipelines...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -1331,8 +1065,8 @@ export function TaskDashboard() {
               </div>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-6 pt-4 h-full min-h-[calc(100vh-210px)] flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="p-6 pt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
 
                 {viewMode === "list" ? (
 
@@ -1720,7 +1454,7 @@ export function TaskDashboard() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </div>
 
 
@@ -1987,7 +1721,7 @@ export function TaskDashboard() {
                       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Action Timeline</h4>
                       <ScrollArea className="max-h-[120px]">
                         <div className="space-y-2.5 pl-1.5 border-l border-border/80 ml-2 text-[11px]">
-                          {selectedTask.history.map((h, idx) => (
+                          {selectedTask.history.map((h: TaskHistory, idx: number) => (
                             <div key={idx} className="relative flex flex-col space-y-0.5">
                               <span className="absolute -left-[14px] top-1 size-2 rounded-full bg-border border border-card" />
                               <span className="text-[10px] font-mono text-muted-foreground">{h.timestamp}</span>

@@ -120,6 +120,7 @@ from src.api.routes.contact_routes import router as contact_router
 from src.api.routes.health_routes import router as health_router
 from src.api.routes.models_routes import router as models_router
 from src.api.conversations import router as conversations_router
+from src.api.routes.task_routes import router as task_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -265,6 +266,7 @@ def create_app() -> FastAPI:
     app.include_router(report_router,        prefix="/api/research-sessions",   tags=["research-sessions"])
     app.include_router(models_router,        prefix="/api/models",              tags=["models"])
     app.include_router(health_router,        prefix="/api/health",              tags=["health"])
+    app.include_router(task_router,          prefix="/api/tasks",               tags=["tasks"])
 
     @app.get("/", tags=["root"])
     async def root():
