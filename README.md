@@ -274,8 +274,29 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
 
 ---
 
-### 2. Start the Backend
+### 2. Start Both Backend & Frontend (Recommended)
 
+You can start both services with a single command from the project root. This command will verify and automatically install missing dependencies/virtual environments.
+
+If you are using **Bun**:
+```bash
+bun run dev
+```
+
+If you are using **npm**:
+```bash
+npm run dev
+```
+
+The frontend will load at [http://localhost:3000](http://localhost:3000) and the backend API documentation will load at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+---
+
+### Alternative: Start Services Separately
+
+If you prefer to run them in separate terminal windows:
+
+#### Backend
 ```bash
 cd backend
 python -m venv .venv
@@ -287,18 +308,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python index.py
 ```
-The FastAPI documentation will load at [http://localhost:8000/docs](http://localhost:8000/docs).
 
----
-
-### 3. Start the Frontend
-
+#### Frontend
 ```bash
-cd ../frontend
+cd frontend
 bun install
-bun dev
+bun dev  # or npm install && npm run dev
 ```
-The client dashboard will load at [http://localhost:3000](http://localhost:3000).
 
 ---
 
