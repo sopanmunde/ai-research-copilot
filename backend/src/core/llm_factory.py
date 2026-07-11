@@ -23,6 +23,50 @@ PROVIDER_MODEL_MAP = {
 }
 
 
+import asyncio
+import time
+
+class LLMRateLimiter:
+    def __init__(self):
+        self.last_request_time = 0.0
+        self.lock = asyncio.Lock()
+
+    async def throttle_async(self):
+        rate_limit = getattr(settings, "RATE_LIMIT_PER_MINUTE", 60)
+        if rate_limit <= 0:
+            return
+        
+        interval = 60.0 / rate_limit
+        async with self.lock:
+            now = time.monotonic()
+            time_since_last = now - self.last_request_time
+            if time_since_last < interval:
+                sleep_time = interval - time_since_last
+                logger.info(
+                    f"RateLimiter: Throttling async LLM request. "
+                    f"Sleeping for {sleep_time:.2f}s (Rate: {rate_limit} RPM)"
+                )
+                await asyncio.sleep(sleep_time)
+            self.last_request_time = time.monotonic()
+
+
+_global_limiter = LLMRateLimiter()
+
+
+from langchain_core.callbacks import AsyncCallbackHandler
+
+class RateLimitingCallbackHandler(AsyncCallbackHandler):
+    async def on_llm_start(self, *args, **kwargs) -> None:
+        await _global_limiter.throttle_async()
+
+    async def on_chat_model_start(self, *args, **kwargs) -> None:
+        await _global_limiter.throttle_async()
+
+
+def _wrap_with_rate_limit(llm: BaseChatModel) -> None:
+    llm.callbacks = (llm.callbacks or []) + [RateLimitingCallbackHandler()]
+
+
 def get_llm(
     provider: str = "",
     model_name: str = "",
@@ -52,16 +96,19 @@ def get_llm(
     logger.info(f"LLM Factory: provider={provider}, model={model or 'default'}, temp={temperature}")
 
     if provider == "anthropic":
-        return _build_anthropic(model, temperature, streaming)
+        llm = _build_anthropic(model, temperature, streaming)
     elif provider == "google":
-        return _build_google(model, temperature, streaming)
+        llm = _build_google(model, temperature, streaming)
     elif provider == "groq":
-        return _build_groq(model, temperature, streaming)
+        llm = _build_groq(model, temperature, streaming)
     elif provider == "mistral":
-        return _build_mistral(model, temperature, streaming)
+        llm = _build_mistral(model, temperature, streaming)
     else:
         raise ValueError(f"Unknown LLM provider: '{provider}'. "
                          f"Supported: {', '.join(PROVIDER_MODEL_MAP)}")
+
+    _wrap_with_rate_limit(llm)
+    return llm
 
 
 def _resolve_provider(provider: str, model: str) -> str:

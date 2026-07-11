@@ -264,6 +264,7 @@ function AuthPageContent() {
         if (!res.ok) throw new Error(data.detail || `${provider} sign-in failed`)
 
         localStorage.setItem("token", data.access_token)
+        localStorage.setItem("dashboard-selected-id", "new")
         document.cookie = `auth_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
         router.push("/dashboard")
       } catch (err) {
@@ -340,6 +341,7 @@ function AuthPageContent() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || "Login failed")
       localStorage.setItem("token", data.access_token)
+      localStorage.setItem("dashboard-selected-id", "new")
       document.cookie = `auth_token=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
       router.push("/dashboard")
     } catch (err) {
