@@ -70,6 +70,29 @@ const animationVariants = {
   },
 }
 
+const getEmbedUrl = (src: string) => {
+  try {
+    if (src.includes("youtube.com/embed/")) {
+      return src
+    }
+    if (src.includes("youtu.be/")) {
+      const parts = src.split("youtu.be/")
+      const id = parts[parts.length - 1].split(/[?#]/)[0]
+      return `https://www.youtube.com/embed/${id}?autoplay=1`
+    }
+    if (src.includes("youtube.com/watch")) {
+      const url = new URL(src)
+      const id = url.searchParams.get("v")
+      if (id) {
+        return `https://www.youtube.com/embed/${id}?autoplay=1`
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse video URL:", e)
+  }
+  return src
+}
+
 export function HeroVideoDialog({
   animationStyle = "from-center",
   videoSrc = "/demo.mp4",
@@ -85,7 +108,8 @@ export function HeroVideoDialog({
   const setIsVideoOpen = onOpenChange || setIsOpenInternal
 
   const selectedAnimation = animationVariants[animationStyle]
-  const isLocalVideo = videoSrc.endsWith(".mp4") || videoSrc.endsWith(".webm") || videoSrc.startsWith("/") || !videoSrc.startsWith("http");
+  const resolvedVideoSrc = getEmbedUrl(videoSrc)
+  const isLocalVideo = resolvedVideoSrc.endsWith(".mp4") || resolvedVideoSrc.endsWith(".webm") || resolvedVideoSrc.startsWith("/") || !resolvedVideoSrc.startsWith("http");
 
   return (
     <div className={cn(!hideTrigger && "relative", className)}>
@@ -146,10 +170,10 @@ export function HeroVideoDialog({
               </motion.button>
               <div className="relative isolate z-1 size-full overflow-hidden rounded-2xl border-2 border-white">
                 {isLocalVideo ? (
-                  <LocalVideoPlayer src={videoSrc} />
+                  <LocalVideoPlayer src={resolvedVideoSrc} />
                 ) : (
                   <iframe
-                    src={videoSrc}
+                    src={resolvedVideoSrc}
                     title="Hero Video player"
                     className="mt-0 size-full rounded-2xl"
                     allowFullScreen
