@@ -71,8 +71,17 @@ async def _stream_chat_response_impl(
         mode: "quick" (direct LLM) or "agent" (LangGraph)
         workflow_type: research | summary | technical | competitive | coding | data_analysis
         model_provider: anthropic | google | groq | mistral
-        model_name: Specific model name override
     """
+    from src.core.llm_factory import current_user_keys
+    from src.database.mongodb.repositories.brain_repository import get_user_keys
+
+    try:
+        user_keys_list = await get_user_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
+        current_user_keys.set(keys_dict)
+    except Exception as e:
+        logger.warning(f"Could not load custom API keys for user {user_id}: {e}")
+
     history = []
     if conversation_id:
         try:
@@ -369,3 +378,70 @@ async def stream_chat_response(
                 await producer_task
             except asyncio.CancelledError:
                 pass
+
+
+async def stream_playground_completion(
+    provider: str,
+    model: str,
+    messages: list,
+    temperature: float,
+    max_tokens: int,
+    system_prompt: Optional[str],
+    user_id: str,
+) -> AsyncGenerator[str, None]:
+    # Streams LLM completion specifically for the playground sandbox.
+    try:
+        from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+        from src.core.llm_factory import get_llm, current_user_keys
+        from src.database.mongodb.repositories.brain_repository import get_user_keys
+
+        # Load user's custom API keys and set ContextVar
+        user_keys_list = await get_user_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
+        current_user_keys.set(keys_dict)
+
+        langchain_messages = []
+        if system_prompt:
+            langchain_messages.append(SystemMessage(content=system_prompt))
+
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "user":
+                langchain_messages.append(HumanMessage(content=content))
+            elif role == "assistant":
+                langchain_messages.append(AIMessage(content=content))
+            elif role == "system" and not system_prompt:
+                langchain_messages.append(SystemMessage(content=content))
+
+        # Build LLM using settings or user key override
+        llm = get_llm(
+            provider=provider,
+            model_name=model,
+            temperature=temperature,
+            streaming=True,
+        )
+
+        # Apply max tokens dynamically if possible
+        if hasattr(llm, "max_output_tokens"):
+            try:
+                llm.max_output_tokens = max_tokens
+            except Exception:
+                pass
+        elif hasattr(llm, "max_tokens"):
+            try:
+                llm.max_tokens = max_tokens
+            except Exception:
+                pass
+
+        async for chunk in llm.astream(langchain_messages):
+            if hasattr(chunk, "content") and chunk.content:
+                token = extract_text(chunk.content)
+                if token:
+                    yield sse_token_event(token)
+
+        yield sse_done_event([])
+
+    except Exception as e:
+        logger.error(f"Playground completion failed: {e}", exc_info=True)
+        yield sse_error_event(str(e))
