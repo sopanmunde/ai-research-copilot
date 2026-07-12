@@ -125,6 +125,7 @@ from src.api.routes.event_routes import router as event_router
 from src.api.routes.email_routes import router as email_router
 from src.api.routes.brain_routes import router as brain_router
 from src.api.routes.notes_routes import router as notes_router
+from src.api.routes.integrations_routes import router as integrations_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -275,6 +276,7 @@ def create_app() -> FastAPI:
     app.include_router(email_router,         prefix="/api/emails",              tags=["emails"])
     app.include_router(brain_router,         prefix="/api/brain",               tags=["brain"])
     app.include_router(notes_router,         prefix="/api/notes",               tags=["notes"])
+    app.include_router(integrations_router,  prefix="/api/integrations",        tags=["integrations"])
 
     @app.get("/", tags=["root"])
     async def root():

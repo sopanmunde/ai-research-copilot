@@ -19,6 +19,7 @@ import { BrainDashboard } from "./BrainDashboard";
 import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
+import IntegrationsPanel from "./IntegrationsPanel";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -149,6 +150,7 @@ export default function AIAssistantUI() {
   const [providerSwitchEvent, setProviderSwitchEvent] = useState(null);
   const [user, setUser] = useState(null);
   const [selectedBot, setSelectedBot] = useState("Fast");
+  const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -386,7 +388,7 @@ export default function AIAssistantUI() {
     );
   }
 
-  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast") {
+  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast", activeFeatures = null) {
     const token = localStorage.getItem("token");
     if (!content.trim() && !fileRef || !token) return;
 
@@ -481,6 +483,7 @@ export default function AIAssistantUI() {
           conversation_id: targetConvId,
           mode,
           filename: fileRef ? fileRef.name : null,
+          active_features: activeFeatures,
         }),
       });
 
@@ -730,6 +733,7 @@ export default function AIAssistantUI() {
             onUserUpdate={fetchUser}
             selectedBot={selectedBot}
             setSelectedBot={setSelectedBot}
+            onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
           />
           {selectedId === "docs" ? (
             <div className="relative flex-1 overflow-y-auto bg-background pb-16">
@@ -770,8 +774,8 @@ export default function AIAssistantUI() {
               ref={composerRef}
               conversation={selected}
               user={user}
-              onSend={(content, mode, fileRef) => {
-                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot);
+              onSend={(content, mode, fileRef, activeFeatures) => {
+                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures);
               }}
               onEditMessage={(messageId, newContent) =>
                 selected && editMessage(selected.id, messageId, newContent)
@@ -786,8 +790,14 @@ export default function AIAssistantUI() {
               providerSwitchEvent={providerSwitchEvent}
               onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
               selectedBot={selectedBot}
+              onNavigateTo={(id) => setSelectedId(id)}
+              onAddNewSkill={() => setIsIntegrationsOpen(true)}
             />
           )}
+          <IntegrationsPanel
+            isOpen={isIntegrationsOpen}
+            onClose={() => setIsIntegrationsOpen(false)}
+          />
         </main>
       </div>
     </div>
