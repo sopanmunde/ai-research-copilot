@@ -52,6 +52,17 @@ class Settings(BaseSettings):
     MISTRAL_API_KEY: str = ""
     MISTRAL_CHAT_MODEL: str = "mistral-large-latest"
 
+    OPENAI_API_KEY: str = ""
+    OPENAI_CHAT_MODEL: str = "gpt-4o"
+
+    COHERE_API_KEY: str = ""
+    COHERE_CHAT_MODEL: str = "command-r-plus"
+
+    OLLAMA_ENDPOINT: str = "http://localhost:11434"
+    LMSTUDIO_ENDPOINT: str = "http://localhost:1234/v1"
+    VLLM_ENDPOINT: str = "http://localhost:8000/v1"
+    CUSTOM_ENDPOINT: str = "https://your-api.example.com/v1"
+
     EMBEDDING_PROVIDER: str = "google"
     EMBEDDING_MODEL: str = "models/gemini-embedding-001"
     EMBEDDING_DIMENSION: int = 384

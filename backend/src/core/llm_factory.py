@@ -2,7 +2,7 @@
 src/core/llm_factory.py — Multi-LLM Provider Factory
 =====================================================
 Returns the appropriate LangChain chat model based on provider string.
-Supports: anthropic, google, groq, mistral
+Supports: openai, anthropic, google, groq, mistral, cohere, ollama, lmstudio, vllm, custom
 """
 from functools import lru_cache
 from typing import Optional
@@ -13,15 +13,21 @@ from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 
-PROVIDER_PRIORITY = ["anthropic", "google", "groq", "mistral"]
+PROVIDER_PRIORITY = ["openai", "anthropic", "google", "groq", "mistral", "cohere"]
 
 from contextvars import ContextVar
 
 PROVIDER_MODEL_MAP = {
+    "openai":     ("OPENAI_API_KEY",     settings.OPENAI_CHAT_MODEL),
     "anthropic":  ("ANTHROPIC_API_KEY",  settings.ANTHROPIC_CHAT_MODEL),
     "google":     ("GOOGLE_API_KEY",     settings.GEMINI_MODEL),
     "groq":       ("GROQ_API_KEY",      settings.GROQ_CHAT_MODEL),
     "mistral":    ("MISTRAL_API_KEY",   settings.MISTRAL_CHAT_MODEL),
+    "cohere":     ("COHERE_API_KEY",    settings.COHERE_CHAT_MODEL),
+    "ollama":     ("", ""),
+    "lmstudio":   ("", ""),
+    "vllm":       ("", ""),
+    "custom":     ("", ""),
 }
 
 current_user_keys: ContextVar[dict] = ContextVar("current_user_keys", default={})
@@ -107,6 +113,10 @@ def get_llm(
 
     logger.info(f"LLM Factory: provider={provider}, model={model or 'default'}, temp={temperature}")
 
+    if provider == "openai":
+        return _build_openai(model, temperature, streaming)
+    elif provider == "anthropic":
+        return _build_anthropic(model, temperature, streaming)
     if provider == "anthropic":
         llm = _build_anthropic(model, temperature, streaming, api_key)
     elif provider == "google":
@@ -114,7 +124,17 @@ def get_llm(
     elif provider == "groq":
         llm = _build_groq(model, temperature, streaming, api_key)
     elif provider == "mistral":
-        llm = _build_mistral(model, temperature, streaming, api_key)
+        return _build_mistral(model, temperature, streaming)
+    elif provider == "cohere":
+        return _build_cohere(model, temperature, streaming)
+    elif provider == "ollama":
+        return _build_ollama(model, temperature, streaming)
+    elif provider == "lmstudio":
+        return _build_lmstudio(model, temperature, streaming)
+    elif provider == "vllm":
+        return _build_vllm(model, temperature, streaming)
+    elif provider == "custom":
+        return _build_custom(model, temperature, streaming)
     else:
         raise ValueError(f"Unknown LLM provider: '{provider}'. "
                          f"Supported: {', '.join(PROVIDER_MODEL_MAP)}")
@@ -130,6 +150,8 @@ def _resolve_provider(provider: str, model: str) -> str:
     if not model:
         return settings.DEFAULT_LLM_PROVIDER
     model_lower = model.lower()
+    if model_lower.startswith("gpt") or model_lower.startswith("o1"):
+        return "openai"
     if model_lower.startswith("claude"):
         return "anthropic"
     if model_lower.startswith("gemini"):
@@ -138,6 +160,8 @@ def _resolve_provider(provider: str, model: str) -> str:
         return "groq"
     if model_lower.startswith("mistral"):
         return "mistral"
+    if model_lower.startswith("command"):
+        return "cohere"
     return settings.DEFAULT_LLM_PROVIDER
 
 
@@ -153,6 +177,18 @@ def _require_api_key(env_var: str, provider_name: str, api_key: Optional[str] = 
     return key
 
 
+def _build_openai(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_openai import ChatOpenAI
+    api_key = _require_api_key("OPENAI_API_KEY", "OpenAI")
+    return ChatOpenAI(
+        model=model or settings.OPENAI_CHAT_MODEL,
+        temperature=temperature,
+        streaming=streaming,
+        api_key=api_key,
+    )
+
+
+def _build_anthropic(model: str, temperature: float, streaming: bool) -> BaseChatModel:
 def _build_anthropic(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_anthropic import ChatAnthropic
     key = _require_api_key("ANTHROPIC_API_KEY", "Anthropic", api_key)
@@ -199,14 +235,81 @@ def _build_mistral(model: str, temperature: float, streaming: bool, api_key: Opt
     )
 
 
+def _build_cohere(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_cohere import ChatCohere
+    api_key = _require_api_key("COHERE_API_KEY", "Cohere")
+    return ChatCohere(
+        model=model or settings.COHERE_CHAT_MODEL,
+        temperature=temperature,
+        streaming=streaming,
+        cohere_api_key=api_key,
+    )
+
+
+def _build_ollama(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_openai import ChatOpenAI
+    base_url = settings.OLLAMA_ENDPOINT
+    if not base_url.endswith("/v1"):
+        base_url = f"{base_url.rstrip('/')}/v1"
+    return ChatOpenAI(
+        model=model or "llama3.2",
+        temperature=temperature,
+        streaming=streaming,
+        base_url=base_url,
+        api_key="ollama",
+    )
+
+
+def _build_lmstudio(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_openai import ChatOpenAI
+    base_url = settings.LMSTUDIO_ENDPOINT
+    return ChatOpenAI(
+        model=model or "any-gguf-model",
+        temperature=temperature,
+        streaming=streaming,
+        base_url=base_url,
+        api_key="lmstudio",
+    )
+
+
+def _build_vllm(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_openai import ChatOpenAI
+    base_url = settings.VLLM_ENDPOINT
+    return ChatOpenAI(
+        model=model or "any-huggingface-model",
+        temperature=temperature,
+        streaming=streaming,
+        base_url=base_url,
+        api_key="vllm",
+    )
+
+
+def _build_custom(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+    from langchain_openai import ChatOpenAI
+    base_url = settings.CUSTOM_ENDPOINT
+    return ChatOpenAI(
+        model=model or "custom",
+        temperature=temperature,
+        streaming=streaming,
+        base_url=base_url,
+        api_key="custom",
+    )
+
+
 
 def get_available_providers() -> dict:
     """Return which providers are configured (have API keys set)."""
     return {
+        "openai":    bool(settings.OPENAI_API_KEY),
         "anthropic": bool(settings.ANTHROPIC_API_KEY),
         "google":    bool(settings.GOOGLE_API_KEY),
         "groq":      bool(settings.GROQ_API_KEY),
         "mistral":   bool(settings.MISTRAL_API_KEY),
+        "cohere":    bool(settings.COHERE_API_KEY),
+        "ollama":    bool(settings.OLLAMA_ENDPOINT),
+        "lmstudio":  bool(settings.LMSTUDIO_ENDPOINT),
+        "vllm":      bool(settings.VLLM_ENDPOINT),
+        "custom":    bool(settings.CUSTOM_ENDPOINT),
     }
 
 
