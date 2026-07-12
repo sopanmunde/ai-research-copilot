@@ -16,6 +16,8 @@ langchain-text-splitters
 langgraph
 
 # ── Multi-LLM Provider Support ─────────────────────────────────────
+langchain-openai
+langchain-cohere
 langchain-anthropic
 langchain-groq
 langchain-mistralai
