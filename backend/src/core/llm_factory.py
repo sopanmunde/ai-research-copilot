@@ -114,27 +114,25 @@ def get_llm(
     logger.info(f"LLM Factory: provider={provider}, model={model or 'default'}, temp={temperature}")
 
     if provider == "openai":
-        return _build_openai(model, temperature, streaming)
+        llm = _build_openai(model, temperature, streaming, api_key)
     elif provider == "anthropic":
-        return _build_anthropic(model, temperature, streaming)
-    if provider == "anthropic":
         llm = _build_anthropic(model, temperature, streaming, api_key)
     elif provider == "google":
         llm = _build_google(model, temperature, streaming, api_key)
     elif provider == "groq":
         llm = _build_groq(model, temperature, streaming, api_key)
     elif provider == "mistral":
-        return _build_mistral(model, temperature, streaming)
+        llm = _build_mistral(model, temperature, streaming, api_key)
     elif provider == "cohere":
-        return _build_cohere(model, temperature, streaming)
+        llm = _build_cohere(model, temperature, streaming, api_key)
     elif provider == "ollama":
-        return _build_ollama(model, temperature, streaming)
+        llm = _build_ollama(model, temperature, streaming, api_key)
     elif provider == "lmstudio":
-        return _build_lmstudio(model, temperature, streaming)
+        llm = _build_lmstudio(model, temperature, streaming, api_key)
     elif provider == "vllm":
-        return _build_vllm(model, temperature, streaming)
+        llm = _build_vllm(model, temperature, streaming, api_key)
     elif provider == "custom":
-        return _build_custom(model, temperature, streaming)
+        llm = _build_custom(model, temperature, streaming, api_key)
     else:
         raise ValueError(f"Unknown LLM provider: '{provider}'. "
                          f"Supported: {', '.join(PROVIDER_MODEL_MAP)}")
@@ -177,18 +175,17 @@ def _require_api_key(env_var: str, provider_name: str, api_key: Optional[str] = 
     return key
 
 
-def _build_openai(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_openai(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
-    api_key = _require_api_key("OPENAI_API_KEY", "OpenAI")
+    key = _require_api_key("OPENAI_API_KEY", "OpenAI", api_key)
     return ChatOpenAI(
         model=model or settings.OPENAI_CHAT_MODEL,
         temperature=temperature,
         streaming=streaming,
-        api_key=api_key,
+        api_key=key,
     )
 
 
-def _build_anthropic(model: str, temperature: float, streaming: bool) -> BaseChatModel:
 def _build_anthropic(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_anthropic import ChatAnthropic
     key = _require_api_key("ANTHROPIC_API_KEY", "Anthropic", api_key)
@@ -235,18 +232,18 @@ def _build_mistral(model: str, temperature: float, streaming: bool, api_key: Opt
     )
 
 
-def _build_cohere(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_cohere(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_cohere import ChatCohere
-    api_key = _require_api_key("COHERE_API_KEY", "Cohere")
+    key = _require_api_key("COHERE_API_KEY", "Cohere", api_key)
     return ChatCohere(
         model=model or settings.COHERE_CHAT_MODEL,
         temperature=temperature,
         streaming=streaming,
-        cohere_api_key=api_key,
+        cohere_api_key=key,
     )
 
 
-def _build_ollama(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_ollama(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
     base_url = settings.OLLAMA_ENDPOINT
     if not base_url.endswith("/v1"):
@@ -256,11 +253,11 @@ def _build_ollama(model: str, temperature: float, streaming: bool) -> BaseChatMo
         temperature=temperature,
         streaming=streaming,
         base_url=base_url,
-        api_key="ollama",
+        api_key=api_key or "ollama",
     )
 
 
-def _build_lmstudio(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_lmstudio(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
     base_url = settings.LMSTUDIO_ENDPOINT
     return ChatOpenAI(
@@ -268,11 +265,11 @@ def _build_lmstudio(model: str, temperature: float, streaming: bool) -> BaseChat
         temperature=temperature,
         streaming=streaming,
         base_url=base_url,
-        api_key="lmstudio",
+        api_key=api_key or "lmstudio",
     )
 
 
-def _build_vllm(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_vllm(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
     base_url = settings.VLLM_ENDPOINT
     return ChatOpenAI(
@@ -280,11 +277,11 @@ def _build_vllm(model: str, temperature: float, streaming: bool) -> BaseChatMode
         temperature=temperature,
         streaming=streaming,
         base_url=base_url,
-        api_key="vllm",
+        api_key=api_key or "vllm",
     )
 
 
-def _build_custom(model: str, temperature: float, streaming: bool) -> BaseChatModel:
+def _build_custom(model: str, temperature: float, streaming: bool, api_key: Optional[str] = None) -> BaseChatModel:
     from langchain_openai import ChatOpenAI
     base_url = settings.CUSTOM_ENDPOINT
     return ChatOpenAI(
@@ -292,8 +289,9 @@ def _build_custom(model: str, temperature: float, streaming: bool) -> BaseChatMo
         temperature=temperature,
         streaming=streaming,
         base_url=base_url,
-        api_key="custom",
+        api_key=api_key or "custom",
     )
+
 
 
 
