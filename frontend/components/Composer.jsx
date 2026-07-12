@@ -8,7 +8,7 @@ import {
   FlaskConical, Zap, Check, BrainCircuit,
   FileText, FileType, FileSpreadsheet, FileCode, FileJson,
   Archive, File as FileIcon, X, Presentation,
-  Bot, Globe, BookOpen, Palette, ArrowUp, Calendar,
+  Bot, Globe, BookOpen, Palette, ArrowUp, Calendar, Sliders, CheckSquare, Mail, FolderHeart, Cpu, Plug, Terminal, Code
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ComposerActionsPopover from "./ComposerActionsPopover";
@@ -95,13 +95,330 @@ function getActionIcon(action) {
   return null;
 }
 
-const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "research", selectedBot = "Fast" }, ref) {
+const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "research", selectedBot = "Fast", onNavigateTo, onAddNewSkill }, ref) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [mode, setMode] = useState(defaultMode);
   const [activeAction, setActiveAction] = useState(null);
+
+  const [integrationsList, setIntegrationsList] = useState(null);
+  const [selectedFeatures, setSelectedFeatures] = useState([]);
+
+  useEffect(() => {
+    const fetchList = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE_URL}/integrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIntegrationsList(data);
+        }
+      } catch (e) {
+        console.error("Failed to load integrations for slash command", e);
+      }
+    };
+    fetchList();
+  }, []);
+
+  const CORE_APPS = [
+    { id: "app:tasks", label: "Tasks Context", category: "Apps & Context", icon: CheckSquare },
+    { id: "app:calendar", label: "Calendar Agenda", category: "Apps & Context", icon: Calendar },
+    { id: "app:email", label: "Email Gateway", category: "Apps & Context", icon: Mail },
+    { id: "app:gallery", label: "Gallery Docs", category: "Apps & Context", icon: FolderHeart },
+    { id: "app:notes", label: "Notes Notion", category: "Apps & Context", icon: FileText }
+  ];
+
+  const EXTENSION_FEATURES = [
+    { id: "lsp:lsp", label: "LSP Engine", category: "Agent Protocols", icon: Code },
+    { id: "acp:acp", label: "ACP Copilot", category: "Agent Protocols", icon: Terminal }
+  ];
+
+  const dynamicSkills = (integrationsList?.skills || []).map((s) => ({
+    id: `skill:${s.id}`,
+    label: `Skill: ${s.name}`,
+    category: "Custom Skills",
+    icon: Cpu
+  }));
+
+  const dynamicMcps = (integrationsList?.mcp_plugins || []).map((m) => ({
+    id: `mcp:${m.id}`,
+    label: `MCP: ${m.name}`,
+    category: "MCP Plugins",
+    icon: Plug
+  }));
+
+  const allAvailableFeatures = [
+    ...CORE_APPS,
+    ...dynamicSkills,
+    ...dynamicMcps,
+    ...EXTENSION_FEATURES
+  ];
+
+  const getSlashModeAndQuery = (text) => {
+    const lastSpaceIdx = Math.max(text.lastIndexOf(" "), text.lastIndexOf("\n"));
+    const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+    
+    // The word must start with "/"
+    if (text[wordStart] !== "/") return { mode: null, query: null };
+    
+    const commandWord = text.slice(wordStart);
+    
+    // Check for prefixes with trailing slash
+    const prefixes = ["/skills/", "/tasks/", "/gallery/", "/docs/", "/email/", "/notes/", "/mcp/", "/lsp/", "/acp/"];
+    for (const prefix of prefixes) {
+      if (commandWord.toLowerCase().startsWith(prefix)) {
+        const query = commandWord.slice(prefix.length);
+        if (query.includes("/")) return { mode: null, query: null }; // no double nested sub-slashes
+        return { mode: prefix.slice(1, -1), query: query.toLowerCase() };
+      }
+    }
+    
+    // Otherwise, we are in root mode, query is the text after the initial slash
+    const query = commandWord.slice(1);
+    if (query.includes("/")) return { mode: null, query: null };
+    return { mode: "root", query: query.toLowerCase() };
+  };
+
+  const { mode: slashMode, query: slashQuery } = getSlashModeAndQuery(value);
+  const showCommandPopup = slashMode !== null;
+
+  // States for sub-menus lazy loading
+  const [subMenuData, setSubMenuData] = useState({
+    tasks: [],
+    gallery: [],
+    email: [],
+    notes: []
+  });
+  const [loadingSubMenu, setLoadingSubMenu] = useState(false);
+
+
+  useEffect(() => {
+    if (!slashMode) return;
+    const fetchSubMenu = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      try {
+        setLoadingSubMenu(true);
+        if (slashMode === "tasks" && subMenuData.tasks.length === 0) {
+          const res = await fetch(`${API_BASE_URL}/tasks`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setSubMenuData(prev => ({ ...prev, tasks: data }));
+          }
+        } else if ((slashMode === "gallery" || slashMode === "docs") && subMenuData.gallery.length === 0) {
+          const res = await fetch(`${API_BASE_URL}/documents`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setSubMenuData(prev => ({ ...prev, gallery: data }));
+          }
+        } else if (slashMode === "email" && subMenuData.email.length === 0) {
+          const res = await fetch(`${API_BASE_URL}/emails`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setSubMenuData(prev => ({ ...prev, email: data }));
+          }
+        } else if (slashMode === "notes" && subMenuData.notes.length === 0) {
+          const res = await fetch(`${API_BASE_URL}/notes`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setSubMenuData(prev => ({ ...prev, notes: data }));
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to load ${slashMode} data for sub-menu`, err);
+      } finally {
+        setLoadingSubMenu(false);
+      }
+    };
+    
+    if (["tasks", "gallery", "docs", "email", "notes"].includes(slashMode)) {
+      fetchSubMenu();
+    }
+  }, [slashMode]);
+
+  const ROOT_COMMANDS = [
+    { id: "category:skills", label: "/skills/", subtitle: "Reference dynamic skills context", icon: Cpu, isFolder: true },
+    { id: "category:tasks", label: "/tasks/", subtitle: "Reference existing tasks from dashboard", icon: CheckSquare, isFolder: true },
+    { id: "category:gallery", label: "/gallery/", subtitle: "Reference uploaded documents & files", icon: FolderHeart, isFolder: true },
+    { id: "category:email", label: "/email/", subtitle: "Reference email correspondence", icon: Mail, isFolder: true },
+    { id: "category:notes", label: "/notes/", subtitle: "Reference workspace notepad entries", icon: FileText, isFolder: true },
+    { id: "category:mcp", label: "/mcp/", subtitle: "Reference Model Context Protocol tools", icon: Plug, isFolder: true },
+    { id: "category:lsp", label: "/lsp/", subtitle: "Configure Language Server Protocol options", icon: Code, isFolder: true },
+    { id: "category:acp", label: "/acp/", subtitle: "Configure Agentic Copilot Protocols", icon: Terminal, isFolder: true }
+  ];
+
+  const getSubMenuFeatures = () => {
+    if (slashMode === "root") {
+      return ROOT_COMMANDS;
+    }
+    if (slashMode === "tasks") {
+      return [
+        { id: "action:tasks", label: "+ Add New Task", category: "Tasks Database", icon: Plus },
+        ...subMenuData.tasks.map(t => ({
+          id: `task:${t.id}`,
+          label: t.title,
+          category: "Tasks Database",
+          icon: CheckSquare
+        }))
+      ];
+    }
+    if (slashMode === "gallery" || slashMode === "docs") {
+      return [
+        { id: "action:gallery", label: "+ Upload New Document", category: "Gallery Files", icon: Plus },
+        ...subMenuData.gallery.map(d => ({
+          id: `gallery:${d.id}`,
+          label: d.name || d.filename,
+          category: "Gallery Files",
+          icon: FolderHeart
+        }))
+      ];
+    }
+    if (slashMode === "email") {
+      return [
+        { id: "action:email", label: "+ Compose New Email", category: "Emails Inbox", icon: Plus },
+        ...subMenuData.email.map(e => ({
+          id: `email:${e.id}`,
+          label: e.subject || "No Subject",
+          category: "Emails Inbox",
+          icon: Mail
+        }))
+      ];
+    }
+    if (slashMode === "notes") {
+      return [
+        { id: "action:notes", label: "+ Create New Note", category: "Workspace Notes", icon: Plus },
+        ...subMenuData.notes.map(n => ({
+          id: `notes:${n.id}`,
+          label: n.title || "Untitled Note",
+          category: "Workspace Notes",
+          icon: FileText
+        }))
+      ];
+    }
+    if (slashMode === "skills") {
+      return [
+        { id: "action:skills", label: "+ Add New Skill", category: "Skills Configurations", icon: Plus },
+        ...(integrationsList?.skills || []).map(s => ({
+          id: `skill:${s.id}`,
+          label: s.name,
+          category: "Skills Configurations",
+          icon: Cpu
+        }))
+      ];
+    }
+    if (slashMode === "mcp") {
+      return [
+        { id: "action:mcp", label: "+ Register New MCP Server", category: "MCP Servers", icon: Plus },
+        ...(integrationsList?.mcp_plugins || []).map(m => ({
+          id: `mcp:${m.id}`,
+          label: m.name,
+          category: "MCP Servers",
+          icon: Plug
+        }))
+      ];
+    }
+    if (slashMode === "lsp") {
+      return (integrationsList?.lsp?.servers || []).map(s => ({
+        id: `lsp:${s.language}`,
+        label: `${s.language} LSP`,
+        category: "LSP Servers",
+        icon: Code
+      }));
+    }
+    if (slashMode === "acp") {
+      return [
+        { id: "acp:autocomplete", label: "Agentic Autopilot", category: "ACP Tools", icon: Terminal }
+      ];
+    }
+    return [];
+  };
+
+  const filteredFeatures = getSubMenuFeatures().filter((f) =>
+    !slashQuery || f.label.toLowerCase().includes(slashQuery)
+  );
+
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  useEffect(() => {
+    if (showCommandPopup) {
+      setHighlightedIndex(0);
+    }
+  }, [showCommandPopup, filteredFeatures.length]);
+
+  const handleToggleFeature = (feat) => {
+    // Format label to show categories properly in pills
+    let prefix = "";
+    if (feat.id.startsWith("task:")) prefix = "Task: ";
+    else if (feat.id.startsWith("gallery:")) prefix = "Doc: ";
+    else if (feat.id.startsWith("email:")) prefix = "Email: ";
+    else if (feat.id.startsWith("notes:")) prefix = "Note: ";
+    else if (feat.id.startsWith("skill:")) prefix = "Skill: ";
+    else if (feat.id.startsWith("mcp:")) prefix = "MCP: ";
+    else if (feat.id.startsWith("lsp:")) prefix = "LSP: ";
+    else if (feat.id.startsWith("acp:")) prefix = "ACP: ";
+
+    const displayFeature = {
+      ...feat,
+      label: feat.label.startsWith(prefix) ? feat.label : `${prefix}${feat.label}`
+    };
+
+    setSelectedFeatures((prev) => {
+      const exists = prev.some((x) => x.id === displayFeature.id);
+      if (exists) {
+        return prev.filter((x) => x.id !== displayFeature.id);
+      } else {
+        return [...prev, displayFeature];
+      }
+    });
+
+    // Clear command input from text area relative to word start
+    setValue((prev) => {
+      const lastSpaceIdx = Math.max(prev.lastIndexOf(" "), prev.lastIndexOf("\n"));
+      const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+      return prev.slice(0, wordStart);
+    });
+
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleItemClick = (feat) => {
+    if (feat.id && feat.id.startsWith("action:")) {
+      const featId = feat.id;
+      if (featId === "action:skills" || featId === "action:mcp") {
+        onAddNewSkill?.();
+      } else if (featId === "action:tasks") {
+        onNavigateTo?.("tasks");
+      } else if (featId === "action:email") {
+        onNavigateTo?.("email");
+      } else if (featId === "action:notes") {
+        onNavigateTo?.("notes");
+      } else if (featId === "action:gallery") {
+        onNavigateTo?.("docs");
+      }
+
+      // Close popup by clearing command input
+      setValue((prev) => {
+        const lastSpaceIdx = Math.max(prev.lastIndexOf(" "), prev.lastIndexOf("\n"));
+        const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+        return prev.slice(0, wordStart);
+      });
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else if (feat.isFolder) {
+      setValue((prev) => {
+        const lastSpaceIdx = Math.max(prev.lastIndexOf(" "), prev.lastIndexOf("\n"));
+        const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+        return prev.slice(0, wordStart) + feat.label;
+      });
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
+      handleToggleFeature(feat);
+    }
+  };
   const [attachedFile, setAttachedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef(null);
@@ -175,14 +492,24 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     const text = value.trim();
     const currentMode = mode;
     const fileRef = attachedFile ? { name: attachedFile.name } : null;
+
+    const activeFeatures = {
+      apps: selectedFeatures.filter(f => f.id.startsWith("app:")).map(f => f.id.split(":")[1]),
+      skills: selectedFeatures.filter(f => f.id.startsWith("skill:")).map(f => f.id.split(":")[1]),
+      mcp_plugins: selectedFeatures.filter(f => f.id.startsWith("mcp:")).map(f => f.id.split(":")[1]),
+      lsp: selectedFeatures.some(f => f.id === "lsp:lsp"),
+      acp: selectedFeatures.some(f => f.id === "acp:acp")
+    };
+
     setValue("");
     setAttachedFile(null);
+    setSelectedFeatures([]);
     setSending(true);
-    try { await onSend?.(text, currentMode, fileRef); } finally { setSending(false); }
-  }, [busy, hasContent, uploading, value, mode, attachedFile, onSend]);
+    try { await onSend?.(text, currentMode, fileRef, activeFeatures); } finally { setSending(false); }
+  }, [busy, hasContent, uploading, value, mode, attachedFile, onSend, selectedFeatures]);
 
   return (
-    <div className="px-3 pb-2 pt-1">
+    <div className="px-3 pb-2 pt-1 relative">
       {/* Active action badge above composer */}
       <AnimatePresence>
         {activeAction && (
@@ -207,10 +534,114 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         )}
       </AnimatePresence>
 
+      {/* Command Popup Dropdown */}
+      <AnimatePresence>
+        {showCommandPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            className="absolute bottom-full mb-3 left-4 right-4 sm:right-auto sm:left-4 sm:w-[320px] bg-white/95 dark:bg-[#0C0C0D]/95 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl backdrop-blur-md z-50 p-2 max-h-[300px] overflow-y-auto scrollbar-thin flex flex-col gap-1.5"
+          >
+            {loadingSubMenu && (
+              <div className="flex items-center justify-center py-6 gap-2 text-zinc-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-[10px] font-mono leading-none">Loading dashboard data...</span>
+              </div>
+            )}
+            
+            {!loadingSubMenu && filteredFeatures.length === 0 ? (
+              <p className="text-[11px] text-zinc-500 text-center py-4">No matching items found.</p>
+            ) : !loadingSubMenu && (
+              Object.entries(
+                filteredFeatures.reduce((acc, feat) => {
+                  if (!acc[feat.category]) acc[feat.category] = [];
+                  acc[feat.category].push(feat);
+                  return acc;
+                }, {})
+              ).map(([cat, feats]) => (
+                <div key={cat} className="space-y-1">
+                  {cat !== "undefined" && cat !== "null" && cat !== "" && (
+                    <span className="block text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500/85 px-2 pt-1.5">{cat}</span>
+                  )}
+                  <div className="space-y-0.5">
+                    {feats.map((feat) => {
+                      const Icon = feat.icon;
+                      const isChecked = selectedFeatures.some(x => x.id === feat.id);
+                      const isHighlighted = filteredFeatures[highlightedIndex]?.id === feat.id;
+                      return (
+                        <div
+                          key={feat.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleItemClick(feat);
+                          }}
+                          className={cn(
+                            "flex items-center justify-between gap-2.5 rounded-lg px-2 py-1.5 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer select-none transition-colors border border-transparent",
+                            isChecked && "bg-primary/5 text-primary hover:bg-primary/10",
+                            isHighlighted && "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-zinc-50 font-semibold"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon className="h-4 w-4 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate leading-none font-semibold text-zinc-900 dark:text-zinc-100">{feat.label}</span>
+                            </div>
+                          </div>
+                          {feat.isFolder ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 shrink-0">
+                              <path d="m9 18 6-6-6-6"/>
+                            </svg>
+                          ) : feat.id && feat.id.startsWith("action:") ? (
+                            <Plus className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {}}
+                              className="accent-primary h-3.5 w-3.5 rounded shrink-0 cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className={cn(
         "mx-auto max-w-3xl rounded-2xl border bg-white dark:bg-[#0B0B0C] border-zinc-200 dark:border-zinc-800/80 shadow-sm transition-all duration-200",
         isFocused && "border-zinc-300 dark:border-zinc-700"
       )}>
+        {/* Selected Command Features Row */}
+        {selectedFeatures.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 px-4 pt-2.5">
+            {selectedFeatures.map((feat) => {
+              const Icon = feat.icon;
+              return (
+                <Badge
+                  key={feat.id}
+                  variant="secondary"
+                  className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] bg-primary/10 border border-primary/20 text-primary font-bold rounded-full leading-none shrink-0"
+                >
+                  <Icon className="h-2.5 w-2.5 mr-0.5 shrink-0" />
+                  <span>{feat.label}</span>
+                  <button
+                    onClick={() => setSelectedFeatures((prev) => prev.filter((f) => f.id !== feat.id))}
+                    className="ml-1 hover:text-red-500 transition-colors shrink-0 cursor-pointer"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </Badge>
+              );
+            })}
+          </div>
+        )}
+
         {/* Attached file row (only visible when file attached) */}
         <AnimatePresence>
           {attachedFile && (
@@ -233,7 +664,34 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
             placeholder={`Message ${selectedBot || "TriVisionX"} ...`} rows={1}
             className="w-full resize-none bg-transparent text-[14.5px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+            onKeyDown={(e) => {
+              if (showCommandPopup) {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedIndex((prev) => (filteredFeatures.length > 0 ? (prev + 1) % filteredFeatures.length : 0));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedIndex((prev) => (filteredFeatures.length > 0 ? (prev - 1 + filteredFeatures.length) % filteredFeatures.length : 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (filteredFeatures[highlightedIndex]) {
+                    handleItemClick(filteredFeatures[highlightedIndex]);
+                  }
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  setValue((prev) => {
+                    const lastSpaceIdx = Math.max(prev.lastIndexOf(" "), prev.lastIndexOf("\n"));
+                    const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+                    return prev.slice(0, wordStart);
+                  });
+                }
+              } else {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }
+            }}
           />
         </div>
 

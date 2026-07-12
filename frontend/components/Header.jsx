@@ -7,6 +7,7 @@ import {
   BrainCircuit,
   Bot,
   Check,
+  Sliders,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ export default function Header({
   setSidebarOpen,
   selectedBot,
   setSelectedBot,
+  onToggleIntegrations,
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot) || CHATBOTS[0];
 
@@ -123,8 +125,18 @@ export default function Header({
         </button>
       </div>
 
-      {/* Right side spacer to keep Center Group aligned */}
-      <div className="w-8" />
+      {/* Right side settings/integrations trigger */}
+      <div className="flex items-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onToggleIntegrations}
+          className="h-8 w-8 rounded-lg p-0 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-900 shadow-xs cursor-pointer flex items-center justify-center transition-all"
+          title="Integrations & Agent Extensions"
+        >
+          <Sliders className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

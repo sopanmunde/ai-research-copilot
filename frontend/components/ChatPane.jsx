@@ -158,6 +158,8 @@ const ChatPane = forwardRef(function ChatPane(
     onDismissProviderSwitch,
     selectedBot,
     user,
+    onNavigateTo,
+    onAddNewSkill,
   },
   ref,
 ) {
@@ -309,18 +311,20 @@ const ChatPane = forwardRef(function ChatPane(
               <div className="w-full relative z-10">
                 <Composer
                   ref={composerRef}
-                  onSend={async (text, mode, fileRef) => {
+                  onSend={async (text, mode, fileRef, activeFeatures) => {
                     if (isThinking || isResponding || busy) {
                       onPauseThinking?.();
                       return;
                     }
                     if (!text.trim() && !fileRef) return;
                     setBusy(true);
-                    await onSend?.(text, mode, fileRef);
+                    await onSend?.(text, mode, fileRef, activeFeatures);
                     setBusy(false);
                   }}
                   busy={busy || isThinking || isResponding}
                   selectedBot={selectedBot}
+                  onNavigateTo={onNavigateTo}
+                  onAddNewSkill={onAddNewSkill}
                 />
               </div>
 
@@ -588,18 +592,20 @@ const ChatPane = forwardRef(function ChatPane(
           <div className="relative z-10">
             <Composer
               ref={composerRef}
-              onSend={async (text, mode, fileRef) => {
+              onSend={async (text, mode, fileRef, activeFeatures) => {
                 if (isThinking || isResponding || busy) {
                   onPauseThinking?.();
                   return;
                 }
                 if (!text.trim() && !fileRef) return;
                 setBusy(true);
-                await onSend?.(text, mode, fileRef);
+                await onSend?.(text, mode, fileRef, activeFeatures);
                 setBusy(false);
               }}
               busy={busy || isThinking || isResponding}
               selectedBot={selectedBot}
+              onNavigateTo={onNavigateTo}
+              onAddNewSkill={onAddNewSkill}
             />
           </div>
 
