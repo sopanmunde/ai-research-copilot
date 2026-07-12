@@ -107,3 +107,44 @@ async def clear_messages(request: Request, current_user=Depends(get_current_user
     user_id = str(current_user["_id"])
     await clear_playground_messages_db(user_id)
     return {"message": "Chat history cleared successfully"}
+
+
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from typing import Optional
+from src.services.chat_service import stream_playground_completion
+
+class PlaygroundCompletionRequest(BaseModel):
+    provider: str
+    model: str
+    messages: List[Dict]
+    temperature: float = 0.7
+    max_tokens: int = 2048
+    system_prompt: Optional[str] = None
+
+
+@router.post("/playground/completion")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def playground_completion(
+    request: Request,
+    req_data: PlaygroundCompletionRequest,
+    current_user=Depends(get_current_user),
+):
+    """Securely streams completion for playground chat sandbox using custom settings and user credentials."""
+    user_id = str(current_user["_id"])
+    return StreamingResponse(
+        stream_playground_completion(
+            provider=req_data.provider,
+            model=req_data.model,
+            messages=req_data.messages,
+            temperature=req_data.temperature,
+            max_tokens=req_data.max_tokens,
+            system_prompt=req_data.system_prompt,
+            user_id=user_id,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )

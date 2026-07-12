@@ -140,6 +140,7 @@ export function Hero() {
           hideTrigger={true}
           isOpen={isVideoOpen}
           onOpenChange={setIsVideoOpen}
+          videoSrc="https://youtu.be/yVSE9QFFcTU"
         />
 
         {/* Social Proof */}

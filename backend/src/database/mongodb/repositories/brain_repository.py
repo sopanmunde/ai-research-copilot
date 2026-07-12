@@ -225,3 +225,13 @@ async def clear_playground_messages_db(user_id: str) -> bool:
     """Clears all playground sandbox chat messages for the user."""
     result = await _db()[COLLECTION_PLAYGROUND_MESSAGES].delete_many({"user_id": user_id})
     return True
+
+
+async def get_active_user_key(user_id: str, provider_id: str) -> Optional[str]:
+    """Retrieves the active API key for a given user and provider from MongoDB."""
+    doc = await _db()[COLLECTION_API_KEYS].find_one({
+        "user_id": user_id,
+        "providerId": provider_id,
+        "isActive": True
+    })
+    return doc.get("key") if doc else None

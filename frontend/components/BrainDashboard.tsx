@@ -457,7 +457,7 @@ export function BrainDashboard() {
     }, intervalTime);
   };
 
-  // Playground Chat Simulation
+  // Playground Chat - Real Functional Streaming
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isGenerating) return;
     const userPrompt = inputMessage.trim();
@@ -465,6 +465,7 @@ export function BrainDashboard() {
 
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg = { role: "user" as const, content: userPrompt, timestamp };
+    let currentChatHistory = [...chatMessages];
 
     try {
       const token = localStorage.getItem("token");
@@ -481,57 +482,147 @@ export function BrainDashboard() {
       });
       if (resUser.ok) {
         const savedUserMsg = await resUser.json();
-        setChatMessages((prev) => [...prev, savedUserMsg]);
+        currentChatHistory = [...chatMessages, savedUserMsg];
+        setChatMessages(currentChatHistory);
+      } else {
+        currentChatHistory = [...chatMessages, userMsg];
+        setChatMessages(currentChatHistory);
       }
     } catch (e) {
       console.error(e);
+      currentChatHistory = [...chatMessages, userMsg];
+      setChatMessages(currentChatHistory);
     }
 
     setIsGenerating(true);
-
-    const providerResponses = SIMULATED_RESPONSES[provider.id] || SIMULATED_RESPONSES.general;
-    const fullResponseTemplate = providerResponses[Math.floor(Math.random() * providerResponses.length)];
-    const fullResponse = fullResponseTemplate
-      .replace("{model}", selectedModel)
-      .replace("{temp}", String(temperature))
-      .replace("{maxTokens}", String(maxTokens));
-
-    let index = 0;
     setStreamedText("");
-    
-    const interval = setInterval(() => {
-      index += Math.max(1, Math.floor(Math.random() * 4));
-      setStreamedText(fullResponse.slice(0, index));
-      if (index >= fullResponse.length) {
-        clearInterval(interval);
-        
-        const assistantMsg = { 
-          role: "assistant" as const, 
-          content: fullResponse, 
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          modelUsed: selectedModel 
-        };
 
-        // Save Assistant Message to DB
-        const token = localStorage.getItem("token");
-        fetch(`${API_BASE_URL}/brain/playground/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(assistantMsg)
-        }).then(async (res) => {
-          if (res.ok) {
-            const savedAssistantMsg = await res.json();
-            setChatMessages(prev => [...prev, savedAssistantMsg]);
-          }
-        }).catch(err => console.error(err));
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Convert history to payload schema
+      const messagesPayload = currentChatHistory.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
 
-        setStreamedText("");
-        setIsGenerating(false);
+      const res = await fetch(`${API_BASE_URL}/brain/playground/completion`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          provider: provider.id,
+          model: selectedModel,
+          messages: messagesPayload,
+          temperature,
+          max_tokens: maxTokens,
+          system_prompt: systemPrompt
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Playground request failed");
       }
-    }, 20);
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body reader available");
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let accumulatedText = "";
+      let buffer = "";
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const cleanLine = line.trim();
+            if (!cleanLine.startsWith("data: ")) continue;
+
+            const jsonStr = cleanLine.slice(6);
+            try {
+              const parsed = JSON.parse(jsonStr);
+              if (parsed.type === "token" && parsed.data) {
+                accumulatedText += parsed.data;
+                setStreamedText(accumulatedText);
+              } else if (parsed.type === "error") {
+                throw new Error(parsed.data || "In-stream error occurred");
+              } else if (parsed.done) {
+                done = true;
+                break;
+              }
+            } catch (jsonErr) {
+              // Ignore partial chunk syntax errors
+            }
+          }
+        }
+      }
+
+      const assistantMsg = { 
+        role: "assistant" as const, 
+        content: accumulatedText, 
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        modelUsed: selectedModel 
+      };
+
+      // Save Assistant Message to DB
+      const resAssistant = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(assistantMsg)
+      });
+
+      if (resAssistant.ok) {
+        const savedAssistantMsg = await resAssistant.json();
+        setChatMessages(prev => [...prev, savedAssistantMsg]);
+      } else {
+        setChatMessages(prev => [...prev, assistantMsg]);
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to generate playground completion");
+      
+      const errorMsg = {
+        role: "assistant" as const,
+        content: `Error: ${err.message || "Could not connect to the model."}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setChatMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setStreamedText("");
+      setIsGenerating(false);
+    }
+  };
+
+  const clearPlaygroundLogs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        setChatMessages([{ role: "assistant", content: "Playground console cleared.", timestamp: "Just now" }]);
+        toast.success("Playground history cleared successfully");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to clear playground history");
+    }
   };
 
   const saveKey = async () => {
@@ -1253,7 +1344,7 @@ export function BrainDashboard() {
                     <span>Press Enter to send. Playground utilizes configured Temperature, System Prompt, and Parameters.</span>
                     <button
                       className="hover:text-foreground underline transition-colors"
-                      onClick={() => setChatMessages([{ role: "assistant", content: "Playground console cleared.", timestamp: "Just now" }])}
+                      onClick={clearPlaygroundLogs}
                     >
                       Clear Playground Logs
                     </button>
