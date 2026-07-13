@@ -148,3 +148,104 @@ async def playground_completion(
             "Connection": "keep-alive",
         }
     )
+
+
+@router.post("/providers/{provider_id}/ping")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def ping_provider(
+    request: Request,
+    provider_id: str,
+    current_user=Depends(get_current_user),
+):
+    """Real connection ping. Instantiates the LLM and runs a quick probe."""
+    import time
+    from src.core.llm_factory import get_llm, current_user_keys
+    from src.database.mongodb.repositories.brain_repository import get_user_keys
+    
+    user_id = str(current_user["_id"])
+    
+    try:
+        user_keys_list = await get_user_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
+        current_user_keys.set(keys_dict)
+        
+        llm = get_llm(
+            provider=provider_id,
+            temperature=0.0,
+            streaming=False,
+        )
+        
+        if hasattr(llm, "timeout"):
+            try:
+                llm.timeout = 5.0
+            except Exception:
+                pass
+        
+        start_time = time.monotonic()
+        await llm.ainvoke("say ping")
+        latency_ms = int((time.monotonic() - start_time) * 1000)
+        
+        return {"status": "connected", "latency": latency_ms}
+    except Exception as e:
+        logger.error(f"Ping failed for provider {provider_id}: {e}")
+        return {"status": "error", "detail": str(e)}
+
+
+@router.post("/providers/{provider_id}/benchmark")
+@limiter.limit(RATE_LIMIT_DEFAULT)
+async def benchmark_provider(
+    request: Request,
+    provider_id: str,
+    current_user=Depends(get_current_user),
+):
+    """Runs a real latency and throughput speed test using a small sample prompt."""
+    import time
+    from src.core.llm_factory import get_llm, current_user_keys
+    from src.database.mongodb.repositories.brain_repository import get_user_keys, update_provider_db
+    
+    user_id = str(current_user["_id"])
+    
+    try:
+        user_keys_list = await get_user_keys(user_id)
+        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
+        current_user_keys.set(keys_dict)
+        
+        llm = get_llm(
+            provider=provider_id,
+            temperature=0.2,
+            streaming=True,
+        )
+        
+        prompt = "Write a 3-sentence description of the solar system."
+        
+        start_time = time.monotonic()
+        ttft = None
+        token_count = 0
+        
+        async for chunk in llm.astream(prompt):
+            if ttft is None:
+                ttft = int((time.monotonic() - start_time) * 1000)
+            if hasattr(chunk, "content") and chunk.content:
+                txt = chunk.content
+                token_count += len(txt.split()) + 1
+        
+        total_time = time.monotonic() - start_time
+        if total_time <= 0:
+            total_time = 0.01
+            
+        tokens_per_sec = int(token_count / total_time)
+        latency = ttft if ttft is not None else int(total_time * 1000)
+        latency = max(1, latency)
+        
+        await update_provider_db(user_id, provider_id, {
+            "latency": latency,
+            "tokensPerSec": tokens_per_sec
+        })
+        
+        return {"latency": latency, "tokensPerSec": tokens_per_sec}
+    except Exception as e:
+        logger.error(f"Benchmark failed for provider {provider_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Benchmark speed test failed: {str(e)}"
+        )

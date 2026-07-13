@@ -17,7 +17,9 @@ def clean_doc(doc: Dict) -> Dict:
     if not doc:
         return doc
     if "_id" in doc:
-        doc["id"] = str(doc.pop("_id"))
+        val = str(doc.pop("_id"))
+        if "id" not in doc:
+            doc["id"] = val
     return doc
 
 
@@ -112,8 +114,14 @@ async def update_provider_db(user_id: str, provider_id: str, updates: Dict) -> O
 
     # If setting isActive to True, optionally deactivate others in the same category/type?
     # Actually let the frontend dictate it, but let's update this record:
+    query = {"user_id": user_id}
+    try:
+        query["_id"] = ObjectId(provider_id)
+    except Exception:
+        query["id"] = provider_id
+
     result = await _db()[COLLECTION_PROVIDERS].find_one_and_update(
-        {"user_id": user_id, "id": provider_id},
+        query,
         {"$set": update_payload},
         return_document=True
     )

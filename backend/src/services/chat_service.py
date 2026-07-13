@@ -50,6 +50,40 @@ async def signal_sse_shutdown():
     logger.info(f"Signaling {len(active_queues)} active SSE streams of shutdown...")
     for q in list(active_queues):
         await q.put("server_shutdown")
+async def record_token_usage(user_id: str, provider_id: str, prompt: str, completion: str):
+    try:
+        prompt_tokens = max(1, int(len(prompt) / 4))
+        completion_tokens = max(1, int(len(completion) / 4))
+        
+        # pricing rates per 1,000,000 tokens
+        pricing = {
+            "openai": (2.50, 10.00),
+            "anthropic": (3.00, 15.00),
+            "google": (0.075, 0.30),
+            "mistral": (2.00, 6.00),
+            "groq": (0.0, 0.0),
+            "cohere": (2.50, 10.00)
+        }
+        
+        rates = pricing.get(provider_id.lower().strip(), (0.0, 0.0))
+        prompt_cost = (prompt_tokens / 1_000_000) * rates[0]
+        completion_cost = (completion_tokens / 1_000_000) * rates[1]
+        total_cost = prompt_cost + completion_cost
+        total_tokens = prompt_tokens + completion_tokens
+        
+        from src.database.mongodb.connection import get_database
+        from src.core.constants import COLLECTION_PROVIDERS
+        
+        db = get_database()
+        await db[COLLECTION_PROVIDERS].update_one(
+            {"user_id": user_id, "id": provider_id},
+            {"$inc": {
+                "usageTokens": total_tokens,
+                "usageCost": total_cost
+            }}
+        )
+    except Exception as e:
+        logger.warning(f"Failed to record token usage in DB: {e}")
 
 
 async def _stream_chat_response_impl(
@@ -178,6 +212,9 @@ async def _stream_chat_response_impl(
             yield sse_node_event("direct_llm", "completed")
             yield sse_done_event([])
 
+            if streamed_text:
+                await record_token_usage(user_id, attempt_provider, query, streamed_text)
+
             if conversation_id and streamed_text:
                 try:
                     await insert_message(
@@ -292,6 +329,9 @@ async def _stream_chat_response_impl(
         yield sse_done_event(final_citations)
 
         persist_text = final_text or streamed_text
+        if persist_text:
+            active_p = model_provider or settings.DEFAULT_LLM_PROVIDER
+            await record_token_usage(user_id, active_p, query, persist_text)
         if conversation_id and persist_text:
             try:
                 await insert_message(
@@ -434,13 +474,19 @@ async def stream_playground_completion(
             except Exception:
                 pass
 
+        accumulated_text = ""
         async for chunk in llm.astream(langchain_messages):
             if hasattr(chunk, "content") and chunk.content:
                 token = extract_text(chunk.content)
                 if token:
+                    accumulated_text += token
                     yield sse_token_event(token)
 
         yield sse_done_event([])
+
+        if accumulated_text:
+            prompt_str = "\n".join([m.get("content", "") for m in messages]) + (system_prompt or "")
+            await record_token_usage(user_id, provider, prompt_str, accumulated_text)
 
     except Exception as e:
         logger.error(f"Playground completion failed: {e}", exc_info=True)
