@@ -44,4 +44,4 @@ setuptools
 wheel
 slowapi
 
-# fastapi-compression (implemented as a custom local module in fastapi_compression.py to prevent PyPI installation errors)
+pymupdf

@@ -26,6 +26,7 @@ from src.database.mongodb.repositories.chat_repository import (
     insert_message,
     touch_conversation,
 )
+from src.core.config import settings
 from src.core.logger import get_logger
 from src.streaming import (
     sse_node_event,
@@ -270,14 +271,14 @@ async def _stream_chat_response_impl(
             data = event.get("data", {})
 
             if kind == "on_chain_start" and name in (
-                "planner", "retriever", "citation", "summarizer", "reporter",
+                "planner", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
-                "planner", "retriever", "citation", "summarizer", "reporter",
+                "planner", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 yield sse_node_event(name, "completed")

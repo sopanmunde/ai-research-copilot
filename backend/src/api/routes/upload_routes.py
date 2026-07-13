@@ -42,13 +42,28 @@ async def upload_document(
 
     if ext == "pdf":
         docs = await load_pdf(content, filename)
+        # Check if PDF is scanned (empty or very short text)
+        total_text = "".join(d.page_content for d in docs).strip()
+        if len(total_text) < 100:
+            logger.info(f"PDF '{filename}' appears to be scanned (extracted text length: {len(total_text)}). Running vision extraction...")
+            from src.agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
+            docs = await extract_scanned_pdf(content, filename)
     elif ext == "docx":
         docs = await load_docx(content, filename)
     elif ext in IMAGE_EXTS:
+        from src.agents.langgraph.nodes.vision_extraction_node import extract_vision_data
         from langchain_core.documents import Document
         import base64
+        
+        extracted_content = await extract_vision_data(
+            content=content,
+            filename=filename,
+            file_type=ext,
+            extraction_type="auto"
+        )
+        
         docs = [Document(
-            page_content=f"[Image file: {filename} ({len(content) // 1024} KB)]",
+            page_content=extracted_content,
             metadata={"filename": filename, "source": filename, "file_type": ext, "page": 0,
                       "data_uri": "data:image/" + ext + ";base64," + base64.b64encode(content[:4096]).decode()},
         )]
@@ -133,13 +148,27 @@ async def upload_document_stream(
 
             if ext == "pdf":
                 docs = await load_pdf(content, filename)
+                # Check if PDF is scanned (empty or very short text)
+                total_text = "".join(d.page_content for d in docs).strip()
+                if len(total_text) < 100:
+                    logger.info(f"PDF '{filename}' appears to be scanned (extracted text length: {len(total_text)}). Running vision extraction...")
+                    from src.agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
+                    docs = await extract_scanned_pdf(content, filename)
             elif ext == "docx":
                 docs = await load_docx(content, filename)
             elif ext in IMAGE_EXTS:
+                from src.agents.langgraph.nodes.vision_extraction_node import extract_vision_data
                 from langchain_core.documents import Document
-                import base64
+                
+                extracted_content = await extract_vision_data(
+                    content=content,
+                    filename=filename,
+                    file_type=ext,
+                    extraction_type="auto"
+                )
+                
                 docs = [Document(
-                    page_content=f"[Image file: {filename} ({len(content) // 1024} KB)]",
+                    page_content=extracted_content,
                     metadata={"filename": filename, "source": filename, "file_type": ext, "page": 0},
                 )]
             elif ext in SHEET_EXTS:
