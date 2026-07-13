@@ -376,86 +376,113 @@ export function BrainDashboard() {
     }
   };
 
-  // Simulated Connection Ping
+  // Real Connection Ping
   const testConnection = async (id: string) => {
     setTestingId(id);
     const setT = (p: LLMProvider) => p.id === id ? { ...p, status: "testing" as ProviderStatus } : p;
     setCloudProviders((p) => p.map(setT));
     setLocalProviders((p) => p.map(setT));
     
-    // Simulate connection check, then update in DB & UI
-    setTimeout(async () => {
-      setTestingId(null);
-      const hasKey = apiKeys.some((k) => k.providerId === id && k.isActive);
-      const prov   = allProviders.find((p) => p.id === id);
-      const ok     = prov?.type === "local" ? true : hasKey;
-      const status: ProviderStatus = ok ? "connected" : "error";
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/providers/${id}/ping`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       
-      try {
-        const token = localStorage.getItem("token");
-        await fetch(`${API_BASE_URL}/brain/providers/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ status })
-        });
-      } catch (e) {
-        console.error("Failed to sync connection status", e);
+      let status: ProviderStatus = "error";
+      let latency = 0;
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === "connected") {
+          status = "connected";
+          latency = data.latency;
+          toast.success(`${allProviders.find(p => p.id === id)?.name || "Provider"} is connected! Latency: ${latency}ms`);
+        } else {
+          toast.error(`Connection check failed: ${data.detail || "Unknown error"}`);
+        }
+      } else {
+        toast.error("Failed to contact the backend verification service.");
       }
-
-      const setF = (p: LLMProvider) => p.id === id ? { ...p, status } : p;
+      
+      // Update in DB
+      await fetch(`${API_BASE_URL}/brain/providers/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status, latency })
+      });
+      
+      const setF = (p: LLMProvider) => p.id === id ? { ...p, status, latency } : p;
       setCloudProviders((p) => p.map(setF));
       setLocalProviders((p) => p.map(setF));
-    }, 1200);
+    } catch (e) {
+      console.error("Failed connection ping", e);
+      toast.error("Connection failed.");
+      
+      const setErr = (p: LLMProvider) => p.id === id ? { ...p, status: "error" as ProviderStatus } : p;
+      setCloudProviders((p) => p.map(setErr));
+      setLocalProviders((p) => p.map(setErr));
+    } finally {
+      setTestingId(null);
+    }
   };
 
-  // Speed test / benchmark simulation
-  const runSpeedBenchmark = () => {
+  // Real Performance Benchmark
+  const runSpeedBenchmark = async () => {
+    const id = provider.id;
     setBenchmarkStatus("running");
-    setBenchmarkProgress(0);
+    setBenchmarkProgress(15);
     setBenchmarkSpeed(0);
     setBenchmarkLatency(0);
 
-    const duration = 2000;
-    const intervalTime = 50;
-    const steps = duration / intervalTime;
-    let currentStep = 0;
+    const progressTimer = setInterval(() => {
+      setBenchmarkProgress((prev) => (prev < 85 ? prev + Math.floor(Math.random() * 8) + 2 : prev));
+    }, 150);
 
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = Math.round((currentStep / steps) * 100);
-      setBenchmarkProgress(progress);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/brain/providers/${id}/benchmark`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-      setBenchmarkSpeed(Math.floor(40 + Math.random() * 50));
-      setBenchmarkLatency(Math.floor(180 + Math.random() * 150));
+      clearInterval(progressTimer);
+      setBenchmarkProgress(100);
 
-      if (currentStep >= steps) {
-        clearInterval(interval);
-        setBenchmarkStatus("done");
-        const finalLatency = provider.id === "groq" ? 45 : (provider.type === "local" ? 18 : 220);
-        const finalSpeed = provider.id === "groq" ? 280 : (provider.type === "local" ? 45 : 85);
+      if (res.ok) {
+        const data = await res.json();
+        const finalLatency = data.latency;
+        const finalSpeed = data.tokensPerSec;
+
         setBenchmarkSpeed(finalSpeed);
         setBenchmarkLatency(finalLatency);
-        
-        // Sync final values back to DB
-        const token = localStorage.getItem("token");
-        fetch(`${API_BASE_URL}/brain/providers/${provider.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ latency: finalLatency, tokensPerSec: finalSpeed })
-        });
+        setBenchmarkStatus("done");
 
-        const updateP = (p: LLMProvider) => p.id === provider.id ? { ...p, latency: finalLatency, tokensPerSec: finalSpeed } : p;
+        const updateP = (p: LLMProvider) => p.id === id ? { ...p, latency: finalLatency, tokensPerSec: finalSpeed } : p;
         setCloudProviders(c => c.map(updateP));
         setLocalProviders(l => l.map(updateP));
+        toast.success(`Speed test complete: ${finalSpeed} tok/s at ${finalLatency}ms latency!`);
+      } else {
+        const err = await res.json();
+        throw new Error(err.detail || "Server error");
       }
-    }, intervalTime);
+    } catch (e: any) {
+      clearInterval(progressTimer);
+      setBenchmarkProgress(0);
+      setBenchmarkStatus("idle");
+      console.error("Benchmark failed", e);
+      toast.error(`Benchmark failed: ${e.message || "Ensure a valid API key is set."}`);
+    }
   };
+
 
   // Playground Chat - Real Functional Streaming
   const handleSendMessage = async () => {
@@ -589,6 +616,7 @@ export function BrainDashboard() {
       } else {
         setChatMessages(prev => [...prev, assistantMsg]);
       }
+      fetchData();
 
     } catch (err: any) {
       console.error(err);
