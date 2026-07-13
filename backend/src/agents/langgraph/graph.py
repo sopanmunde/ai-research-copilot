@@ -23,6 +23,7 @@ from src.agents.langgraph.nodes.retriever_node import retriever_node
 from src.agents.langgraph.nodes.summarizer_node import summarizer_node
 from src.agents.langgraph.nodes.citation_node import citation_node
 from src.agents.langgraph.nodes.report_node import report_node
+from src.agents.langgraph.nodes.vision_extraction_node import vision_extraction_node
 from src.agents.langgraph.nodes.code_generation_node import code_generation_node
 from src.agents.langgraph.nodes.code_review_node import code_review_node
 from src.agents.langgraph.nodes.testing_node import testing_node
@@ -42,6 +43,16 @@ def _should_retrieve(state: AgentState) -> str:
     """
     if state.get("terminate"):
         return "end"
+        
+    filename = state.get("filename", "") or ""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    IMAGE_EXTS = {"png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg"}
+    
+    # If the active file is an image, route to the vision extractor node first
+    if ext in IMAGE_EXTS:
+        logger.debug(f"[Graph] Routing after planner → vision_extractor")
+        return "vision_extractor"
+        
     requires_context = state.get("requires_context", False)
     route = "retriever" if requires_context else "summarizer"
     logger.debug(f"[Graph] Routing after planner → {route}")
@@ -53,13 +64,15 @@ def build_graph() -> StateGraph:
     Assemble and compile the LangGraph multi-agent research workflow.
 
     Graph topology:
-      planner → [conditional: retriever | summarizer]
+      planner → [conditional: retriever | vision_extractor | summarizer]
+      vision_extractor → summarizer
       retriever → citation → summarizer → reporter → END
       summarizer → reporter → END  (when retrieval skipped)
     """
     workflow = StateGraph(AgentState)
 
     workflow.add_node("planner", planner_node)
+    workflow.add_node("vision_extractor", vision_extraction_node)
     workflow.add_node("retriever", retriever_node)
     workflow.add_node("citation", citation_node)
     workflow.add_node("summarizer", summarizer_node)
@@ -73,10 +86,12 @@ def build_graph() -> StateGraph:
         {
             "end": END,
             "retriever": "retriever",
+            "vision_extractor": "vision_extractor",
             "summarizer": "summarizer",
         },
     )
 
+    workflow.add_edge("vision_extractor", "summarizer")
     workflow.add_edge("retriever", "citation")
     workflow.add_edge("citation", "summarizer")
     workflow.add_edge("summarizer", "reporter")

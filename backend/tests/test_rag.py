@@ -82,7 +82,8 @@ class TestTextCleaning:
 class TestCitationNode:
     """Validate citation deduplication and confidence scoring."""
 
-    def test_citation_node_deduplicates(self):
+    @pytest.mark.asyncio
+    async def test_citation_node_deduplicates(self):
         from src.agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
@@ -91,10 +92,11 @@ class TestCitationNode:
             {"doc_id": "def456", "source": "other.pdf", "page": 2, "snippet": "..."},
         ]
         state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
-        result = citation_node(state)
+        result = await citation_node(state)
         assert len(result["citations"]) == 2, "Duplicate doc_id should be removed"
 
-    def test_citation_confidence_decays(self):
+    @pytest.mark.asyncio
+    async def test_citation_confidence_decays(self):
         from src.agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
@@ -102,7 +104,7 @@ class TestCitationNode:
             for i in range(5)
         ]
         state = {"citations": citations, "retrieved_docs": [], "current_node": ""}
-        result = citation_node(state)
+        result = await citation_node(state)
         confs = [c["confidence"] for c in result["citations"]]
         assert confs == sorted(confs, reverse=True), "Confidence should decay with rank"
 
@@ -111,7 +113,8 @@ class TestCitationNode:
 class TestReportNode:
     """Validate final output assembly."""
 
-    def test_report_node_includes_summary(self):
+    @pytest.mark.asyncio
+    async def test_report_node_includes_summary(self):
         from src.agents.langgraph.nodes.report_node import report_node
 
         state = {
@@ -120,10 +123,11 @@ class TestReportNode:
             "report_mode": False,
             "current_node": "",
         }
-        result = report_node(state)
+        result = await report_node(state)
         assert "Analysis" in result["final_output"]
 
-    def test_report_node_appends_references(self):
+    @pytest.mark.asyncio
+    async def test_report_node_appends_references(self):
         from src.agents.langgraph.nodes.report_node import report_node
 
         state = {
@@ -139,11 +143,12 @@ class TestReportNode:
             "report_mode": False,
             "current_node": "",
         }
-        result = report_node(state)
+        result = await report_node(state)
         assert "📚 References" in result["final_output"]
         assert "paper.pdf" in result["final_output"]
 
-    def test_report_mode_adds_methodology(self):
+    @pytest.mark.asyncio
+    async def test_report_mode_adds_methodology(self):
         from src.agents.langgraph.nodes.report_node import report_node
 
         state = {
@@ -155,7 +160,7 @@ class TestReportNode:
             "report_mode": True,
             "current_node": "",
         }
-        result = report_node(state)
+        result = await report_node(state)
         assert "semantic MMR retrieval" in result["final_output"]
 
 

@@ -104,6 +104,7 @@ async def summarizer_node(state: AgentState) -> dict:
         f"docs={len(docs)}, history={len(history)} turns"
     )
 
+    analysis_results = state.get("analysis_results", "")
     if workflow_type == "coding":
         system_prompt = SUMMARIZER_SYSTEM_CODING
         history_turns = 6
@@ -112,6 +113,12 @@ async def summarizer_node(state: AgentState) -> dict:
         history_turns = 6
     elif requires_context and docs:
         context = _build_context(docs)
+        if analysis_results:
+            context += f"\n\n---\n\nVisual/Vision Extraction Data for '{state.get('filename')}':\n{analysis_results}"
+        system_prompt = SUMMARIZER_SYSTEM_RESEARCH.format(context=context)
+        history_turns = 6
+    elif analysis_results:
+        context = f"Visual/Vision Extraction Data for '{state.get('filename')}':\n{analysis_results}"
         system_prompt = SUMMARIZER_SYSTEM_RESEARCH.format(context=context)
         history_turns = 6
     else:
