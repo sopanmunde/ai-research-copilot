@@ -39,6 +39,7 @@ class AgentState(TypedDict):
 
     citations: List[Dict[str, Any]]
 
+    long_term_memory: str
     summary: str
 
     generated_code: str

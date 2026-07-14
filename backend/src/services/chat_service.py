@@ -226,6 +226,14 @@ async def _stream_chat_response_impl(
                         sources=[],
                     )
                     await touch_conversation(conversation_id)
+                    asyncio.create_task(
+                        save_turn_to_long_term_memory(
+                            user_id=user_id,
+                            conversation_id=conversation_id,
+                            user_query=query,
+                            ai_response=streamed_text
+                        )
+                    )
                 except Exception as e:
                     logger.error(f"Failed to persist assistant message: {e}")
             return
@@ -271,14 +279,14 @@ async def _stream_chat_response_impl(
             data = event.get("data", {})
 
             if kind == "on_chain_start" and name in (
-                "planner", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
+                "planner", "memory_retriever", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
-                "planner", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
+                "planner", "memory_retriever", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 yield sse_node_event(name, "completed")
@@ -343,6 +351,14 @@ async def _stream_chat_response_impl(
                     sources=final_citations,
                 )
                 await touch_conversation(conversation_id)
+                asyncio.create_task(
+                    save_turn_to_long_term_memory(
+                        user_id=user_id,
+                        conversation_id=conversation_id,
+                        user_query=query,
+                        ai_response=persist_text
+                    )
+                )
             except Exception as e:
                 logger.error(f"Failed to persist assistant message: {e}")
 
@@ -492,3 +508,92 @@ async def stream_playground_completion(
     except Exception as e:
         logger.error(f"Playground completion failed: {e}", exc_info=True)
         yield sse_error_event(str(e))
+
+
+async def save_turn_to_long_term_memory(
+    user_id: str,
+    conversation_id: str,
+    user_query: str,
+    ai_response: str
+) -> None:
+    """
+    Background Task:
+    1. Indexes the Q&A exchange into Pinecone as a chat memory.
+    2. Calls fact extraction and saves new user facts to MongoDB.
+    """
+    try:
+        from langchain_core.documents import Document
+        from src.rag.vectorstores.pinecone_store import get_vector_store
+        
+        logger.info(f"[Long-term Memory] Archiving exchange for user={user_id}")
+        
+        # 1. Index in Pinecone for semantic memory retrieval
+        doc = Document(
+            page_content=f"User Query: {user_query}\nAI Response: {ai_response}",
+            metadata={
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "type": "chat_memory",
+                "filename": "chat_memory",
+                "uploaded_at": datetime.now(timezone.utc).isoformat()
+            }
+        )
+        
+        store = get_vector_store()
+        await asyncio.to_thread(store.add_documents, [doc])
+        logger.info(f"[Long-term Memory] Exchange indexed in Pinecone successfully")
+        
+        # 2. Extract and save user facts to MongoDB
+        await extract_and_save_user_facts(user_id, user_query, ai_response)
+        
+    except Exception as e:
+        logger.error(f"[Long-term Memory] Failed to archive exchange: {e}", exc_info=True)
+
+
+async def extract_and_save_user_facts(user_id: str, query: str, response: str) -> None:
+    """
+    Extracts persistent user profile facts or preferences from a Q&A turn using an LLM.
+    Upserts findings to MongoDB user_memory collection.
+    """
+    try:
+        from langchain_core.messages import HumanMessage
+        from src.database.mongodb.repositories.user_memory_repository import save_user_fact
+        
+        FACT_EXTRACTION_PROMPT = """You are a Memory Extractor Agent inside a research platform.
+Analyze the user's chat exchange below.
+Identify any persistent facts, research topics, preferences, goals, settings, or professional facts the user shares about themselves or their work.
+
+GUIDELINES:
+- Extract ONLY facts that have long-term value for a research partner (e.g., "User is studying clinical trials for Alzheimer's", "User prefers summaries in markdown format").
+- Do NOT extract transient topics, casual talk, or general knowledge questions.
+- Write each fact as a simple, objective third-person sentence starting with "User...".
+- Return each fact on a new line.
+- If no persistent facts are found, reply ONLY with "NONE".
+
+Exchange:
+User Query: {query}
+AI Response: {response}
+
+Extracted Facts:"""
+        
+        llm = get_llm(
+            provider="google",
+            model_name="gemini-2.5-flash",
+            temperature=0.1,
+            streaming=False
+        )
+        
+        messages = [HumanMessage(content=FACT_EXTRACTION_PROMPT.format(query=query, response=response))]
+        res = await llm.ainvoke(messages)
+        
+        facts_text = extract_text(res.content).strip()
+        if not facts_text or facts_text.upper() == "NONE":
+            return
+            
+        for line in facts_text.splitlines():
+            line = line.strip()
+            if line and line.startswith("User"):
+                await save_user_fact(user_id, line)
+                
+    except Exception as e:
+        logger.warning(f"[Long-term Memory] Fact extraction failed: {e}")

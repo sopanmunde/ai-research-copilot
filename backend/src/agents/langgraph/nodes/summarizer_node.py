@@ -125,6 +125,10 @@ async def summarizer_node(state: AgentState) -> dict:
         system_prompt = SUMMARIZER_SYSTEM_SIMPLE
         history_turns = 6
 
+    long_term_memory = state.get("long_term_memory", "")
+    if long_term_memory:
+        system_prompt += f"\n\n{long_term_memory}"
+
     messages = [SystemMessage(content=system_prompt)]
 
     for turn in history[-history_turns:]:
