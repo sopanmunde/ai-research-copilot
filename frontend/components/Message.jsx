@@ -144,8 +144,19 @@ export default function Message({ role, content, sources, quality_score, childre
                           {i + 1}
                         </span>
                         <span className="break-all">
-                          {src.source || src.filename || "Unknown Source"}{" "}
-                          {src.page ? `(Page ${src.page})` : ""}
+                          {src.url ? (
+                            <a
+                              href={src.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
+                            >
+                              {src.source || src.filename || "Unknown Source"}
+                            </a>
+                          ) : (
+                            src.source || src.filename || "Unknown Source"
+                          )}{" "}
+                          {src.page && src.page !== "N/A" ? `(Page ${src.page})` : ""}
                         </span>
                       </li>
                     ))}

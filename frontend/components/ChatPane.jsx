@@ -82,6 +82,7 @@ function ThinkingMessage({ onPause, agentState }) {
   const getAgentText = (state) => {
     if (state === "planner") return "Planning research strategy...";
     if (state === "retriever") return "Searching documents...";
+    if (state === "web_researcher") return "Searching the web...";
     if (state === "summarizer") return "Analyzing findings...";
     if (state === "citation") return "Extracting citations...";
     if (state === "reporter") return "Generating report...";

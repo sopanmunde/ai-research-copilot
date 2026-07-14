@@ -279,14 +279,14 @@ async def _stream_chat_response_impl(
             data = event.get("data", {})
 
             if kind == "on_chain_start" and name in (
-                "planner", "memory_retriever", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
+                "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
-                "planner", "memory_retriever", "vision_extractor", "retriever", "citation", "summarizer", "reporter",
+                "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 yield sse_node_event(name, "completed")
@@ -298,6 +298,13 @@ async def _stream_chat_response_impl(
                         yield sse_token_event(final_text)
 
                 elif name == "retriever":
+                    output = data.get("output", {})
+                    cits = output.get("citations", [])
+                    if cits:
+                        final_citations = cits
+                        yield sse_citations_event(cits)
+
+                elif name == "web_researcher":
                     output = data.get("output", {})
                     cits = output.get("citations", [])
                     if cits:
