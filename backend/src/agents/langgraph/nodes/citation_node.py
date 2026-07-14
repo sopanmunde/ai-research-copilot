@@ -64,6 +64,7 @@ async def citation_node(state: AgentState) -> dict:
             "source": source,
             "filename": source,
             "page": page,
+            "url": meta.get("url"),
             "chunk_index": meta.get("chunk_index", "N/A"),
             "total_chunks": meta.get("total_chunks", "N/A"),
             "uploaded_at": meta.get("uploaded_at", ""),

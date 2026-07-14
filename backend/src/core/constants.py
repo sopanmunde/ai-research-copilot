@@ -91,6 +91,7 @@ COLLECTION_API_KEYS = "api_keys"
 COLLECTION_PLAYGROUND_MESSAGES = "playground_messages"
 COLLECTION_NOTES = "notes"
 COLLECTION_INTEGRATIONS = "integrations"
+COLLECTION_USER_MEMORY = "user_memory"
 
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
 CACHE_RAG_PREFIX = "rag:query:"
