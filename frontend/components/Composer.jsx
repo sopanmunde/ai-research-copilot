@@ -103,6 +103,11 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
   const [mode, setMode] = useState(defaultMode);
   const [activeAction, setActiveAction] = useState(null);
 
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const streamRef = useRef(null);
+  const isVoiceUsedRef = useRef(false);
+
   const [integrationsList, setIntegrationsList] = useState(null);
   const [selectedFeatures, setSelectedFeatures] = useState([]);
 
@@ -481,6 +486,105 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     e.target.value = "";
   }, [uploadFileToRag]);
 
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      audioChunksRef.current = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      let mimeType = "audio/webm";
+      let extension = "webm";
+      
+      if (typeof MediaRecorder !== "undefined") {
+        if (MediaRecorder.isTypeSupported("audio/webm")) {
+          mimeType = "audio/webm";
+          extension = "webm";
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4";
+          extension = "mp4";
+        } else if (MediaRecorder.isTypeSupported("audio/ogg")) {
+          mimeType = "audio/ogg";
+          extension = "ogg";
+        } else if (MediaRecorder.isTypeSupported("audio/wav")) {
+          mimeType = "audio/wav";
+          extension = "wav";
+        } else if (MediaRecorder.isTypeSupported("audio/aac")) {
+          mimeType = "audio/aac";
+          extension = "aac";
+        }
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        if (audioBlob.size === 0) return;
+        
+        const formData = new FormData();
+        formData.append("file", audioBlob, `recording.${extension}`);
+        
+        try {
+          toast.info("Transcribing audio...", { id: "voice-transcribing", duration: 4000 });
+          const token = localStorage.getItem("token");
+          const response = await fetch(`${API_BASE_URL}/audio/transcribe`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to transcribe: ${response.statusText}`);
+          }
+          
+          const result = await response.json();
+          if (result.text) {
+            setValue((prev) => (prev ? prev + " " + result.text : result.text));
+            isVoiceUsedRef.current = true;
+            toast.success("Voice transcribed!", { id: "voice-transcribing" });
+          } else {
+            toast.warning("Speech not recognized, please try again.", { id: "voice-transcribing" });
+          }
+        } catch (error) {
+          console.error("Transcription error:", error);
+          toast.error("Audio transcription failed.", { id: "voice-transcribing" });
+        }
+      };
+      
+      mediaRecorder.start();
+      setIsListening(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      toast.error("Failed to access microphone. Please check permissions.");
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+    setIsListening(false);
+  }, []);
+
   const hasContent = value.trim().length > 0 || !!attachedFile;
 
   const handleSend = useCallback(async () => {
@@ -505,7 +609,12 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     setAttachedFile(null);
     setSelectedFeatures([]);
     setSending(true);
-    try { await onSend?.(text, currentMode, fileRef, activeFeatures); } finally { setSending(false); }
+    try {
+      await onSend?.(text, currentMode, fileRef, activeFeatures, isVoiceUsedRef.current);
+    } finally {
+      setSending(false);
+      isVoiceUsedRef.current = false;
+    }
   }, [busy, hasContent, uploading, value, mode, attachedFile, onSend, selectedFeatures]);
 
   return (
@@ -746,7 +855,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
                     </>
                   )}
                   <Button variant="ghost" size="icon"
-                    onClick={() => setIsListening(!isListening)}
+                    onClick={() => isListening ? stopRecording() : startRecording()}
                     className={cn(
                       "relative h-7 w-7 rounded-lg transition-all duration-300",
                       isListening ? "bg-red-500 text-white hover:bg-red-600 shadow-md" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"

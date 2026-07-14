@@ -19,6 +19,7 @@ Agent mapping (image label → node name):
 from langgraph.graph import StateGraph, END
 from src.agents.langgraph.state import AgentState
 from src.agents.langgraph.nodes.planner_node import planner_node
+from src.agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
 from src.agents.langgraph.nodes.retriever_node import retriever_node
 from src.agents.langgraph.nodes.web_research_node import web_research_node
 from src.agents.langgraph.nodes.summarizer_node import summarizer_node
@@ -73,6 +74,7 @@ def build_graph() -> StateGraph:
     """
     workflow = StateGraph(AgentState)
 
+    workflow.add_node("voice_preprocessor", voice_preprocessing_node)
     workflow.add_node("planner", planner_node)
     workflow.add_node("memory_retriever", memory_retrieval_node)
     workflow.add_node("vision_extractor", vision_extraction_node)
@@ -82,8 +84,9 @@ def build_graph() -> StateGraph:
     workflow.add_node("summarizer", summarizer_node)
     workflow.add_node("reporter", report_node)
 
-    workflow.set_entry_point("planner")
+    workflow.set_entry_point("voice_preprocessor")
 
+    workflow.add_edge("voice_preprocessor", "planner")
     workflow.add_edge("planner", "memory_retriever")
 
     workflow.add_conditional_edges(

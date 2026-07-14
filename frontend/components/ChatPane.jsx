@@ -80,6 +80,7 @@ function MessageFileCard({ attachedFile }) {
 
 function ThinkingMessage({ onPause, agentState }) {
   const getAgentText = (state) => {
+    if (state === "voice_preprocessor") return "Cleaning voice input...";
     if (state === "planner") return "Planning research strategy...";
     if (state === "retriever") return "Searching documents...";
     if (state === "web_researcher") return "Searching the web...";
@@ -593,14 +594,14 @@ const ChatPane = forwardRef(function ChatPane(
           <div className="relative z-10">
             <Composer
               ref={composerRef}
-              onSend={async (text, mode, fileRef, activeFeatures) => {
+              onSend={async (text, mode, fileRef, activeFeatures, isVoice = false) => {
                 if (isThinking || isResponding || busy) {
                   onPauseThinking?.();
                   return;
                 }
                 if (!text.trim() && !fileRef) return;
                 setBusy(true);
-                await onSend?.(text, mode, fileRef, activeFeatures);
+                await onSend?.(text, mode, fileRef, activeFeatures, isVoice);
                 setBusy(false);
               }}
               busy={busy || isThinking || isResponding}

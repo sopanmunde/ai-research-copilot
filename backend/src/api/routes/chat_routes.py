@@ -103,6 +103,7 @@ async def chat(
             model_name=query_req.model_name,
             http_request=request,
             filename=query_req.filename,
+            is_voice=query_req.is_voice,
         ),
         media_type="text/event-stream",
         headers={

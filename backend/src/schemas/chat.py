@@ -15,6 +15,7 @@ class QueryRequest(BaseModel):
     model_name: Optional[str] = None
     filename: Optional[str] = None
     active_features: Optional[dict] = None
+    is_voice: Optional[bool] = False
 
     @field_validator("mode")
     @classmethod

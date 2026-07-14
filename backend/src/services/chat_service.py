@@ -98,6 +98,7 @@ async def _stream_chat_response_impl(
     model_provider: Optional[str] = None,
     model_name: Optional[str] = None,
     filename: Optional[str] = None,
+    is_voice: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrates either Quick Mode or Agent Mode and yields SSE events.
@@ -256,6 +257,7 @@ async def _stream_chat_response_impl(
         "selected_llm_provider": provider or "",
         "selected_llm_model": model or "",
         "requires_context": True,
+        "is_voice": is_voice,
         "history": history,
         "messages": [],
         "plan": [],
@@ -279,14 +281,14 @@ async def _stream_chat_response_impl(
             data = event.get("data", {})
 
             if kind == "on_chain_start" and name in (
-                "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
+                "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
-                "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
+                "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 yield sse_node_event(name, "completed")

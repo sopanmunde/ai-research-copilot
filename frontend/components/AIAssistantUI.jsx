@@ -388,7 +388,7 @@ export default function AIAssistantUI() {
     );
   }
 
-  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast", activeFeatures = null) {
+  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast", activeFeatures = null, isVoice = false) {
     const token = localStorage.getItem("token");
     if (!content.trim() && !fileRef || !token) return;
 
@@ -484,6 +484,7 @@ export default function AIAssistantUI() {
           mode,
           filename: fileRef ? fileRef.name : null,
           active_features: activeFeatures,
+          is_voice: isVoice,
         }),
       });
 
@@ -774,8 +775,8 @@ export default function AIAssistantUI() {
               ref={composerRef}
               conversation={selected}
               user={user}
-              onSend={(content, mode, fileRef, activeFeatures) => {
-                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures);
+              onSend={(content, mode, fileRef, activeFeatures, isVoice = false) => {
+                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures, isVoice);
               }}
               onEditMessage={(messageId, newContent) =>
                 selected && editMessage(selected.id, messageId, newContent)

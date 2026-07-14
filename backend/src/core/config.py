@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     SERPAPI_API_KEY: str = ""
     BRAVE_API_KEY: str = ""
+    ELEVENLABS_API_KEY: str = ""
 
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_CHAT_MODEL: str = "claude-sonnet-4-20250514"

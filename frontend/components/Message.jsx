@@ -4,7 +4,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Volume2, VolumeX } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 function CodeBlock({ children, className, ...props }) {
   const [copied, setCopied] = useState(false);
@@ -51,6 +52,70 @@ function CodeBlock({ children, className, ...props }) {
 
 export default function Message({ role, content, sources, quality_score, children }) {
   const isUser = role === "user";
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioInstance, setAudioInstance] = useState(null);
+
+  const handleSpeak = async () => {
+    if (isSpeaking) {
+      if (audioInstance) {
+        audioInstance.pause();
+      }
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API_BASE_URL}/audio/tts?text=${encodeURIComponent(content)}`;
+      
+      const testRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!testRes.ok) {
+        throw new Error("tts_disabled_or_failed");
+      }
+
+      const audioBlob = await testRes.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      setAudioInstance(audio);
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setAudioInstance(null);
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setAudioInstance(null);
+      };
+
+      await audio.play();
+
+    } catch (err) {
+      console.log("ElevenLabs TTS not available, falling back to Browser speechSynthesis: ", err.message);
+      window.speechSynthesis.cancel();
+      
+      const cleanText = content
+        .replace(/\[\d+\]/g, "")
+        .replace(/[*_`#]/g, "")
+        .trim();
+        
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   return (
     <div
@@ -217,6 +282,20 @@ export default function Message({ role, content, sources, quality_score, childre
                   </div>
                 </div>
               )}
+
+              <div className="mt-3 flex items-center justify-end gap-2 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-2.5">
+                <button
+                  onClick={handleSpeak}
+                  className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                  title={isSpeaking ? "Stop speaking" : "Speak response"}
+                >
+                  {isSpeaking ? (
+                    <VolumeX className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
           )
         ) : (
