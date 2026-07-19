@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import { Copy, Check, Volume2, VolumeX, ChevronDown, X } from "lucide-react";
+import { Copy, Check, Volume2, VolumeX, ChevronDown, X, ShieldCheck } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 function CodeBlock({ children, className, ...props }) {
@@ -50,7 +50,7 @@ function CodeBlock({ children, className, ...props }) {
   );
 }
 
-export default function Message({ role, content, sources, quality_score, agent_steps, source_heatmap, children }) {
+export default function Message({ role, content, sources, quality_score, agent_steps, source_heatmap, onOpenAuditLogs, children }) {
   const isUser = role === "user";
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioInstance, setAudioInstance] = useState(null);
@@ -392,18 +392,23 @@ export default function Message({ role, content, sources, quality_score, agent_s
                 </div>
               )}
 
-              <div className="mt-3 flex items-center justify-end gap-2 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-2.5">
-                <button
-                  onClick={handleSpeak}
-                  className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer"
-                  title={isSpeaking ? "Stop speaking" : "Speak response"}
-                >
-                  {isSpeaking ? (
-                    <VolumeX className="h-3.5 w-3.5 text-red-500 animate-pulse" />
-                  ) : (
-                    <Volume2 className="h-3.5 w-3.5" />
-                  )}
-                </button>
+              <div className="mt-3 flex items-center justify-between border-t border-zinc-200/50 dark:border-zinc-800/50 pt-2.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  <ShieldCheck className="h-3 w-3" /> Explainable AI Audited
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSpeak}
+                    className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                    title={isSpeaking ? "Stop speaking" : "Speak response"}
+                  >
+                    {isSpeaking ? (
+                      <VolumeX className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )

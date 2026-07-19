@@ -8,6 +8,7 @@ import {
   Bot,
   Check,
   Sliders,
+  ShieldCheck,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,7 +19,6 @@ import {
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
-
 
 const CHATBOTS = [
   {
@@ -53,6 +53,7 @@ export default function Header({
   selectedBot,
   setSelectedBot,
   onToggleIntegrations,
+  onOpenAuditLogs,
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot) || CHATBOTS[0];
 
@@ -125,8 +126,18 @@ export default function Header({
         </button>
       </div>
 
-      {/* Right side settings/integrations trigger */}
-      <div className="flex items-center">
+      {/* Right side settings & audit log triggers */}
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenAuditLogs}
+          className="h-8 rounded-lg px-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
+          title="Explainable AI Audit Logs"
+        >
+          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <span className="hidden sm:inline">Audit Logs</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"

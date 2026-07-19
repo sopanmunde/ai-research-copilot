@@ -20,6 +20,7 @@ import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
+import AuditLogsModal from "./AuditLogsModal";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -151,6 +152,7 @@ export default function AIAssistantUI() {
   const [user, setUser] = useState(null);
   const [selectedBot, setSelectedBot] = useState("Fast");
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
+  const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -762,6 +764,7 @@ export default function AIAssistantUI() {
             selectedBot={selectedBot}
             setSelectedBot={setSelectedBot}
             onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
+            onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
           />
           {selectedId === "docs" ? (
             <div className="relative flex-1 overflow-y-auto bg-background pb-16">
@@ -825,6 +828,10 @@ export default function AIAssistantUI() {
           <IntegrationsPanel
             isOpen={isIntegrationsOpen}
             onClose={() => setIsIntegrationsOpen(false)}
+          />
+          <AuditLogsModal
+            isOpen={isAuditLogsOpen}
+            onClose={() => setIsAuditLogsOpen(false)}
           />
         </main>
       </div>
