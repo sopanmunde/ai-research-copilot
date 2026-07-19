@@ -55,3 +55,4 @@ class AgentState(TypedDict):
     terminate: bool
     errors: List[str]
     current_node: str
+    is_voice: bool

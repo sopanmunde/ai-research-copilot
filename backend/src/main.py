@@ -126,6 +126,8 @@ from src.api.routes.email_routes import router as email_router
 from src.api.routes.brain_routes import router as brain_router
 from src.api.routes.notes_routes import router as notes_router
 from src.api.routes.integrations_routes import router as integrations_router
+from src.api.routes.audio_routes import router as audio_router
+from src.api.routes.audit_routes import router as audit_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -239,6 +241,11 @@ def create_app() -> FastAPI:
     origins = [
         settings.FRONTEND_URL,
         "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "https://trivisionx-ai.vercel.app",
     ]
     origins = list(dict.fromkeys(o for o in origins if o))
@@ -277,6 +284,8 @@ def create_app() -> FastAPI:
     app.include_router(brain_router,         prefix="/api/brain",               tags=["brain"])
     app.include_router(notes_router,         prefix="/api/notes",               tags=["notes"])
     app.include_router(integrations_router,  prefix="/api/integrations",        tags=["integrations"])
+    app.include_router(audio_router,         prefix="/api/audio",               tags=["audio"])
+    app.include_router(audit_router,         prefix="/api/audit-logs",          tags=["audit-logs"])
 
     @app.get("/", tags=["root"])
     async def root():

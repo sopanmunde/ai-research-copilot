@@ -79,15 +79,40 @@ function MessageFileCard({ attachedFile }) {
 }
 
 function ThinkingMessage({ onPause, agentState }) {
-  const getAgentText = (state) => {
-    if (state === "planner") return "Planning research strategy...";
-    if (state === "retriever") return "Searching documents...";
-    if (state === "web_researcher") return "Searching the web...";
-    if (state === "summarizer") return "Analyzing findings...";
-    if (state === "citation") return "Extracting citations...";
-    if (state === "reporter") return "Generating report...";
-    return "Thinking...";
+  const getAgentInfo = (state) => {
+    switch (state) {
+      case "voice_preprocessor":
+        return { label: "Voice Preprocessor", desc: "Transcribing and cleaning voice input..." };
+      case "planner":
+        return { label: "Research Planner", desc: "Formulating multi-step research plan & query routing..." };
+      case "memory_retriever":
+        return { label: "Memory Recall", desc: "Querying historical conversation memory database..." };
+      case "vision_extractor":
+        return { label: "Vision Document Extractor", desc: "Extracting OCR text, charts, and tables from file..." };
+      case "retriever":
+        return { label: "Document Vector Retriever", desc: "Executing MMR semantic search over Pinecone chunks..." };
+      case "web_researcher":
+        return { label: "Web Search Analyst", desc: "Performing web query search for live data..." };
+      case "citation":
+        return { label: "Citation Validator", desc: "Scoring snippet relevance confidence & deduplicating..." };
+      case "summarizer":
+        return { label: "Synthesis Summarizer", desc: "Synthesizing evidence & drafting structured response..." };
+      case "reporter":
+        return { label: "Report Assembly", desc: "Formatting final markdown report & quality evaluation..." };
+      case "code_generation":
+        return { label: "Code Generator", desc: "Synthesizing clean code implementation..." };
+      case "code_review":
+        return { label: "Code Reviewer", desc: "Scanning generated code for logic & security..." };
+      case "testing":
+        return { label: "Test Runner", desc: "Executing verification test cases..." };
+      case "data_analysis":
+        return { label: "Data Analyst", desc: "Processing numerical data datasets..." };
+      default:
+        return { label: "Agent Pipeline", desc: "Orchestrating agent workflow execution..." };
+    }
   };
+
+  const agentInfo = getAgentInfo(agentState);
 
   return (
     <motion.div
@@ -101,35 +126,42 @@ function ThinkingMessage({ onPause, agentState }) {
           <Bot className="h-4 w-4" />
         </AvatarFallback>
       </Avatar>
-      <div className="flex items-center gap-3 py-1">
-        {/* Staggered dots */}
-        <div className="flex items-center gap-[5px]">
-          {[0, 160, 320].map((delay) => (
-            <motion.div
-              key={delay}
-              className="h-2 w-2 rounded-full bg-zinc-400 dark:bg-zinc-500"
-              animate={{ scale: [0.7, 1.2, 0.7], opacity: [0.35, 1, 0.35] }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                delay: delay / 1000,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </div>
-        <span className="text-[14px] font-medium text-zinc-500 dark:text-zinc-400">
-          {getAgentText(agentState)}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onPause}
-          className="ml-2 h-7 rounded-full px-3 text-[11px] font-semibold transition-all border-zinc-200 hover:border-red-500/50 hover:bg-red-50 dark:border-zinc-800 dark:hover:border-red-500/30 dark:hover:bg-red-950/20 text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
-        >
-          <Square className="h-2 w-2 mr-1.5 fill-current" /> Stop
-        </Button>
+      <div className="flex flex-col gap-1 py-1">
+        <div className="flex items-center gap-2">
+          {/* Staggered dots */}
+          <div className="flex items-center gap-[4px]">
+            {[0, 160, 320].map((delay) => (
+              <motion.div
+                key={delay}
+                className="h-2 w-2 rounded-full bg-emerald-500"
+                animate={{ scale: [0.7, 1.2, 0.7], opacity: [0.35, 1, 0.35] }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  delay: delay / 1000,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
 
+          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Node: {agentInfo.label}
+          </span>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPause}
+            className="ml-2 h-6 rounded-full px-2.5 text-[10px] font-semibold transition-all border-zinc-200 hover:border-red-500/50 hover:bg-red-50 dark:border-zinc-800 dark:hover:border-red-500/30 dark:hover:bg-red-950/20 text-zinc-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400"
+          >
+            <Square className="h-2 w-2 mr-1 fill-current" /> Stop
+          </Button>
+        </div>
+
+        <p className="text-[12.5px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
+          {agentInfo.desc}
+        </p>
       </div>
     </motion.div>
   );
@@ -456,6 +488,8 @@ const ChatPane = forwardRef(function ChatPane(
                             content={m.content}
                             sources={m.sources}
                             quality_score={m.quality_score}
+                            agent_steps={m.agent_steps}
+                            source_heatmap={m.source_heatmap}
                           />
 
                           {/* Hover action bar */}
@@ -593,14 +627,14 @@ const ChatPane = forwardRef(function ChatPane(
           <div className="relative z-10">
             <Composer
               ref={composerRef}
-              onSend={async (text, mode, fileRef, activeFeatures) => {
+              onSend={async (text, mode, fileRef, activeFeatures, isVoice = false) => {
                 if (isThinking || isResponding || busy) {
                   onPauseThinking?.();
                   return;
                 }
                 if (!text.trim() && !fileRef) return;
                 setBusy(true);
-                await onSend?.(text, mode, fileRef, activeFeatures);
+                await onSend?.(text, mode, fileRef, activeFeatures, isVoice);
                 setBusy(false);
               }}
               busy={busy || isThinking || isResponding}

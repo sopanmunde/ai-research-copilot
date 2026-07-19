@@ -8,9 +8,12 @@ import json
 from typing import AsyncGenerator, Any
 
 
-def sse_node_event(node_name: str, status: str) -> str:
+def sse_node_event(node_name: str, status: str, output: Any = None) -> str:
     """Format a node lifecycle event for SSE."""
-    return f"data: {json.dumps({'node': node_name, 'status': status})}\n\n"
+    payload = {"node": node_name, "status": status}
+    if output is not None:
+        payload["output"] = output
+    return f"data: {json.dumps(payload)}\n\n"
 
 
 def sse_token_event(token: str) -> str:
@@ -23,9 +26,12 @@ def sse_citations_event(citations: list) -> str:
     return f"data: {json.dumps({'type': 'citations', 'data': citations})}\n\n"
 
 
-def sse_done_event(sources: list = None) -> str:
+def sse_done_event(sources: list = None, source_heatmap: list = None) -> str:
     """Format a done event for SSE."""
-    return f"data: {json.dumps({'done': True, 'sources': sources or []})}\n\n"
+    payload = {"done": True, "sources": sources or []}
+    if source_heatmap is not None:
+        payload["source_heatmap"] = source_heatmap
+    return f"data: {json.dumps(payload)}\n\n"
 
 
 def sse_error_event(error: str) -> str:

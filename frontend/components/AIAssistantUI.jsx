@@ -20,6 +20,7 @@ import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
+import AuditLogsModal from "./AuditLogsModal";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -151,6 +152,7 @@ export default function AIAssistantUI() {
   const [user, setUser] = useState(null);
   const [selectedBot, setSelectedBot] = useState("Fast");
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
+  const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -388,7 +390,7 @@ export default function AIAssistantUI() {
     );
   }
 
-  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast", activeFeatures = null) {
+  async function sendMessage(convId, content, mode = "research", fileRef = null, selectedBot = "Fast", activeFeatures = null, isVoice = false) {
     const token = localStorage.getItem("token");
     if (!content.trim() && !fileRef || !token) return;
 
@@ -484,6 +486,7 @@ export default function AIAssistantUI() {
           mode,
           filename: fileRef ? fileRef.name : null,
           active_features: activeFeatures,
+          is_voice: isVoice,
         }),
       });
 
@@ -546,6 +549,33 @@ export default function AIAssistantUI() {
 
                 if (data.node) {
                   setAgentState(data.node);
+                  setConversations((prev) =>
+                    prev.map((c) => {
+                      if (c.id !== targetConvId) return c;
+                      const msgs = c.messages.map((m) => {
+                        if (m.id !== asstMsgId) return m;
+                        const currentSteps = m.agent_steps || [];
+                        const existingStepIdx = currentSteps.findIndex((s) => s.node === data.node);
+                        let updatedSteps = [...currentSteps];
+                        if (existingStepIdx === -1) {
+                          updatedSteps.push({
+                            node: data.node,
+                            status: data.status,
+                            output: data.output || null,
+                            timestamp: new Date().toISOString(),
+                          });
+                        } else {
+                          updatedSteps[existingStepIdx] = {
+                            ...updatedSteps[existingStepIdx],
+                            status: data.status,
+                            output: data.output || updatedSteps[existingStepIdx].output || null,
+                          };
+                        }
+                        return { ...m, agent_steps: updatedSteps };
+                      });
+                      return { ...c, messages: msgs };
+                    })
+                  );
                 }
 
                 if (data.type === "citations" && data.data) {
@@ -572,7 +602,7 @@ export default function AIAssistantUI() {
                     prev.map((c) => {
                       if (c.id !== targetConvId) return c;
                       const msgs = c.messages.map((m) =>
-                        m.id === asstMsgId ? { ...m, sources: data.sources } : m,
+                        m.id === asstMsgId ? { ...m, sources: data.sources, source_heatmap: data.source_heatmap || [] } : m,
                       );
                       return { ...c, messages: msgs };
                     }),
@@ -734,6 +764,7 @@ export default function AIAssistantUI() {
             selectedBot={selectedBot}
             setSelectedBot={setSelectedBot}
             onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
+            onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
           />
           {selectedId === "docs" ? (
             <div className="relative flex-1 overflow-y-auto bg-background pb-16">
@@ -774,8 +805,8 @@ export default function AIAssistantUI() {
               ref={composerRef}
               conversation={selected}
               user={user}
-              onSend={(content, mode, fileRef, activeFeatures) => {
-                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures);
+              onSend={(content, mode, fileRef, activeFeatures, isVoice = false) => {
+                if (selected) sendMessage(selected.id, content, mode, fileRef, selectedBot, activeFeatures, isVoice);
               }}
               onEditMessage={(messageId, newContent) =>
                 selected && editMessage(selected.id, messageId, newContent)
@@ -797,6 +828,10 @@ export default function AIAssistantUI() {
           <IntegrationsPanel
             isOpen={isIntegrationsOpen}
             onClose={() => setIsIntegrationsOpen(false)}
+          />
+          <AuditLogsModal
+            isOpen={isAuditLogsOpen}
+            onClose={() => setIsAuditLogsOpen(false)}
           />
         </main>
       </div>

@@ -4,7 +4,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Volume2, VolumeX, ChevronDown, X, ShieldCheck } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 function CodeBlock({ children, className, ...props }) {
   const [copied, setCopied] = useState(false);
@@ -49,8 +50,73 @@ function CodeBlock({ children, className, ...props }) {
   );
 }
 
-export default function Message({ role, content, sources, quality_score, children }) {
+export default function Message({ role, content, sources, quality_score, agent_steps, source_heatmap, onOpenAuditLogs, children }) {
   const isUser = role === "user";
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioInstance, setAudioInstance] = useState(null);
+  const [showSteps, setShowSteps] = useState(false);
+
+  const handleSpeak = async () => {
+    if (isSpeaking) {
+      if (audioInstance) {
+        audioInstance.pause();
+      }
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const url = `${API_BASE_URL}/audio/tts?text=${encodeURIComponent(content)}`;
+      
+      const testRes = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!testRes.ok) {
+        throw new Error("tts_disabled_or_failed");
+      }
+
+      const audioBlob = await testRes.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      setAudioInstance(audio);
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setAudioInstance(null);
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setAudioInstance(null);
+      };
+
+      await audio.play();
+
+    } catch (err) {
+      console.log("ElevenLabs TTS not available, falling back to Browser speechSynthesis: ", err.message);
+      window.speechSynthesis.cancel();
+      
+      const cleanText = content
+        .replace(/\[\d+\]/g, "")
+        .replace(/[*_`#]/g, "")
+        .trim();
+        
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   return (
     <div
@@ -135,32 +201,78 @@ export default function Message({ role, content, sources, quality_score, childre
                     Citations
                   </h4>
                   <ul className="space-y-1.5 list-none pl-0">
-                    {sources.map((src, i) => (
-                      <li
-                        key={i}
-                        className="text-[12px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/40 px-2.5 py-1.5 rounded-md border border-zinc-100 dark:border-zinc-900/80 flex items-start gap-2"
-                      >
-                        <span className="shrink-0 mt-0.5 w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
-                          {i + 1}
-                        </span>
-                        <span className="break-all">
-                          {src.url ? (
-                            <a
-                              href={src.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
-                            >
-                              {src.source || src.filename || "Unknown Source"}
-                            </a>
-                          ) : (
-                            src.source || src.filename || "Unknown Source"
-                          )}{" "}
-                          {src.page && src.page !== "N/A" ? `(Page ${src.page})` : ""}
-                        </span>
-                      </li>
-                    ))}
+                    {sources.map((src, i) => {
+                      const confPercent = src.confidence ? Math.round(src.confidence * 100) : null;
+                      const confColorClass = confPercent >= 80 
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20" 
+                        : confPercent >= 55 
+                          ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" 
+                          : "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20";
+                      return (
+                        <li
+                          key={i}
+                          className="text-[12px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/40 px-2.5 py-1.5 rounded-md border border-zinc-100 dark:border-zinc-900/80 flex items-center gap-2"
+                        >
+                          <span className="shrink-0 w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                            {i + 1}
+                          </span>
+                          <span className="break-all flex-1 min-w-0">
+                            {src.url ? (
+                              <a
+                                href={src.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
+                              >
+                                {src.source || src.filename || "Unknown Source"}
+                              </a>
+                            ) : (
+                              src.source || src.filename || "Unknown Source"
+                            )}{" "}
+                            {src.page && src.page !== "N/A" ? `(Page ${src.page})` : ""}
+                          </span>
+                          {confPercent !== null && (
+                            <span className={cls("shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border leading-none ml-2", confColorClass)}>
+                              {confPercent}% Match
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
+                </div>
+              )}
+
+              {/* Source Heatmap Panel */}
+              {role === "assistant" && source_heatmap && source_heatmap.length > 0 && (
+                <div className="mt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3">
+                  <h4 className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+                    Source Impact Heatmap
+                  </h4>
+                  <div className="space-y-2">
+                    {source_heatmap.map((item, idx) => {
+                      const total = source_heatmap.reduce((sum, h) => sum + h.count, 0);
+                      const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                      return (
+                        <div key={idx} className="flex flex-col gap-1">
+                          <div className="flex justify-between text-[11.5px] font-medium">
+                            <span className="text-zinc-750 dark:text-zinc-350 truncate max-w-[70%]" title={item.source}>
+                              {item.source}
+                            </span>
+                            <span className="text-zinc-500 dark:text-zinc-400 shrink-0 font-semibold text-[11px]">
+                              {item.count} hit{item.count !== 1 ? 's' : ''} ({pct}%)
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" 
+                              style={{ width: `${pct}%` }} 
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -217,6 +329,87 @@ export default function Message({ role, content, sources, quality_score, childre
                   </div>
                 </div>
               )}
+
+              {/* Agent Execution Pathway Panel */}
+              {role === "assistant" && agent_steps && agent_steps.length > 0 && (
+                <div className="mt-4 border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3">
+                  <button
+                    onClick={() => setShowSteps(!showSteps)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 uppercase tracking-wider transition-colors cursor-pointer select-none"
+                  >
+                    <span>Agent execution pathway</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">({agent_steps.length} step{agent_steps.length !== 1 ? 's' : ''})</span>
+                    <ChevronDown className={cls("h-3.5 w-3.5 transition-transform duration-250 text-zinc-400", showSteps && "rotate-180")} />
+                  </button>
+                  
+                  {showSteps && (
+                    <div className="mt-3.5 pl-2.5 border-l border-zinc-200 dark:border-zinc-850 space-y-4">
+                      {agent_steps.map((step, idx) => {
+                        const nodeConfig = {
+                          voice_preprocessor: { title: "Voice Preprocessing", desc: "Transcribing and optimizing voice audio input." },
+                          planner: { title: "Research Planner", desc: "Analyzing user query, routing, and creating research task list." },
+                          memory_retriever: { title: "Memory Recall", desc: "Searching conversation history and persistent memories." },
+                          vision_extractor: { title: "Vision Document Parsing", desc: "Extracting tables, OCR text, and charts from file." },
+                          retriever: { title: "Document Semantics Retriever", desc: "Querying vector database to extract factual contexts." },
+                          web_researcher: { title: "Web Query Analyst", desc: "Performing live search over the internet for fresh data." },
+                          citation: { title: "Citation Validator", desc: "Filtering duplication and grading source relevancies." },
+                          summarizer: { title: "Synthesis Architect", desc: "Compiling research details and draft answers." },
+                          reporter: { title: "Final Report Publisher", desc: "Constructing final report markdown structure." },
+                          code_generation: { title: "Code Generator", desc: "Creating solution structure and code files." },
+                          code_review: { title: "Code Reviewer", desc: "Scanning code for potential bugs and inefficiencies." },
+                          testing: { title: "Testing Suite", desc: "Running test cases over implementation." },
+                          data_analysis: { title: "Data Analyst", desc: "Aggregating and analyzing numerical data datasets." },
+                        };
+                        const config = nodeConfig[step.node] || { title: step.node, desc: "Executing agent tasks." };
+                        const isCompleted = step.status === "completed";
+                        const isRunning = step.status === "running";
+                        const isFailed = step.status === "failed";
+                        
+                        return (
+                          <div key={idx} className="relative flex items-start gap-3">
+                            <div className={cls("mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold", 
+                              isCompleted ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" :
+                              isRunning ? "border-blue-500/25 bg-blue-500/5 text-blue-600 dark:text-blue-400 animate-pulse" :
+                              "border-rose-500/25 bg-rose-500/5 text-rose-600 dark:text-rose-400"
+                            )}>
+                              {isCompleted ? "✓" : isRunning ? "●" : "✗"}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 justify-between">
+                                <span className="text-[12px] font-semibold text-zinc-800 dark:text-zinc-200 leading-none">
+                                  {config.title}
+                                </span>
+                              </div>
+                              <p className="mt-1.5 text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium font-mono">
+                                {step.output || config.desc}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center justify-between border-t border-zinc-200/50 dark:border-zinc-800/50 pt-2.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  <ShieldCheck className="h-3 w-3" /> Explainable AI Audited
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSpeak}
+                    className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors cursor-pointer"
+                    title={isSpeaking ? "Stop speaking" : "Speak response"}
+                  >
+                    {isSpeaking ? (
+                      <VolumeX className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           )
         ) : (

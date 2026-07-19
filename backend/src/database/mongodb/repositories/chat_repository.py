@@ -21,6 +21,8 @@ async def insert_message(
     content: str,
     sources: List[Dict] = None,
     attached_file: Optional[Dict] = None,
+    agent_steps: List[Dict] = None,
+    source_heatmap: List[Dict] = None,
 ) -> str:
     doc = {
         "conversation_id": conversation_id,
@@ -28,6 +30,8 @@ async def insert_message(
         "role": role,
         "content": content,
         "sources": sources or [],
+        "agent_steps": agent_steps or [],
+        "source_heatmap": source_heatmap or [],
         "created_at": datetime.utcnow(),
     }
     if attached_file:
