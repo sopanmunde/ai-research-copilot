@@ -547,6 +547,33 @@ export default function AIAssistantUI() {
 
                 if (data.node) {
                   setAgentState(data.node);
+                  setConversations((prev) =>
+                    prev.map((c) => {
+                      if (c.id !== targetConvId) return c;
+                      const msgs = c.messages.map((m) => {
+                        if (m.id !== asstMsgId) return m;
+                        const currentSteps = m.agent_steps || [];
+                        const existingStepIdx = currentSteps.findIndex((s) => s.node === data.node);
+                        let updatedSteps = [...currentSteps];
+                        if (existingStepIdx === -1) {
+                          updatedSteps.push({
+                            node: data.node,
+                            status: data.status,
+                            output: data.output || null,
+                            timestamp: new Date().toISOString(),
+                          });
+                        } else {
+                          updatedSteps[existingStepIdx] = {
+                            ...updatedSteps[existingStepIdx],
+                            status: data.status,
+                            output: data.output || updatedSteps[existingStepIdx].output || null,
+                          };
+                        }
+                        return { ...m, agent_steps: updatedSteps };
+                      });
+                      return { ...c, messages: msgs };
+                    })
+                  );
                 }
 
                 if (data.type === "citations" && data.data) {
@@ -573,7 +600,7 @@ export default function AIAssistantUI() {
                     prev.map((c) => {
                       if (c.id !== targetConvId) return c;
                       const msgs = c.messages.map((m) =>
-                        m.id === asstMsgId ? { ...m, sources: data.sources } : m,
+                        m.id === asstMsgId ? { ...m, sources: data.sources, source_heatmap: data.source_heatmap || [] } : m,
                       );
                       return { ...c, messages: msgs };
                     }),

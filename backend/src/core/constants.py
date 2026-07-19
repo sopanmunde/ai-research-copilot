@@ -92,6 +92,7 @@ COLLECTION_PLAYGROUND_MESSAGES = "playground_messages"
 COLLECTION_NOTES = "notes"
 COLLECTION_INTEGRATIONS = "integrations"
 COLLECTION_USER_MEMORY = "user_memory"
+COLLECTION_AUDIT_LOGS = "audit_logs"
 
 REDIS_TTL_SECONDS = 3600          # 1 hour default TTL for RAG query cache
 CACHE_RAG_PREFIX = "rag:query:"

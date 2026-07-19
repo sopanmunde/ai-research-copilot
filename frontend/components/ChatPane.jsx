@@ -457,6 +457,8 @@ const ChatPane = forwardRef(function ChatPane(
                             content={m.content}
                             sources={m.sources}
                             quality_score={m.quality_score}
+                            agent_steps={m.agent_steps}
+                            source_heatmap={m.source_heatmap}
                           />
 
                           {/* Hover action bar */}

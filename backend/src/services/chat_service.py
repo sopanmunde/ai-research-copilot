@@ -46,6 +46,63 @@ from typing import Set
 active_queues: Set[asyncio.Queue] = set()
 shutdown_event = asyncio.Event()
 
+def get_node_summary(name: str, output: dict) -> str:
+    """Generates a user-friendly summary of what each agent node found/accomplished."""
+    if not output:
+        return "Execution completed."
+
+    if name == "voice_preprocessor":
+        return "Audio voice input transcribed and preprocessed."
+    elif name == "planner":
+        req_context = output.get("requires_context", False)
+        plan = output.get("plan", [])
+        if req_context and plan:
+            queries_str = ", ".join([f"'{q}'" for q in plan])
+            return f"Analyzed query. Routed to RAG pipeline. Generated search queries: {queries_str}."
+        else:
+            return "Analyzed query. Routed directly to synthesis (no document context required)."
+    elif name == "memory_retriever":
+        mem = output.get("long_term_memory", "")
+        if mem and mem.strip():
+            return "Retrieved relevant historical context from user memory."
+        return "Checked user memory database; no matching historical context found."
+    elif name == "vision_extractor":
+        return "Extracted visual data and structure from uploaded image file."
+    elif name == "retriever":
+        docs = output.get("retrieved_docs", [])
+        if docs:
+            sources = list(set([d.get("metadata", {}).get("filename", d.get("metadata", {}).get("source", "Unknown")) for d in docs]))
+            return f"Semantic search completed. Retrieved {len(docs)} relevant text chunks from source(s): {', '.join(sources)}."
+        return "Semantic search completed. No relevant document chunks found."
+    elif name == "web_researcher":
+        docs = output.get("retrieved_docs", [])
+        if docs:
+            web_sources = list(set([d.get("metadata", {}).get("filename", d.get("metadata", {}).get("source", "Unknown")) for d in docs]))
+            return f"Web search complete. Found {len(docs)} resources from the web: {', '.join(web_sources)}."
+        return "Web search completed with no relevant documents found."
+    elif name == "citation":
+        citations = output.get("citations", [])
+        if citations:
+            best_conf = max([c.get("confidence", 0.0) for c in citations if isinstance(c.get("confidence"), (int, float))] or [0.0])
+            return f"Processed and de-duplicated citations. Highest source confidence: {int(best_conf * 100)}%."
+        return "Completed citation validation."
+    elif name == "summarizer":
+        return "Synthesized query findings and drafted initial response summary."
+    elif name == "reporter":
+        q_score = output.get("quality_score", {})
+        if q_score:
+            return f"Assembled final report. Quality score: {q_score.get('overall', 80)}% (Coverage: {q_score.get('coverage', 80)}%, Confidence: {q_score.get('confidence', 80)}%)."
+        return "Final markdown report assembled."
+    elif name == "code_generation":
+        return "Generated functional source code matching parameters."
+    elif name == "code_review":
+        return "Completed review of generated code for logic and edge-cases."
+    elif name == "testing":
+        return "Completed testing verification suite."
+    elif name == "data_analysis":
+        return "Data analysis completed."
+    return "Step execution completed."
+
 async def signal_sse_shutdown():
     shutdown_event.set()
     logger.info(f"Signaling {len(active_queues)} active SSE streams of shutdown...")
@@ -137,6 +194,8 @@ async def _stream_chat_response_impl(
     provider = model_provider or ""
     model = model_name or ""
 
+    run_steps = {}
+
     if mode == "quick":
         try:
             from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
@@ -162,6 +221,15 @@ async def _stream_chat_response_impl(
                 else:
                     langchain_messages.append(AIMessage(content=msg.get("content", "")))
             langchain_messages.append(HumanMessage(content=query))
+
+            run_steps = {
+                "direct_llm": {
+                    "node": "direct_llm",
+                    "status": "running",
+                    "started_at": datetime.now(timezone.utc).isoformat(),
+                    "output": "Running direct fast LLM query."
+                }
+            }
 
             yield sse_node_event("direct_llm", "running")
 
@@ -211,7 +279,11 @@ async def _stream_chat_response_impl(
                     succeeded = True
                     break
 
-            yield sse_node_event("direct_llm", "completed")
+            run_steps["direct_llm"]["status"] = "completed"
+            run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            run_steps["direct_llm"]["output"] = "Generated response from quick mode model."
+
+            yield sse_node_event("direct_llm", "completed", output="Generated response from quick mode model.")
             yield sse_done_event([])
 
             if streamed_text:
@@ -225,6 +297,8 @@ async def _stream_chat_response_impl(
                         role="assistant",
                         content=streamed_text,
                         sources=[],
+                        agent_steps=list(run_steps.values()),
+                        source_heatmap=[],
                     )
                     await touch_conversation(conversation_id)
                     asyncio.create_task(
@@ -237,11 +311,61 @@ async def _stream_chat_response_impl(
                     )
                 except Exception as e:
                     logger.error(f"Failed to persist assistant message: {e}")
+
+            # Write successful quick mode audit log
+            try:
+                from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+                audit_data = {
+                    "user_id": user_id,
+                    "conversation_id": conversation_id,
+                    "query": query,
+                    "mode": "quick",
+                    "workflow_type": workflow_type,
+                    "provider": attempt_provider,
+                    "model": model or "default",
+                    "steps": list(run_steps.values()),
+                    "citations": [],
+                    "source_heatmap": [],
+                    "response_length": len(streamed_text),
+                    "status": "success",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                await insert_audit_log(audit_data)
+            except Exception as audit_err:
+                logger.error(f"Failed to write quick mode audit log: {audit_err}")
+
             return
 
         except Exception as e:
             logger.error(f"Quick mode fatal error: {e}", exc_info=True)
             yield sse_error_event(str(e))
+            # Write failed quick mode audit log
+            try:
+                from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+                if "direct_llm" in run_steps:
+                    run_steps["direct_llm"]["status"] = "failed"
+                    run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    run_steps["direct_llm"]["error"] = str(e)
+                
+                audit_data = {
+                    "user_id": user_id,
+                    "conversation_id": conversation_id,
+                    "query": query,
+                    "mode": "quick",
+                    "workflow_type": workflow_type,
+                    "provider": provider or settings.DEFAULT_LLM_PROVIDER,
+                    "model": model or "default",
+                    "steps": list(run_steps.values()),
+                    "citations": [],
+                    "source_heatmap": [],
+                    "response_length": 0,
+                    "status": "failed",
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                await insert_audit_log(audit_data)
+            except Exception as audit_err:
+                logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
             return
 
     graph = get_workflow_for_mode(workflow_type)
@@ -285,36 +409,59 @@ async def _stream_chat_response_impl(
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
                 active_node = name
+                run_steps[name] = {
+                    "node": name,
+                    "status": "running",
+                    "started_at": datetime.now(timezone.utc).isoformat(),
+                    "output": None,
+                }
                 yield sse_node_event(name, "running")
 
             elif kind == "on_chain_end" and name in (
                 "voice_preprocessor", "planner", "memory_retriever", "vision_extractor", "retriever", "web_researcher", "citation", "summarizer", "reporter",
                 "code_generation", "code_review", "testing", "data_analysis",
             ):
-                yield sse_node_event(name, "completed")
+                output = data.get("output", {}) or {}
+                summary = get_node_summary(name, output)
+
+                if name in run_steps:
+                    run_steps[name]["status"] = "completed"
+                    run_steps[name]["completed_at"] = datetime.now(timezone.utc).isoformat()
+                    run_steps[name]["output"] = summary
+                else:
+                    run_steps[name] = {
+                        "node": name,
+                        "status": "completed",
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                        "output": summary
+                    }
+
+                yield sse_node_event(name, "completed", output=summary)
 
                 if name == "planner":
-                    output = data.get("output", {})
                     if output.get("terminate") and output.get("final_output"):
                         final_text = output.get("final_output")
                         yield sse_token_event(final_text)
 
                 elif name == "retriever":
-                    output = data.get("output", {})
                     cits = output.get("citations", [])
                     if cits:
                         final_citations = cits
                         yield sse_citations_event(cits)
 
                 elif name == "web_researcher":
-                    output = data.get("output", {})
                     cits = output.get("citations", [])
                     if cits:
                         final_citations = cits
                         yield sse_citations_event(cits)
 
+                elif name == "citation":
+                    cits = output.get("citations", [])
+                    if cits:
+                        final_citations = cits
+
                 elif name == "reporter":
-                    output = data.get("output", {})
                     final_text = output.get("final_output", streamed_text)
                     final_citations = output.get("citations", final_citations)
 
@@ -344,7 +491,14 @@ async def _stream_chat_response_impl(
                         data.get("from", ""), data.get("to", ""), data.get("reason", "")
                     )
 
-        yield sse_done_event(final_citations)
+        # Compile source heatmap
+        source_counts = {}
+        for cit in final_citations:
+            src = cit.get("filename", cit.get("source", "Unknown"))
+            source_counts[src] = source_counts.get(src, 0) + 1
+        source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
+
+        yield sse_done_event(final_citations, source_heatmap)
 
         persist_text = final_text or streamed_text
         if persist_text:
@@ -358,6 +512,8 @@ async def _stream_chat_response_impl(
                     role="assistant",
                     content=persist_text,
                     sources=final_citations,
+                    agent_steps=list(run_steps.values()),
+                    source_heatmap=source_heatmap,
                 )
                 await touch_conversation(conversation_id)
                 asyncio.create_task(
@@ -371,9 +527,68 @@ async def _stream_chat_response_impl(
             except Exception as e:
                 logger.error(f"Failed to persist assistant message: {e}")
 
+        # Write successful agent mode audit log
+        try:
+            from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+            audit_data = {
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "query": query,
+                "mode": mode,
+                "workflow_type": workflow_type,
+                "provider": model_provider or settings.DEFAULT_LLM_PROVIDER,
+                "model": model_name or "default",
+                "steps": list(run_steps.values()),
+                "citations": final_citations,
+                "source_heatmap": source_heatmap,
+                "response_length": len(persist_text),
+                "status": "success",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            await insert_audit_log(audit_data)
+        except Exception as audit_err:
+            logger.error(f"Failed to write agent mode audit log: {audit_err}")
+
     except Exception as e:
         logger.error(f"Agent mode error: {e}", exc_info=True)
+        
+        # Update current active step to failed if any
+        if active_node and active_node in run_steps:
+            run_steps[active_node]["status"] = "failed"
+            run_steps[active_node]["error"] = str(e)
+            run_steps[active_node]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            
         yield sse_error_event(str(e))
+        
+        # Write failed agent mode audit log
+        try:
+            from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+            # compile source heatmap if empty
+            source_counts = {}
+            for cit in final_citations:
+                src = cit.get("filename", cit.get("source", "Unknown"))
+                source_counts[src] = source_counts.get(src, 0) + 1
+            source_heatmap = [{"source": k, "count": v} for k, v in source_counts.items()]
+            
+            audit_data = {
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "query": query,
+                "mode": mode,
+                "workflow_type": workflow_type,
+                "provider": model_provider or settings.DEFAULT_LLM_PROVIDER,
+                "model": model_name or "default",
+                "steps": list(run_steps.values()),
+                "citations": final_citations,
+                "source_heatmap": source_heatmap,
+                "response_length": 0,
+                "status": "failed",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            await insert_audit_log(audit_data)
+        except Exception as audit_err:
+            logger.error(f"Failed to write failed agent mode audit log: {audit_err}")
 
 
 async def stream_chat_response(
