@@ -114,6 +114,18 @@ async def upload_document(
         file_bytes=content,
     )
 
+    try:
+        from src.services.workflow_scheduler import trigger_event_workflows
+        asyncio.create_task(
+            trigger_event_workflows(
+                event_type="document_uploaded",
+                user_id=user_id,
+                payload={"filename": filename, "file_type": ext, "chunks": chunk_count},
+            )
+        )
+    except Exception as e:
+        logger.warning(f"Failed to trigger event workflow for upload: {e}")
+
     return {
         "message": "Document ingested and indexed successfully",
         "filename": filename,

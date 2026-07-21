@@ -45,3 +45,4 @@ wheel
 slowapi
 
 pymupdf
+apscheduler

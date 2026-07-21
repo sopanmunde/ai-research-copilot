@@ -128,6 +128,7 @@ from src.api.routes.notes_routes import router as notes_router
 from src.api.routes.integrations_routes import router as integrations_router
 from src.api.routes.audio_routes import router as audio_router
 from src.api.routes.audit_routes import router as audit_router
+from src.api.routes.workflow_routes import router as workflow_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -172,10 +173,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Redis check failed (non-fatal): {e}")
 
+    try:
+        from src.services.workflow_scheduler import start_scheduler, shutdown_scheduler
+        await start_scheduler()
+    except Exception as e:
+        logger.warning(f"Workflow scheduler initialization failed (non-fatal): {e}")
+
     logger.info("Application ready [OK]")
     yield
     logger.info("Graceful shutdown started...")
     shutdown_start = time.time()
+
+    try:
+        from src.services.workflow_scheduler import shutdown_scheduler
+        await shutdown_scheduler()
+    except Exception as e:
+        logger.warning(f"Failed to shutdown workflow scheduler: {e}")
     
     try:
         from src.services.chat_service import signal_sse_shutdown
@@ -286,6 +299,7 @@ def create_app() -> FastAPI:
     app.include_router(integrations_router,  prefix="/api/integrations",        tags=["integrations"])
     app.include_router(audio_router,         prefix="/api/audio",               tags=["audio"])
     app.include_router(audit_router,         prefix="/api/audit-logs",          tags=["audit-logs"])
+    app.include_router(workflow_router,      prefix="/api/workflows",           tags=["workflows"])
 
     @app.get("/", tags=["root"])
     async def root():

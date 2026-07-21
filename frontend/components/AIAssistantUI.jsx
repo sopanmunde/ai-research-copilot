@@ -21,6 +21,7 @@ import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
+import WorkflowsModal from "./WorkflowsModal";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -153,6 +154,7 @@ export default function AIAssistantUI() {
   const [selectedBot, setSelectedBot] = useState("Fast");
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
+  const [isWorkflowsOpen, setIsWorkflowsOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -765,6 +767,7 @@ export default function AIAssistantUI() {
             setSelectedBot={setSelectedBot}
             onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
             onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
+            onOpenWorkflows={() => setIsWorkflowsOpen(true)}
           />
           {selectedId === "docs" ? (
             <div className="relative flex-1 overflow-y-auto bg-background pb-16">
@@ -832,6 +835,10 @@ export default function AIAssistantUI() {
           <AuditLogsModal
             isOpen={isAuditLogsOpen}
             onClose={() => setIsAuditLogsOpen(false)}
+          />
+          <WorkflowsModal
+            isOpen={isWorkflowsOpen}
+            onClose={() => setIsWorkflowsOpen(false)}
           />
         </main>
       </div>
