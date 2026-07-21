@@ -564,13 +564,27 @@ function DocumentDataTable({
   React.useEffect(() => {
     const fetchDocs = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/documents`, { headers })
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        if (!token) {
+          setData([])
+          setIsLoading(false)
+          return
+        }
+        const res = await fetch(`${API_BASE_URL}/documents`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...headers,
+          },
+        })
         if (res.ok) {
           const docs = await res.json()
           setData(docs || [])
+        } else {
+          setData([])
         }
       } catch (err) {
-        console.error("Failed to fetch documents", err)
+        console.warn("Failed to fetch documents", err)
+        setData([])
       } finally {
         setIsLoading(false)
       }
@@ -823,7 +837,18 @@ function ConversationDataTable() {
   React.useEffect(() => {
     const fetchConvs = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/conversations`, { headers })
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        if (!token) {
+          setData([])
+          setIsLoading(false)
+          return
+        }
+        const res = await fetch(`${API_BASE_URL}/conversations`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...headers,
+          },
+        })
         if (res.ok) {
           const convs = await res.json()
           setData(
@@ -835,9 +860,12 @@ function ConversationDataTable() {
               folder: c.folder || null,
             }))
           )
+        } else {
+          setData([])
         }
       } catch (err) {
-        console.error("Failed to fetch conversations", err)
+        console.warn("Failed to fetch conversations", err)
+        setData([])
       } finally {
         setIsLoading(false)
       }

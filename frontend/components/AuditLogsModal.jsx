@@ -5,20 +5,19 @@ import {
   ShieldCheck,
   Search,
   X,
-  FileJson,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Layers,
   FileText,
-  ChevronRight,
   Download,
   RefreshCw,
-  ExternalLink,
   Cpu,
   BarChart2,
+  Layers,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) {
   const [logs, setLogs] = useState([]);
@@ -87,61 +86,65 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
       : "0";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="flex flex-col h-[85vh] w-full max-w-6xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="flex flex-col h-[85vh] w-full max-w-6xl rounded-2xl border border-border bg-card text-card-foreground shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 bg-zinc-50/80 dark:bg-zinc-900/50">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-muted/40">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                 Explainable AI Audit Logs
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                   Enterprise Compliance
-                </span>
+                </Badge>
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 Immutable query execution step logs, citation confidence scoring, and source heatmaps stored in MongoDB.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={fetchAuditLogs}
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               Refresh
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              className="h-8 w-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             >
               <X className="h-5 w-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Metrics Banner */}
-        <div className="grid grid-cols-4 divide-x divide-zinc-200 dark:divide-zinc-800 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/20">
+        <div className="grid grid-cols-4 divide-x divide-border border-b border-border bg-muted/20">
           <div className="p-3.5 px-6">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Total Audited Queries</p>
-            <p className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 mt-0.5">{totalLogs}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Audited Queries</p>
+            <p className="text-xl font-extrabold text-foreground mt-0.5">{totalLogs}</p>
           </div>
           <div className="p-3.5 px-6">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Compliance Reliability Rate</p>
-            <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{successRate}%</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Compliance Reliability Rate</p>
+            <p className="text-xl font-extrabold text-emerald-500 mt-0.5">{successRate}%</p>
           </div>
           <div className="p-3.5 px-6">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Avg Citations Per Query</p>
-            <p className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 mt-0.5">{avgCitations}</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Citations Per Query</p>
+            <p className="text-xl font-extrabold text-foreground mt-0.5">{avgCitations}</p>
           </div>
           <div className="p-3.5 px-6">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Audit Storage Target</p>
-            <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 mt-1 flex items-center gap-1.5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Storage Target</p>
+            <p className="text-xs font-semibold text-foreground mt-1 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               MongoDB audit_logs
             </p>
@@ -151,216 +154,230 @@ export default function AuditLogsModal({ isOpen, onClose, defaultSearch = "" }) 
         {/* Main Body */}
         <div className="flex flex-1 min-h-0">
           {/* Left Column: Log List */}
-          <div className="w-5/12 flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <div className="w-5/12 flex flex-col border-r border-border bg-card">
             {/* Search */}
-            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="p-3 border-b border-border">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-                <input
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
                   type="text"
                   placeholder="Search queries, models, providers..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 pl-9 pr-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full pl-9 h-8 text-xs font-medium"
                 />
               </div>
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-900">
-              {logs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center text-zinc-400">
-                  <FileText className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-xs font-semibold">No audit logs found</p>
-                  <p className="text-[11px] mt-1">Queries submitted in agent/quick mode will appear here.</p>
-                </div>
-              ) : (
-                logs.map((log) => {
-                  const isSelected = selectedLog?.id === log.id;
-                  const isSuccess = log.status === "success";
-                  const dateStr = log.timestamp
-                    ? new Date(log.timestamp).toLocaleString()
-                    : "N/A";
-                  const stepCount = log.steps?.length || 0;
-                  const citCount = log.citations?.length || 0;
+            <ScrollArea className="flex-1">
+              <div className="divide-y divide-border/50">
+                {logs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+                    <FileText className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-xs font-semibold text-foreground">No audit logs found</p>
+                    <p className="text-[11px] mt-1 text-muted-foreground">Queries submitted in agent/quick mode will appear here.</p>
+                  </div>
+                ) : (
+                  logs.map((log) => {
+                    const isSelected = selectedLog?.id === log.id;
+                    const isSuccess = log.status === "success";
+                    const dateStr = log.timestamp
+                      ? new Date(log.timestamp).toLocaleString()
+                      : "N/A";
+                    const stepCount = log.steps?.length || 0;
+                    const citCount = log.citations?.length || 0;
 
-                  return (
-                    <div
-                      key={log.id}
-                      onClick={() => setSelectedLog(log)}
-                      className={`p-3.5 px-4 cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-emerald-500/10 dark:bg-emerald-950/30 border-l-4 border-emerald-500"
-                          : "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                          {log.mode?.toUpperCase() || "AGENT"} · {log.workflow_type || "research"}
-                        </span>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                            isSuccess
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                              : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {isSuccess ? "Success" : "Failed"}
-                        </span>
+                    return (
+                      <div
+                        key={log.id}
+                        onClick={() => setSelectedLog(log)}
+                        className={`p-3.5 px-4 cursor-pointer transition-colors ${
+                          isSelected
+                            ? "bg-emerald-500/10 border-l-4 border-emerald-500"
+                            : "hover:bg-accent/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <Badge variant="secondary" className="text-[10px] font-mono uppercase tracking-wider">
+                            {log.mode?.toUpperCase() || "AGENT"} · {log.workflow_type || "research"}
+                          </Badge>
+                          <Badge
+                            className={`text-[10px] font-semibold border-none ${
+                              isSuccess
+                                ? "bg-emerald-500/10 text-emerald-500"
+                                : "bg-destructive/10 text-destructive"
+                            }`}
+                          >
+                            {isSuccess ? "Success" : "Failed"}
+                          </Badge>
+                        </div>
+
+                        <p className="text-xs font-bold text-foreground line-clamp-2 leading-relaxed">
+                          {log.query}
+                        </p>
+
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-2 font-mono">
+                          <span>{dateStr}</span>
+                          <span>
+                            {stepCount} step{stepCount !== 1 ? "s" : ""} · {citCount} citation{citCount !== 1 ? "s" : ""}
+                          </span>
+                        </div>
                       </div>
-
-                      <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-relaxed">
-                        {log.query}
-                      </p>
-
-                      <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-2 font-mono">
-                        <span>{dateStr}</span>
-                        <span>
-                          {stepCount} step{stepCount !== 1 ? "s" : ""} · {citCount} citation{citCount !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
+            </ScrollArea>
           </div>
 
           {/* Right Column: Audit Detail Inspector */}
-          <div className="w-7/12 flex flex-col overflow-y-auto bg-zinc-50/50 dark:bg-zinc-900/30 p-6">
+          <ScrollArea className="w-7/12 flex-1 bg-muted/20 p-6">
             {selectedLog ? (
               <div className="space-y-6">
                 {/* Detail Header */}
-                <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                <div className="flex items-start justify-between border-b border-border pb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold font-mono text-zinc-500">
+                      <span className="text-xs font-bold font-mono text-muted-foreground">
                         AUDIT LOG ID: {selectedLog.id}
                       </span>
                     </div>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                    <h3 className="text-sm font-bold text-foreground leading-snug">
                       "{selectedLog.query}"
                     </h3>
                   </div>
 
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleExportJson(selectedLog)}
-                    className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0 shadow-xs"
+                    className="gap-1.5 h-8 text-xs font-semibold shrink-0 shadow-xs"
                   >
                     <Download className="h-3.5 w-3.5 text-emerald-500" />
                     Export Audit JSON
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Metadata Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 shadow-xs">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Model & Provider</p>
-                    <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 flex items-center gap-1.5">
-                      <Cpu className="h-3.5 w-3.5 text-blue-500" />
-                      {selectedLog.provider || "default"} / {selectedLog.model || "default"}
-                    </p>
-                  </div>
+                  <Card className="border-border bg-card text-card-foreground shadow-xs">
+                    <CardContent className="p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Model & Provider</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5 flex items-center gap-1.5">
+                        <Cpu className="h-3.5 w-3.5 text-blue-500" />
+                        {selectedLog.provider || "default"} / {selectedLog.model || "default"}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                  <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-3 shadow-xs">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Execution Mode</p>
-                    <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 flex items-center gap-1.5">
-                      <Layers className="h-3.5 w-3.5 text-fuchsia-500" />
-                      {selectedLog.mode?.toUpperCase()} ({selectedLog.workflow_type || "research"})
-                    </p>
-                  </div>
+                  <Card className="border-border bg-card text-card-foreground shadow-xs">
+                    <CardContent className="p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Execution Mode</p>
+                      <p className="text-xs font-bold text-foreground mt-0.5 flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5 text-purple-500" />
+                        {selectedLog.mode?.toUpperCase()} ({selectedLog.workflow_type || "research"})
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Execution Pathway Steps */}
-                <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-xs">
-                  <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-emerald-500" />
-                    Agent Step Execution Log ({selectedLog.steps?.length || 0} Nodes)
-                  </h4>
+                <Card className="border-border bg-card text-card-foreground shadow-xs">
+                  <CardContent className="p-4">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Layers className="h-4 w-4 text-emerald-500" />
+                      Agent Step Execution Log ({selectedLog.steps?.length || 0} Nodes)
+                    </h4>
 
-                  <div className="space-y-3 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-                    {selectedLog.steps && selectedLog.steps.length > 0 ? (
-                      selectedLog.steps.map((step, idx) => (
-                        <div key={idx} className="relative pl-4 flex flex-col gap-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                              {step.node}
-                            </span>
-                            <span className="text-[10px] font-mono text-zinc-400">
-                              {step.started_at ? new Date(step.started_at).toLocaleTimeString() : ""}
-                            </span>
+                    <div className="space-y-3 pl-2 border-l border-border">
+                      {selectedLog.steps && selectedLog.steps.length > 0 ? (
+                        selectedLog.steps.map((step, idx) => (
+                          <div key={idx} className="relative pl-4 flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                {step.node}
+                              </span>
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {step.started_at ? new Date(step.started_at).toLocaleTimeString() : ""}
+                              </span>
+                            </div>
+                            <p className="text-xs font-mono text-muted-foreground bg-muted p-2 rounded-md border border-border">
+                              {step.output || "Completed successfully."}
+                            </p>
                           </div>
-                          <p className="text-xs font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-2 rounded-md border border-zinc-100 dark:border-zinc-800/80">
-                            {step.output || "Completed successfully."}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-zinc-400 italic">No node steps recorded for this execution.</p>
-                    )}
-                  </div>
-                </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No node steps recorded for this execution.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Citation Confidence Scores */}
                 {selectedLog.citations && selectedLog.citations.length > 0 && (
-                  <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-xs">
-                    <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      Citation Confidence Match Scores
-                    </h4>
+                  <Card className="border-border bg-card text-card-foreground shadow-xs">
+                    <CardContent className="p-4">
+                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-500" />
+                        Citation Confidence Match Scores
+                      </h4>
 
-                    <div className="space-y-2">
-                      {selectedLog.citations.map((cit, idx) => {
-                        const confPct = cit.confidence ? Math.round(cit.confidence * 100) : 85;
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-xs"
-                          >
-                            <span className="font-semibold text-zinc-800 dark:text-zinc-200 truncate max-w-[70%]">
-                              {idx + 1}. {cit.filename || cit.source || "Document"} {cit.page ? `(Page ${cit.page})` : ""}
-                            </span>
-                            <span className="font-bold px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                              {confPct}% Confidence Match
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                      <div className="space-y-2">
+                        {selectedLog.citations.map((cit, idx) => {
+                          const confPct = cit.confidence ? Math.round(cit.confidence * 100) : 85;
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 rounded-lg bg-muted border border-border text-xs"
+                            >
+                              <span className="font-semibold text-foreground truncate max-w-[70%]">
+                                {idx + 1}. {cit.filename || cit.source || "Document"} {cit.page ? `(Page ${cit.page})` : ""}
+                              </span>
+                              <Badge className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                {confPct}% Confidence Match
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
                 {/* Source Impact Heatmap */}
                 {selectedLog.source_heatmap && selectedLog.source_heatmap.length > 0 && (
-                  <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 shadow-xs">
-                    <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <BarChart2 className="h-4 w-4 text-fuchsia-500" />
-                      Source Impact Heatmap
-                    </h4>
+                  <Card className="border-border bg-card text-card-foreground shadow-xs">
+                    <CardContent className="p-4">
+                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <BarChart2 className="h-4 w-4 text-purple-500" />
+                        Source Impact Heatmap
+                      </h4>
 
-                    <div className="space-y-2">
-                      {selectedLog.source_heatmap.map((item, idx) => (
-                        <div key={idx} className="flex flex-col gap-1">
-                          <div className="flex justify-between text-xs font-semibold">
-                            <span className="text-zinc-700 dark:text-zinc-300 truncate">{item.source}</span>
-                            <span className="text-zinc-500 font-mono text-[11px]">{item.count} hit(s)</span>
+                      <div className="space-y-2">
+                        {selectedLog.source_heatmap.map((item, idx) => (
+                          <div key={idx} className="flex flex-col gap-1">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-foreground truncate">{item.source}</span>
+                              <span className="text-muted-foreground font-mono text-[11px]">{item.count} hit(s)</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: `${Math.min(item.count * 25, 100)}%` }} />
+                            </div>
                           </div>
-                          <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: `${Math.min(item.count * 25, 100)}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             ) : (
-              <div className="flex flex-1 items-center justify-center text-center text-zinc-400">
+              <div className="flex flex-1 items-center justify-center text-center text-muted-foreground py-12">
                 <p className="text-xs font-semibold">Select an audit log entry on the left to inspect detailed explainability metadata.</p>
               </div>
             )}
-          </div>
+          </ScrollArea>
         </div>
       </div>
     </div>

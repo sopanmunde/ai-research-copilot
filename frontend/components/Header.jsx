@@ -9,6 +9,7 @@ import {
   Check,
   Sliders,
   ShieldCheck,
+  GitMerge,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -54,6 +55,7 @@ export default function Header({
   setSelectedBot,
   onToggleIntegrations,
   onOpenAuditLogs,
+  onOpenWorkflows,
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot) || CHATBOTS[0];
 
@@ -126,13 +128,23 @@ export default function Header({
         </button>
       </div>
 
-      {/* Right side settings & audit log triggers */}
-      <div className="flex items-center gap-1.5">
+      {/* Right side settings, audit logs & automations triggers */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenWorkflows}
+          className="h-8 gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-900 shadow-xs transition-all"
+          title="Workflow Automations (Cron & Events)"
+        >
+          <GitMerge className="h-4 w-4 text-purple-500" />
+          <span className="hidden sm:inline">Automations</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={onOpenAuditLogs}
-          className="h-8 rounded-lg px-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 shadow-xs cursor-pointer flex items-center gap-1.5 transition-all"
+          className="h-8 gap-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-900 shadow-xs transition-all"
           title="Explainable AI Audit Logs"
         >
           <ShieldCheck className="h-4 w-4 text-emerald-500" />

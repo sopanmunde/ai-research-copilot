@@ -59,6 +59,8 @@ import {
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
+import { ExportModal } from "./ExportModal";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProviderType = "cloud" | "local";
@@ -240,7 +242,9 @@ function ProviderLogo({ logo, active, size = "md" }: { logo: string; active: boo
 
 export function BrainDashboard() {
   const [activeTab,          setActiveTab]          = useState<"cloud" | "local">("cloud");
+  const [isExportOpen,       setIsExportOpen]       = useState(false);
   const [selectedProviderId, setSelectedProviderId] = useState<string>("openai");
+
   const [cloudProviders,     setCloudProviders]     = useState<LLMProvider[]>([]);
   const [localProviders,     setLocalProviders]     = useState<LLMProvider[]>([]);
   const [apiKeys,            setApiKeys]            = useState<ApiKey[]>([]);
@@ -882,17 +886,29 @@ export function BrainDashboard() {
                 <p className="text-[11px] text-muted-foreground mt-0.5">Manage LLM configurations, security keys, benchmark speeds &amp; live playground</p>
               </div>
             </div>
-            {activeProvider && (
-              <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-1.5">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] text-muted-foreground font-medium">Active:</span>
-                <span className="text-[11px] font-semibold text-foreground">{activeProvider.name}</span>
-                <Badge variant="outline" className="text-[9px] h-4.5 px-1.5 border-border">
-                  {activeProvider.type === "local" ? "Local" : "Cloud"}
-                </Badge>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {activeProvider && (
+                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-1.5">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] text-muted-foreground font-medium">Active:</span>
+                  <span className="text-[11px] font-semibold text-foreground">{activeProvider.name}</span>
+                  <Badge variant="outline" className="text-[9px] h-4.5 px-1.5 border-border">
+                    {activeProvider.type === "local" ? "Local" : "Cloud"}
+                  </Badge>
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsExportOpen(true)}
+                className="h-8 text-xs font-semibold gap-1.5 border-indigo-500/20 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+              >
+                <Plug className="h-3.5 w-3.5" />
+                Export &amp; Integrations Hub
+              </Button>
+            </div>
           </div>
+
 
           <div className="grid grid-cols-4 gap-0 border-t border-border divide-x divide-border bg-muted/20">
             {[
@@ -1651,6 +1667,12 @@ export function BrainDashboard() {
 
         </div>
       </div>
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        query="AI Model & Brain Playground Session"
+      />
     </TooltipProvider>
   );
 }

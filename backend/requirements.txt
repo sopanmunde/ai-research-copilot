@@ -45,3 +45,8 @@ wheel
 slowapi
 
 pymupdf
+apscheduler
+reportlab
+python-docx
+openpyxl
+

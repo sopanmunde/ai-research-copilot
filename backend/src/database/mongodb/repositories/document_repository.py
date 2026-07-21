@@ -40,10 +40,12 @@ async def save_document_metadata(
 
 async def get_user_documents(user_id: str, limit: int = 50) -> List[Dict]:
     docs = await _db()[COLLECTION_DOCUMENTS].find(
-        {"user_id": user_id}
+        {"user_id": user_id},
+        {"file_bytes": 0}
     ).sort("uploaded_at", -1).limit(limit).to_list(limit)
     for d in docs:
         d["id"] = str(d.pop("_id"))
+        d.pop("file_bytes", None)
         if "uploaded_at" in d and hasattr(d["uploaded_at"], "isoformat"):
             d["uploaded_at"] = d["uploaded_at"].isoformat()
     return docs

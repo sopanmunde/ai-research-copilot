@@ -35,10 +35,11 @@ interface IntegrationsPanelProps {
 }
 
 export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanelProps) {
-  const [activeTab, setActiveTab] = useState<"apps" | "extensions">("apps");
+  const [activeTab, setActiveTab] = useState<"apps" | "extensions" | "hub">("apps");
   const [config, setConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
 
   // States for adding new items
   const [newSkillName, setNewSkillName] = useState("");
@@ -274,28 +275,41 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
         <button
           onClick={() => setActiveTab("apps")}
           className={cn(
-            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1",
             activeTab === "apps"
               ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700/60"
               : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
           )}
         >
           <Layers className="h-3.5 w-3.5" />
-          Apps &amp; Context
+          Apps
         </button>
         <button
           onClick={() => setActiveTab("extensions")}
           className={cn(
-            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1",
             activeTab === "extensions"
               ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700/60"
               : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
           )}
         >
           <Sparkles className="h-3.5 w-3.5" />
-          Agent Protocols
+          Protocols
+        </button>
+        <button
+          onClick={() => setActiveTab("hub")}
+          className={cn(
+            "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1",
+            activeTab === "hub"
+              ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700/60"
+              : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+          )}
+        >
+          <Plug className="h-3.5 w-3.5 text-indigo-500" />
+          Export &amp; Hub
         </button>
       </div>
+
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
@@ -309,8 +323,8 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
             Error loading settings. Please try again.
           </div>
         ) : activeTab === "apps" ? (
-          /* APPS & CONTEXT TAB */
           <div className="space-y-5">
+            {/* APPS & CONTEXT TAB */}
             {/* TASKS */}
             <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -477,9 +491,9 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
               )}
             </div>
           </div>
-        ) : (
-          /* AGENT EXTENSIONS TAB (Skills, MCP, LSP, ACP) */
+        ) : activeTab === "extensions" ? (
           <div className="space-y-6">
+            {/* AGENT EXTENSIONS TAB (Skills, MCP, LSP, ACP) */}
             {/* SKILLS */}
             <div className="space-y-3">
               <h4 className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -697,9 +711,244 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
                 </div>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {/* EXPORT & INTEGRATION HUB TAB */}
+            {/* SLACK */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-emerald-500">#</span>
+                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Slack Webhook</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.slack?.enabled || false}
+                  onChange={() => {
+                    const updated = { ...config, slack: { ...config.slack, enabled: !config.slack?.enabled } };
+                    setConfig(updated);
+                    saveConfig(updated);
+                  }}
+                  className="accent-primary h-3.5 w-3.5 rounded"
+                />
+              </div>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  placeholder="https://hooks.slack.com/services/..."
+                  value={config.slack?.webhookUrl || ""}
+                  onChange={(e) => setConfig({ ...config, slack: { ...config.slack, webhookUrl: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-zinc-500">Channel Name:</span>
+                  <Input
+                    placeholder="#research-reports"
+                    value={config.slack?.channelName || ""}
+                    onChange={(e) => setConfig({ ...config, slack: { ...config.slack, channelName: e.target.value } })}
+                    onBlur={() => saveConfig()}
+                    className="h-6 text-[10px] bg-zinc-50 dark:bg-zinc-800 max-w-[150px]"
+                  />
+                </div>
+              </div>
+            </div>
 
+            {/* TEAMS */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-indigo-500">T</span>
+                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Microsoft Teams</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.teams?.enabled || false}
+                  onChange={() => {
+                    const updated = { ...config, teams: { ...config.teams, enabled: !config.teams?.enabled } };
+                    setConfig(updated);
+                    saveConfig(updated);
+                  }}
+                  className="accent-primary h-3.5 w-3.5 rounded"
+                />
+              </div>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  placeholder="https://outlook.office.com/webhook/..."
+                  value={config.teams?.webhookUrl || ""}
+                  onChange={(e) => setConfig({ ...config, teams: { ...config.teams, webhookUrl: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+              </div>
+            </div>
+
+            {/* NOTION */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200">N</span>
+                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Notion Workspace</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.notion?.enabled || false}
+                  onChange={() => {
+                    const updated = { ...config, notion: { ...config.notion, enabled: !config.notion?.enabled } };
+                    setConfig(updated);
+                    saveConfig(updated);
+                  }}
+                  className="accent-primary h-3.5 w-3.5 rounded"
+                />
+              </div>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  type="password"
+                  placeholder="Notion Integration Secret (secret_...)"
+                  value={config.notion?.apiKey || ""}
+                  onChange={(e) => setConfig({ ...config, notion: { ...config.notion, apiKey: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+                <Input
+                  placeholder="Parent Page ID or Database ID"
+                  value={config.notion?.parentPageId || ""}
+                  onChange={(e) => setConfig({ ...config, notion: { ...config.notion, parentPageId: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+              </div>
+            </div>
+
+            {/* CONFLUENCE */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-blue-500">C</span>
+                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Confluence Wiki</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.confluence?.enabled || false}
+                  onChange={() => {
+                    const updated = { ...config, confluence: { ...config.confluence, enabled: !config.confluence?.enabled } };
+                    setConfig(updated);
+                    saveConfig(updated);
+                  }}
+                  className="accent-primary h-3.5 w-3.5 rounded"
+                />
+              </div>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  placeholder="Domain (e.g. company.atlassian.net)"
+                  value={config.confluence?.domain || ""}
+                  onChange={(e) => setConfig({ ...config, confluence: { ...config.confluence, domain: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="User Email"
+                    value={config.confluence?.email || ""}
+                    onChange={(e) => setConfig({ ...config, confluence: { ...config.confluence, email: e.target.value } })}
+                    onBlur={() => saveConfig()}
+                    className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                  />
+                  <Input
+                    placeholder="Space Key (e.g. RESEARCH)"
+                    value={config.confluence?.spaceKey || ""}
+                    onChange={(e) => setConfig({ ...config, confluence: { ...config.confluence, spaceKey: e.target.value } })}
+                    onBlur={() => saveConfig()}
+                    className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                  />
+                </div>
+                <Input
+                  type="password"
+                  placeholder="Atlassian API Token"
+                  value={config.confluence?.apiToken || ""}
+                  onChange={(e) => setConfig({ ...config, confluence: { ...config.confluence, apiToken: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+              </div>
+            </div>
+
+            {/* JIRA */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-sky-500">J</span>
+                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Jira Integration</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={config.jira?.enabled || false}
+                  onChange={() => {
+                    const updated = { ...config, jira: { ...config.jira, enabled: !config.jira?.enabled } };
+                    setConfig(updated);
+                    saveConfig(updated);
+                  }}
+                  className="accent-primary h-3.5 w-3.5 rounded"
+                />
+              </div>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  placeholder="Domain (e.g. company.atlassian.net)"
+                  value={config.jira?.domain || ""}
+                  onChange={(e) => setConfig({ ...config, jira: { ...config.jira, domain: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="User Email"
+                    value={config.jira?.email || ""}
+                    onChange={(e) => setConfig({ ...config, jira: { ...config.jira, email: e.target.value } })}
+                    onBlur={() => saveConfig()}
+                    className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                  />
+                  <Input
+                    placeholder="Project Key (e.g. AI)"
+                    value={config.jira?.projectKey || ""}
+                    onChange={(e) => setConfig({ ...config, jira: { ...config.jira, projectKey: e.target.value } })}
+                    onBlur={() => saveConfig()}
+                    className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                  />
+                </div>
+                <Input
+                  type="password"
+                  placeholder="Atlassian API Token"
+                  value={config.jira?.apiToken || ""}
+                  onChange={(e) => setConfig({ ...config, jira: { ...config.jira, apiToken: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+              </div>
+            </div>
+
+            {/* EXPORT BRANDING */}
+            <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 space-y-3">
+              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">PDF &amp; DOCX Branding</span>
+              <div className="space-y-2 pt-1 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px]">
+                <Input
+                  placeholder="Company Name (e.g. TriVisionX Enterprise)"
+                  value={config.export?.companyName || ""}
+                  onChange={(e) => setConfig({ ...config, export: { ...config.export, companyName: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+                <Input
+                  placeholder="Footer Disclaimer Text"
+                  value={config.export?.footerText || ""}
+                  onChange={(e) => setConfig({ ...config, export: { ...config.export, footerText: e.target.value } })}
+                  onBlur={() => saveConfig()}
+                  className="h-7 text-[11px] bg-zinc-50 dark:bg-zinc-800"
+                />
+              </div>
+            </div>
           </div>
         )}
+
       </div>
 
       {/* Footer */}
