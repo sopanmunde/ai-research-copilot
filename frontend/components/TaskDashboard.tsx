@@ -65,6 +65,8 @@ import { cls } from "./utils";
 import * as ShadcnTaskUI from "@/components/ui/task";
 import { API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
+import { ExportModal } from "./ExportModal";
+
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 interface SubTask {
@@ -174,8 +176,14 @@ export function TaskDashboard() {
   const [newTagsStr, setNewTagsStr] = useState("");
   const [newSubtasksStr, setNewSubtasksStr] = useState("");
 
+  // Export & Integration Hub State
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportTaskId, setExportTaskId] = useState<string | undefined>(undefined);
+  const [exportTaskTitle, setExportTaskTitle] = useState<string | undefined>(undefined);
+
   // AI Copilot State
   const [copilotPrompt, setCopilotPrompt] = useState("");
+
   const [isSimulatingAI, setIsSimulatingAI] = useState(false);
   const [simulationLogs, setSimulationLogs] = useState<string[]>([]);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -691,7 +699,23 @@ export function TaskDashboard() {
                 </p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setExportTaskId(undefined);
+                  setExportTaskTitle("Task Board Export");
+                  setIsExportOpen(true);
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 border-indigo-500/20 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Export &amp; Integrations Hub
+              </Button>
+            </div>
           </div>
+
 
           {/* Stats Bar */}
           <div className="grid grid-cols-4 gap-0 border-t border-border divide-x divide-border bg-muted/20">
@@ -1778,10 +1802,20 @@ export function TaskDashboard() {
           </DialogContent>
         </Dialog>
 
+        {/* Export & Integration Hub Modal */}
+        <ExportModal
+          isOpen={isExportOpen}
+          onClose={() => setIsExportOpen(false)}
+          type="task"
+          taskId={exportTaskId}
+          query={exportTaskTitle || "Task Board Export"}
+        />
+
       </div>
     </TooltipProvider>
   );
 }
+
 
 // ─── HELPER CARDS (INTERNAL COMPONENTS) ───────────────────────────────────────
 function TaskCard({
