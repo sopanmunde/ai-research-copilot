@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     SERPAPI_API_KEY: str = ""
     BRAVE_API_KEY: str = ""
+    FIRECRAWL_API_KEY: str = ""
+    JINA_API_KEY: str = ""  # optional — Jina Reader works without a key
+    GITHUB_TOKEN: str = ""
+    CODE_EXECUTION_TIMEOUT_SECONDS: int = 30
+    CODE_EXECUTION_WORKSPACE: str = "./workspace"
     ELEVENLABS_API_KEY: str = ""
 
     ANTHROPIC_API_KEY: str = ""
