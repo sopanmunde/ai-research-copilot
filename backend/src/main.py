@@ -129,6 +129,7 @@ from src.api.routes.integrations_routes import router as integrations_router
 from src.api.routes.audio_routes import router as audio_router
 from src.api.routes.audit_routes import router as audit_router
 from src.api.routes.workflow_routes import router as workflow_router
+from src.api.routes.tools_routes import router as tools_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -300,6 +301,7 @@ def create_app() -> FastAPI:
     app.include_router(audio_router,         prefix="/api/audio",               tags=["audio"])
     app.include_router(audit_router,         prefix="/api/audit-logs",          tags=["audit-logs"])
     app.include_router(workflow_router,      prefix="/api/workflows",           tags=["workflows"])
+    app.include_router(tools_router,         prefix="/api/tools",               tags=["tools"])
 
     @app.get("/", tags=["root"])
     async def root():

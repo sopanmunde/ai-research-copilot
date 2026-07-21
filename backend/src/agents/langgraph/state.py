@@ -46,6 +46,14 @@ class AgentState(TypedDict):
     code_review: str
     test_results: str
 
+    # Coding agent execution & self-correction
+    execution_output: str
+    execution_errors: str
+    retry_count: int
+
+    # Tool call audit log (list of {tool, input, output, timestamp})
+    tool_calls_log: List[Dict[str, Any]]
+
     analysis_results: str
     visualization_data: Dict[str, Any]
 
