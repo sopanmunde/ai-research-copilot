@@ -28,15 +28,33 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  CheckCircle,
   GripVertical,
   LayoutGrid,
   Loader,
   Plus,
   MoreVertical,
-  TrendingUp,
   SlidersHorizontal,
   List,
+  // File type icons
+  FileText,
+  FileCode,
+  FileImage,
+  FileSpreadsheet,
+  FileVideo,
+  FileAudio,
+  FileJson,
+  FilePieChart,
+  File as FileIcon,
+  MessageSquare,
+  Eye,
+  Trash2,
+  RefreshCw,
+  Search,
+  Pencil,
+  Pin,
+  PinOff,
+  Download,
+  Check,
 } from "lucide-react"
 import {
   flexRender,
@@ -117,7 +135,13 @@ interface Document {
   filename: string
   file_type: string
   chunk_count: number
+  file_size?: number
   uploaded_at: string
+}
+
+function formatBytes(bytes?: number) {
+  if (bytes === undefined || bytes === null || bytes === 0) return "0 KB"
+  return (bytes / 1024).toFixed(1) + " KB"
 }
 
 interface Conversation {
@@ -133,16 +157,441 @@ interface Conversation {
 type TableRowData = Document | Conversation
 
 
-function getFileIcon(filename: string) {
+type FileIconInfo = {
+  Icon: React.ElementType
+}
+
+function getFileIcon(filename: string): FileIconInfo {
   const ext = filename.split(".").pop()?.toLowerCase() || ""
-  if (["pdf"].includes(ext)) return { emoji: "📄", color: "text-red-500", bg: "bg-red-500/10 border-red-500/20" }
-  if (["doc", "docx"].includes(ext)) return { emoji: "📝", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20" }
-  if (["xls", "xlsx", "csv"].includes(ext)) return { emoji: "📊", color: "text-green-500", bg: "bg-green-500/10 border-green-500/20" }
-  if (["ppt", "pptx"].includes(ext)) return { emoji: "📑", color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/20" }
-  if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return { emoji: "🖼️", color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/20" }
-  if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "go", "rs"].includes(ext)) return { emoji: "💻", color: "text-cyan-500", bg: "bg-cyan-500/10 border-cyan-500/20" }
-  if (["json", "yaml", "yml", "xml", "toml"].includes(ext)) return { emoji: "⚙️", color: "text-zinc-400", bg: "bg-zinc-500/10 border-zinc-500/20" }
-  return { emoji: "📁", color: "text-zinc-400", bg: "bg-zinc-500/10 border-zinc-500/20" }
+  if (["pdf", "doc", "docx", "odt", "rtf", "md", "mdx", "rst", "txt", "log"].includes(ext))
+    return { Icon: FileText }
+  if (["xls", "xlsx", "csv", "tsv"].includes(ext))
+    return { Icon: FileSpreadsheet }
+  if (["ppt", "pptx"].includes(ext))
+    return { Icon: FilePieChart }
+  if (["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "tiff", "ico"].includes(ext))
+    return { Icon: FileImage }
+  if (["mp4", "webm", "mov", "avi", "mkv"].includes(ext))
+    return { Icon: FileVideo }
+  if (["mp3", "wav", "aac", "flac", "ogg", "m4a"].includes(ext))
+    return { Icon: FileAudio }
+  if (["json", "jsonl"].includes(ext))
+    return { Icon: FileJson }
+  if (["yaml", "yml", "xml", "toml", "py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "rb", "php", "sh", "sql"].includes(ext))
+    return { Icon: FileCode }
+  return { Icon: FileIcon }
+}
+
+function getFilterIcon(filter: string): React.ElementType {
+  switch (filter) {
+    case "conversations":
+      return MessageSquare
+    case "pdf-docs":
+    case "word-docs":
+    case "txt-docs":
+      return FileText
+    case "image-docs":
+      return FileImage
+    case "spreadsheet-docs":
+      return FileSpreadsheet
+    case "presentation-docs":
+      return FilePieChart
+    case "code-docs":
+      return FileCode
+    case "all-docs":
+    default:
+      return FileIcon
+  }
+}
+
+// ── Realistic Document Icon Component ─────────────────────────────────────────
+function RealisticDocIcon({ filename, size = "md", className }: { filename: string; size?: "sm" | "md" | "lg"; className?: string }) {
+  const ext = filename?.split(".").pop()?.toLowerCase() || ""
+
+  const dimensions = {
+    sm: "w-5 h-6.5 text-[5px]",
+    md: "w-6.5 h-8.5 text-[6.5px]",
+    lg: "w-9 h-11 text-[8px]",
+  }[size] || "w-6.5 h-8.5 text-[6.5px]"
+
+  let theme = {
+    badge: "PDF",
+    bg: "from-red-500/20 via-red-500/10 to-rose-600/20",
+    border: "border-red-500/40",
+    headerBg: "bg-red-600 text-white",
+    linesColor: "bg-red-400/50",
+    IconComponent: FileText,
+    accent: "text-red-400",
+  }
+
+  if (["pdf"].includes(ext)) {
+    theme = {
+      badge: "PDF",
+      bg: "from-red-500/20 via-red-500/10 to-rose-600/20",
+      border: "border-red-500/40",
+      headerBg: "bg-red-600 text-white",
+      linesColor: "bg-red-400/50",
+      IconComponent: FileText,
+      accent: "text-red-400",
+    }
+  } else if (["doc", "docx", "rtf", "odt"].includes(ext)) {
+    theme = {
+      badge: "DOCX",
+      bg: "from-blue-500/20 via-blue-500/10 to-indigo-600/20",
+      border: "border-blue-500/40",
+      headerBg: "bg-blue-600 text-white",
+      linesColor: "bg-blue-400/50",
+      IconComponent: FileText,
+      accent: "text-blue-400",
+    }
+  } else if (["xls", "xlsx", "csv"].includes(ext)) {
+    theme = {
+      badge: "XLS",
+      bg: "from-emerald-500/20 via-emerald-500/10 to-teal-600/20",
+      border: "border-emerald-500/40",
+      headerBg: "bg-emerald-600 text-white",
+      linesColor: "bg-emerald-400/50",
+      IconComponent: FileSpreadsheet,
+      accent: "text-emerald-400",
+    }
+  } else if (["ppt", "pptx"].includes(ext)) {
+    theme = {
+      badge: "PPT",
+      bg: "from-orange-500/20 via-orange-500/10 to-amber-600/20",
+      border: "border-orange-500/40",
+      headerBg: "bg-orange-600 text-white",
+      linesColor: "bg-orange-400/50",
+      IconComponent: FilePieChart,
+      accent: "text-orange-400",
+    }
+  } else if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4),
+      bg: "from-purple-500/20 via-purple-500/10 to-pink-600/20",
+      border: "border-purple-500/40",
+      headerBg: "bg-purple-600 text-white",
+      linesColor: "bg-purple-400/50",
+      IconComponent: FileImage,
+      accent: "text-purple-400",
+    }
+  } else if (["json", "jsonl"].includes(ext)) {
+    theme = {
+      badge: "JSON",
+      bg: "from-amber-500/20 via-amber-500/10 to-yellow-600/20",
+      border: "border-amber-500/40",
+      headerBg: "bg-amber-600 text-white",
+      linesColor: "bg-amber-400/50",
+      IconComponent: FileJson,
+      accent: "text-amber-400",
+    }
+  } else if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "html", "css", "sh", "sql"].includes(ext)) {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4),
+      bg: "from-cyan-500/20 via-cyan-500/10 to-blue-600/20",
+      border: "border-cyan-500/40",
+      headerBg: "bg-cyan-600 text-white",
+      linesColor: "bg-cyan-400/50",
+      IconComponent: FileCode,
+      accent: "text-cyan-400",
+    }
+  } else if (["mp3", "wav", "mp4", "mov", "avi"].includes(ext)) {
+    theme = {
+      badge: "MEDIA",
+      bg: "from-pink-500/20 via-pink-500/10 to-purple-600/20",
+      border: "border-pink-500/40",
+      headerBg: "bg-pink-600 text-white",
+      linesColor: "bg-pink-400/50",
+      IconComponent: FileVideo,
+      accent: "text-pink-400",
+    }
+  } else {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4) || "TXT",
+      bg: "from-zinc-500/20 via-zinc-500/10 to-slate-600/20",
+      border: "border-zinc-500/40",
+      headerBg: "bg-zinc-600 text-white",
+      linesColor: "bg-zinc-400/50",
+      IconComponent: FileText,
+      accent: "text-zinc-400",
+    }
+  }
+
+  return (
+    <div className={cn("relative shrink-0 select-none group/docicon", dimensions, className)}>
+      <div className={cn(
+        "relative w-full h-full rounded bg-gradient-to-b border shadow-xs flex flex-col overflow-hidden transition-all duration-300 group-hover/docicon:scale-105 group-hover/docicon:-translate-y-0.5",
+        theme.bg,
+        theme.border
+      )}>
+        {/* Folded Corner */}
+        <div className="absolute top-0 right-0 w-2 h-2 bg-zinc-700/80 shadow-xs rounded-bl-sm border-l border-b border-white/20 z-10" />
+
+        {/* Ribbon Header Badge */}
+        <div className={cn("px-0.5 py-0.2 font-bold tracking-tight flex items-center justify-between shadow-xs leading-none", theme.headerBg)}>
+          <span>{theme.badge}</span>
+        </div>
+
+        {/* Mini Document Body Lines */}
+        <div className="flex-1 p-0.5 flex flex-col justify-between items-center opacity-90">
+          <theme.IconComponent className={cn("w-2.5 h-2.5 mt-0.5 shrink-0", theme.accent)} />
+          <div className="w-full space-y-0.5 mb-0.5">
+            <div className={cn("h-0.5 w-full rounded-full", theme.linesColor)} />
+            <div className={cn("h-0.5 w-3/4 rounded-full", theme.linesColor)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocVisualPreview({ doc }: { doc: Document }) {
+  const ext = doc.filename.split(".").pop()?.toLowerCase() || ""
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+  const isImage = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)
+  const isCode = ["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "rb", "php", "sh", "sql", "json", "yaml", "yml", "xml", "html", "css"].includes(ext)
+  const isSheet = ["xls", "xlsx", "csv", "tsv"].includes(ext)
+  const isPdf = ["pdf"].includes(ext)
+  const isWord = ["doc", "docx", "rtf", "odt"].includes(ext)
+  const isPpt = ["ppt", "pptx"].includes(ext)
+  const isAudioVideo = ["mp3", "wav", "aac", "flac", "ogg", "mp4", "webm", "mov", "avi"].includes(ext)
+
+  const [imageBlobUrl, setImageBlobUrl] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (!doc.id || !isImage) return
+    let isMounted = true
+
+    const fetchImage = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/documents/${doc.id}/download`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        if (res.ok) {
+          const blob = await res.blob()
+          if (blob.size > 0) {
+            const url = URL.createObjectURL(blob)
+            if (isMounted) setImageBlobUrl(url)
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchImage()
+    return () => { isMounted = false }
+  }, [doc.id, isImage, token])
+
+  if (isImage) {
+    const isJpg = ["jpg", "jpeg"].includes(ext)
+    const isPng = ext === "png"
+    const badgeLabel = isJpg ? "JPG" : isPng ? "PNG" : ext.toUpperCase().slice(0, 4) || "IMG"
+
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs">
+              {badgeLabel}
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-1.5 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10 relative">
+          {imageBlobUrl ? (
+            <img
+              src={imageBlobUrl}
+              alt={doc.filename}
+              className="w-full h-full object-cover rounded-md opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+            />
+          ) : (
+            <>
+              <FileImage className="h-7 w-7 text-purple-400 group-hover:scale-110 transition-transform" />
+              <div className="w-full space-y-1 opacity-60">
+                <div className="h-1 w-4/5 mx-auto rounded bg-zinc-700/60" />
+                <div className="h-1 w-3/5 mx-auto rounded bg-zinc-800/80" />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (isPdf) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs">
+              PDF
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+          <FileText className="h-7 w-7 text-red-500 group-hover:scale-110 transition-transform" />
+          <div className="w-full space-y-1 opacity-60">
+            <div className="h-1 w-4/5 mx-auto rounded bg-zinc-700/60" />
+            <div className="h-1 w-3/5 mx-auto rounded bg-zinc-800/80" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isWord) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs">
+              DOCX
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+          <FileText className="h-7 w-7 text-blue-500 group-hover:scale-110 transition-transform" />
+          <div className="w-full space-y-1 opacity-60">
+            <div className="h-1 w-4/5 mx-auto rounded bg-zinc-700/60" />
+            <div className="h-1 w-3/5 mx-auto rounded bg-zinc-800/80" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isCode) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors font-mono text-[10px]">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between opacity-90 z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="flex items-center gap-1 mr-1">
+              <span className="size-1.5 rounded-full bg-rose-500" />
+              <span className="size-1.5 rounded-full bg-amber-500" />
+              <span className="size-1.5 rounded-full bg-emerald-500" />
+            </div>
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs uppercase">
+              {ext}
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+          <FileCode className="h-7 w-7 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <div className="w-full space-y-1 opacity-60">
+            <div className="h-1 w-3/4 mx-auto rounded bg-zinc-700/60" />
+            <div className="h-1 w-1/2 mx-auto rounded bg-zinc-800/80" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isSheet) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs">
+              XLS
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+          <FileSpreadsheet className="h-7 w-7 text-emerald-500 group-hover:scale-110 transition-transform" />
+          <div className="grid grid-cols-3 gap-1 w-full opacity-60">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-1.5 rounded bg-zinc-800 border border-zinc-700/60" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isPpt) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="h-4.5 px-1.5 rounded bg-zinc-800 text-zinc-200 border border-zinc-700 text-[8.5px] font-extrabold flex items-center shadow-xs">
+              PPT
+            </div>
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+          <FilePieChart className="h-7 w-7 text-orange-500 group-hover:scale-110 transition-transform" />
+          <div className="w-full space-y-1 opacity-60">
+            <div className="h-1 w-3/4 mx-auto rounded bg-zinc-700/60" />
+            <div className="h-1 w-1/2 mx-auto rounded bg-zinc-800/80" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isAudioVideo) {
+    return (
+      <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+        <div className="flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5 overflow-hidden">
+            <FileVideo className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+            <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-1 my-1 h-7 opacity-85 group-hover:opacity-100 transition-opacity z-10">
+          {[40, 70, 30, 90, 60, 100, 45, 80, 50, 65, 35, 85].map((h, i) => (
+            <div
+              key={i}
+              style={{ height: `${h}%` }}
+              className="w-1 rounded-full bg-purple-400 group-hover:bg-purple-300 transition-colors"
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative w-full h-full bg-zinc-950/90 rounded-xl overflow-hidden p-2.5 border border-zinc-800/80 flex flex-col justify-between group-hover:border-white/30 transition-colors">
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+      <div className="flex items-center justify-between z-10">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <FileText className="h-3.5 w-3.5 text-zinc-300 shrink-0" />
+          <span className="text-[10px] font-mono text-zinc-300 font-medium truncate">{doc.filename}</span>
+        </div>
+      </div>
+
+      <div className="my-1 p-2 bg-zinc-900/90 border border-zinc-800/70 rounded-lg flex-1 overflow-hidden flex flex-col justify-center items-center gap-1.5 z-10">
+        <FileText className="h-7 w-7 text-zinc-300 group-hover:scale-110 transition-transform" />
+        <div className="w-full space-y-1 opacity-60">
+          <div className="h-1 w-3/4 mx-auto rounded bg-zinc-700/60" />
+          <div className="h-1 w-1/2 mx-auto rounded bg-zinc-800/80" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocFileIcon({ filename }: { filename: string }) {
+  return <RealisticDocIcon filename={filename} size="sm" />
 }
 
 function formatDate(dateStr: string) {
@@ -213,13 +662,12 @@ function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Documen
       accessorKey: "filename",
       header: "Filename",
       cell: ({ row }) => {
-        const { emoji } = getFileIcon(row.original.filename)
         return (
           <button
             onClick={() => onView(row.original)}
-            className="flex items-center gap-2 max-w-[260px] text-left hover:underline underline-offset-2 cursor-pointer group"
+            className="flex items-center gap-2.5 max-w-[280px] text-left cursor-pointer group"
           >
-            <span className="text-base shrink-0">{emoji}</span>
+            <DocFileIcon filename={row.original.filename} />
             <span className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors">
               {row.original.filename}
             </span>
@@ -238,11 +686,11 @@ function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Documen
       ),
     },
     {
-      accessorKey: "chunk_count",
-      header: "Chunks",
+      accessorKey: "file_size",
+      header: "Size",
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground tabular-nums">
-          {row.original.chunk_count.toLocaleString()}
+          {formatBytes(row.original.file_size)}
         </span>
       ),
     },
@@ -269,11 +717,17 @@ function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Documen
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => onView(row.original)}>View details</DropdownMenuItem>
-            <DropdownMenuItem>Re-index</DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem onClick={() => onView(row.original)} className="gap-2">
+              <Eye className="h-3.5 w-3.5" /> View details
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2">
+              <RefreshCw className="h-3.5 w-3.5" /> Re-index
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)} className="gap-2">
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -372,12 +826,28 @@ const convColumns: ColumnDef<Conversation>[] = [
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Open conversation</DropdownMenuItem>
-          <DropdownMenuItem>Rename</DropdownMenuItem>
-          <DropdownMenuItem>{row.original.pinned ? "Unpin" : "Pin"}</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-40 text-xs">
+          <DropdownMenuItem className="gap-2">
+            <MessageSquare className="h-3.5 w-3.5" /> Open conversation
+          </DropdownMenuItem>
+          <DropdownMenuItem className="gap-2">
+            <Pencil className="h-3.5 w-3.5" /> Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem className="gap-2">
+            {row.original.pinned ? (
+              <>
+                <PinOff className="h-3.5 w-3.5" /> Unpin
+              </>
+            ) : (
+              <>
+                <Pin className="h-3.5 w-3.5" /> Pin
+              </>
+            )}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" className="gap-2">
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -435,7 +905,7 @@ function TablePagination({ table }: { table: any }) {
               />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
+              {[12, 24, 50, 100].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -543,7 +1013,7 @@ function DocumentDataTable({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 50 })
 
   const [viewerOpen, setViewerOpen] = React.useState(false)
   const [viewerDoc, setViewerDoc] = React.useState<Document | null>(null)
@@ -660,160 +1130,194 @@ function DocumentDataTable({
 
   return (
     <>
-    <div className="flex flex-col gap-4">
-      {/* Table Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
-        <div className="relative flex-1 max-w-sm">
-          <Input
-            placeholder="Search documents by name..."
-            value={(table.getColumn("filename")?.getFilterValue() as string) ?? ""}
-            onChange={(e) => table.getColumn("filename")?.setFilterValue(e.target.value)}
-            className="w-full pl-9 h-9 bg-background border-input focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring transition-colors"
-          />
-          <span className="absolute left-3 top-2.5 text-muted-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 opacity-60"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </span>
+      <div className="flex flex-col gap-4">
+        {/* Table Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
+          <div className="relative flex-1 max-w-sm">
+            <Input
+              placeholder="Search documents by name..."
+              value={(table.getColumn("filename")?.getFilterValue() as string) ?? ""}
+              onChange={(e) => table.getColumn("filename")?.setFilterValue(e.target.value)}
+              className="w-full pl-9 h-9 bg-background border-input focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring transition-colors"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
+          </div>
+
+          <Button
+            onClick={onUploadTrigger}
+            disabled={uploading}
+            variant="default"
+            size="sm"
+            className="h-9 cursor-pointer ml-auto"
+          >
+            {uploading ? (
+              <Loader className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" />
+            )}
+            Upload New
+          </Button>
         </div>
 
-        <Button
-          onClick={onUploadTrigger}
-          disabled={uploading}
-          variant="default"
-          size="sm"
-          className="h-9 cursor-pointer ml-auto"
-        >
-          {uploading ? (
-            <Loader className="mr-2 h-4 w-4 animate-spin" />
+        {layoutMode === "grid" ? (
+          table.getRowModel().rows.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-1">
+              {table.getRowModel().rows.map((row) => {
+                const doc = row.original;
+                const isSelected = row.getIsSelected();
+
+                return (
+                  <div
+                    key={doc.id}
+                    className={cn(
+                      "group/card relative flex flex-col justify-between h-[225px] p-3.5 rounded-xl border bg-zinc-950/85 border-zinc-800/80 backdrop-blur-2xl transition-all duration-300 shadow-md hover:border-white/50 hover:shadow-[0_0_22px_rgba(255,255,255,0.15)] hover:-translate-y-1.5 overflow-hidden cursor-pointer select-none",
+                      isSelected
+                        ? "border-white/70 ring-2 ring-white/20 bg-zinc-900/90"
+                        : "border-zinc-800/80 hover:border-white/40"
+                    )}
+                    onClick={() => openViewer(doc)}
+                  >
+                    {/* Glowing Top Ambient White Shine Beam on Card Hover */}
+                    <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white/90 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
+
+                    {/* White Sheen Glass Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+
+                    {/* Top Header Row (Realistic Icon + Filename + Selection Checkbox) */}
+                    <div className="flex items-center justify-between gap-2 z-10">
+                      <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
+                        <RealisticDocIcon filename={doc.filename} size="sm" />
+                        <span
+                          className="font-semibold text-xs text-foreground truncate tracking-tight group-hover/card:text-primary transition-colors"
+                          title={doc.filename}
+                        >
+                          {doc.filename}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          row.toggleSelected(!isSelected);
+                        }}
+                        className={cn(
+                          "size-5.5 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shrink-0 border",
+                          isSelected
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm scale-100 opacity-100"
+                            : "bg-muted/80 hover:bg-muted border-border/80 text-muted-foreground hover:text-foreground opacity-60 group-hover/card:opacity-100"
+                        )}
+                        title={isSelected ? "Deselect document" : "Select document"}
+                      >
+                        <Check className="size-2.5 stroke-[3]" />
+                      </button>
+                    </div>
+
+                    {/* Main Middle Section (Preview Banner + Hover Floating Action Bar) */}
+                    <div className="relative flex-1 my-1.5 rounded-lg overflow-hidden bg-zinc-950/80 border border-border/40 flex items-center justify-center group-hover/card:border-border/80 transition-colors shadow-inner">
+                      {/* Visual File Preview */}
+                      <DocVisualPreview doc={doc} />
+
+                      {/* Glassmorphic Floating Action Bar (Visible on Card Hover) */}
+                      <div
+                        className="absolute inset-x-0 bottom-0 p-1.5 z-20 flex items-center justify-center gap-1.5 bg-gradient-to-t from-zinc-950/95 via-zinc-950/70 to-transparent opacity-0 group-hover/card:opacity-100 transition-all duration-200 transform translate-y-1 group-hover/card:translate-y-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => openViewer(doc)}
+                          className="h-6 px-2.5 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 border border-zinc-700/70 shadow-md backdrop-blur-md flex items-center gap-1 text-[10px] font-medium transition-transform hover:scale-105 cursor-pointer"
+                          title="View Document Details"
+                        >
+                          <Eye className="size-3 text-primary" /> View
+                        </button>
+
+                        <a
+                          href={`${API_BASE_URL}/documents/${doc.id}/download`}
+                          target="_blank"
+                          rel="noreferrer"
+                          download={doc.filename}
+                          className="h-6 px-2.5 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 border border-zinc-700/70 shadow-md backdrop-blur-md flex items-center gap-1 text-[10px] font-medium transition-transform hover:scale-105"
+                          title="Download File"
+                        >
+                          <Download className="size-3 text-emerald-400" /> Save
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDoc(doc)}
+                          className="h-6 w-6 rounded-md bg-rose-950/90 hover:bg-rose-900 text-rose-400 border border-rose-800/70 shadow-md backdrop-blur-md flex items-center justify-center transition-transform hover:scale-105 cursor-pointer"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="size-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <Plus className="mr-2 h-4 w-4" />
-          )}
-          Upload Document
-        </Button>
+            <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-xl text-xs text-muted-foreground bg-muted/10">
+              No documents found. Upload files to get started.
+            </div>
+          )
+        ) : (
+          <div className="overflow-hidden rounded-lg border">
+            <DndContext
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
+              onDragEnd={handleDragEnd}
+              sensors={sensors}
+              id={sortableId}
+            >
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-muted">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id} colSpan={header.colSpan}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody className="**:data-[slot=table-cell]:first:w-8">
+                  {table.getRowModel().rows.length ? (
+                    <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
+                      {table.getRowModel().rows.map((row) => (
+                        <DraggableRow key={row.id} row={row} />
+                      ))}
+                    </SortableContext>
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={docColumns.length} className="h-24 text-center text-muted-foreground text-xs font-medium">
+                        No documents found. Upload files to get started.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </DndContext>
+          </div>
+        )}
+
+        <TablePagination table={table} />
       </div>
 
-      {layoutMode === "grid" ? (
-        table.getRowModel().rows.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
-            {table.getRowModel().rows.map((row) => {
-              const doc = row.original;
-              const { emoji, color, bg } = getFileIcon(doc.filename);
-              return (
-                <div
-                  key={doc.id}
-                  className="bg-card border border-border hover:border-zinc-400 dark:hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between gap-3 shadow-xs relative group h-36 cursor-pointer animate-in fade-in duration-200"
-                  onClick={() => openViewer(doc)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl shrink-0">{emoji}</span>
-                      {table.getColumn("file_type")?.getIsVisible() && (
-                        <Badge variant="outline" className={cn("px-1.5 text-[9px] font-mono font-bold uppercase", color, bg)}>
-                          {doc.file_type}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {/* Actions Dropdown */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:bg-muted rounded-md">
-                            <MoreVertical className="size-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-32 text-xs">
-                          <DropdownMenuItem onClick={() => openViewer(doc)}>View details</DropdownMenuItem>
-                          <DropdownMenuItem>Re-index</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive" onClick={() => handleDeleteDoc(doc)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                      {doc.filename}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-                    {table.getColumn("chunk_count")?.getIsVisible() ? (
-                      <span>{doc.chunk_count} chunks</span>
-                    ) : (
-                      <span />
-                    )}
-                    {table.getColumn("uploaded_at")?.getIsVisible() ? (
-                      <span>{formatDate(doc.uploaded_at)}</span>
-                    ) : (
-                      <span />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="h-32 flex items-center justify-center border border-dashed border-border rounded-xl text-xs text-muted-foreground bg-muted/10">
-            No documents found. Upload files to get started.
-          </div>
-        )
-      ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows.length ? (
-                  <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={docColumns.length} className="h-24 text-center text-muted-foreground text-xs font-medium">
-                      No documents found. Upload files to get started.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-      )}
-
-      <TablePagination table={table} />
-    </div>
-
-    {/* ── Document Viewer (slide-in panel) ── */}
-    <DocumentViewer
-      open={viewerOpen}
-      onClose={() => setViewerOpen(false)}
-      file={viewerDoc ? {
-        name: viewerDoc.filename,
-        uploadedAt: viewerDoc.uploaded_at,
-        url: `${API_BASE_URL}/documents/${viewerDoc.id}/download`,
-      } : null}
-    />
+      {/* ── Document Viewer (slide-in panel) ── */}
+      <DocumentViewer
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        file={viewerDoc ? {
+          name: viewerDoc.filename,
+          uploadedAt: viewerDoc.uploaded_at,
+          url: `${API_BASE_URL}/documents/${viewerDoc.id}/download`,
+        } : null}
+      />
     </>
   )
 }
@@ -996,7 +1500,7 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
   const [activeTab, setActiveTab] = React.useState("documents")
   const [selectedFilter, setSelectedFilter] = React.useState("all-docs")
   const [tableInstance, setTableInstance] = React.useState<any>(null)
-  const [layoutMode, setLayoutMode] = React.useState<"table" | "grid">("table")
+  const [layoutMode, setLayoutMode] = React.useState<"table" | "grid">("grid")
 
   const handleFilterChange = (val: string) => {
     setSelectedFilter(val)
@@ -1070,7 +1574,7 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
               try {
                 const eventData = JSON.parse(line.slice(6))
                 if (eventData.stage === "done") {
-                  toast.success(`Indexed successfully: ${eventData.chunks} chunks.`, { id: toastId })
+                  toast.success("Document indexed successfully.", { id: toastId })
                   setDocsRefreshKey(prev => prev + 1)
                 } else if (eventData.progress) {
                   toast.loading(`Indexing... ${eventData.progress}%`, { id: toastId })
@@ -1110,29 +1614,81 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
           View
         </Label>
         <Select value={selectedFilter} onValueChange={handleFilterChange}>
-          <SelectTrigger className="flex w-fit gap-1.5 text-xs font-semibold bg-transparent border border-border" size="sm">
-            <SelectValue>
-              {selectedFilter === "conversations" ? "Conversations" : `Documents (${getFilterLabel(selectedFilter)})`}
-            </SelectValue>
+          <SelectTrigger className="flex w-fit gap-2 text-xs font-semibold bg-transparent border border-border" size="sm">
+            <div className="flex items-center gap-1.5">
+              {React.createElement(getFilterIcon(selectedFilter), {
+                className: "h-3.5 w-3.5 text-muted-foreground",
+              })}
+              <SelectValue>
+                {selectedFilter === "conversations" ? "Conversations" : `Documents (${getFilterLabel(selectedFilter)})`}
+              </SelectValue>
+            </div>
           </SelectTrigger>
           <SelectContent className="text-xs">
-            <SelectItem value="all-docs">All Documents</SelectItem>
-            <SelectItem value="pdf-docs">PDFs (.pdf)</SelectItem>
-            <SelectItem value="txt-docs">Text Files (.txt, .md)</SelectItem>
-            <SelectItem value="image-docs">Images (.png, .jpg, .webp)</SelectItem>
-            <SelectItem value="spreadsheet-docs">Spreadsheets (.xlsx, .csv)</SelectItem>
-            <SelectItem value="presentation-docs">Presentations (.pptx)</SelectItem>
-            <SelectItem value="word-docs">Word Documents (.docx)</SelectItem>
-            <SelectItem value="code-docs">Code Files (.py, .js, .ts)</SelectItem>
+            <SelectItem value="all-docs">
+              <div className="flex items-center gap-2">
+                <FileIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>All Documents</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="pdf-docs">
+              <div className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>PDFs (.pdf)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="txt-docs">
+              <div className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Text Files (.txt, .md)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="image-docs">
+              <div className="flex items-center gap-2">
+                <FileImage className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Images (.png, .jpg, .webp)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="spreadsheet-docs">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Spreadsheets (.xlsx, .csv)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="presentation-docs">
+              <div className="flex items-center gap-2">
+                <FilePieChart className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Presentations (.pptx)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="word-docs">
+              <div className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Word Documents (.docx)</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="code-docs">
+              <div className="flex items-center gap-2">
+                <FileCode className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Code Files (.py, .js, .ts)</span>
+              </div>
+            </SelectItem>
             <DropdownMenuSeparator className="my-1 bg-border/60" />
-            <SelectItem value="conversations">Conversations</SelectItem>
+            <SelectItem value="conversations">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Conversations</span>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="documents" onClick={() => handleFilterChange("all-docs")}>
+          <TabsTrigger value="documents" onClick={() => handleFilterChange("all-docs")} className="gap-2">
+            <FileIcon className="h-3.5 w-3.5" />
             Documents <Badge variant="secondary">Docs</Badge>
           </TabsTrigger>
-          <TabsTrigger value="conversations" onClick={() => handleFilterChange("conversations")}>
+          <TabsTrigger value="conversations" onClick={() => handleFilterChange("conversations")} className="gap-2">
+            <MessageSquare className="h-3.5 w-3.5" />
             Conversations <Badge variant="secondary">Chats</Badge>
           </TabsTrigger>
         </TabsList>
@@ -1166,7 +1722,7 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm">
                   <SlidersHorizontal className="h-4 w-4" />
-                  <span className="hidden lg:inline">Customize Columns</span>
+                  <span className="hidden lg:inline">Customize</span>
                   <span className="lg:hidden">Columns</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -1186,7 +1742,7 @@ export function DashboardDocsTable({ showChart = true }: DashboardDocsTableProps
                           checked={column.getIsVisible()}
                           onCheckedChange={(value) => column.toggleVisibility(!!value)}
                         >
-                          {column.id === "file_type" ? "Type" : column.id === "chunk_count" ? "Chunks" : column.id === "uploaded_at" ? "Uploaded" : column.id}
+                          {column.id === "file_type" ? "Type" : column.id === "file_size" ? "Size" : column.id === "uploaded_at" ? "Uploaded" : column.id}
                         </DropdownMenuCheckboxItem>
                       ))
                   ) : (

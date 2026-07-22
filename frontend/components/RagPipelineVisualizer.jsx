@@ -33,7 +33,7 @@ export default function RagPipelineVisualizer({ currentStage, progress, chunks }
           </h3>
           <p className="mt-1 text-[13px] text-zinc-500 dark:text-zinc-400">
             {currentStage === "done"
-              ? `Indexed ${chunks} semantic chunks into Pinecone.`
+              ? "Document successfully indexed into Pinecone."
               : "Running ingestion pipeline..."}
           </p>
         </div>

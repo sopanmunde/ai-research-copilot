@@ -471,7 +471,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       const res = await fetch(`${apiUrl}/documents/upload`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Upload failed");
-      toast.success(`"${file.name}" indexed (${data.chunks} chunks)`);
+      toast.success(`"${file.name}" indexed successfully.`);
     } catch (err) {
       toast.error(err.message || "Upload failed");
       setAttachedFile(null);
