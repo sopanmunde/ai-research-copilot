@@ -377,6 +377,7 @@ function LoadingSkeleton() {
 
 export default function DocumentViewer({ open, onClose, file }) {
   const [textContent, setTextContent] = useState(null);
+  const [blobUrl, setBlobUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -384,29 +385,61 @@ export default function DocumentViewer({ open, onClose, file }) {
   const { Icon, color, bg } = getFileIcon(type);
   const ext = (file?.name?.split(".").pop() || "").toUpperCase();
 
-  const needsTextFetch = file && ["text", "markdown", "json", "csv"].includes(type) && !file.content && file.url;
-
+  // Fetch the file with auth token and convert to a local blob URL.
+  // This is necessary because the backend /api/documents/{id}/download is a
+  // JWT-protected endpoint — a plain <img src> or <iframe src> won't send the
+  // Authorization header, resulting in a 401 blank view.
   useEffect(() => {
-    if (!open || !needsTextFetch) return;
-    if (file?.content) { setTextContent(file.content); return; }
+    if (!open || !file?.url) return;
 
+    // If the file already has inline content, no fetch needed
+    if (file.content) {
+      setTextContent(file.content);
+      return;
+    }
+
+    let objectUrl = null;
     setLoading(true);
     setError(null);
-    fetch(file.url)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
+    setBlobUrl(null);
+    setTextContent(null);
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(file.url, { headers })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status} — document not accessible`);
+        return r.blob();
       })
-      .then(text => { setTextContent(text); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
-  }, [open, file?.url, needsTextFetch]);
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+
+        // For text-based types, also decode to string
+        const needsText = ["text", "markdown", "json", "csv"].includes(type);
+        if (needsText) {
+          return blob.text().then((text) => setTextContent(text));
+        }
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+
+    // Revoke the blob URL when the viewer closes or file changes
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [open, file?.url, file?.name]);
 
   useEffect(() => {
     setTextContent(null);
+    setBlobUrl(null);
     setError(null);
   }, [file?.name]);
 
   const resolvedContent = file?.content || textContent;
+  // Use blob URL for all rendering (falls back to file.url for demo/static files)
+  const resolvedSrc = blobUrl || file?.url;
 
   function renderViewer() {
     if (!file) return null;
@@ -428,17 +461,18 @@ export default function DocumentViewer({ open, onClose, file }) {
     );
 
     switch (type) {
-      case "image":   return <ImageViewer src={file.url} name={file.name} />;
-      case "pdf":     return <PdfViewer src={file.url} name={file.name} />;
-      case "video":   return <VideoViewer src={file.url} name={file.name} />;
-      case "audio":   return <AudioViewer src={file.url} name={file.name} />;
+      case "image":   return <ImageViewer src={resolvedSrc} name={file.name} />;
+      case "pdf":     return <PdfViewer src={resolvedSrc} name={file.name} />;
+      case "video":   return <VideoViewer src={resolvedSrc} name={file.name} />;
+      case "audio":   return <AudioViewer src={resolvedSrc} name={file.name} />;
       case "csv":     return resolvedContent ? <CsvViewer content={resolvedContent} /> : <LoadingSkeleton />;
       case "markdown":
       case "json":
       case "text":    return resolvedContent ? <TextViewer content={resolvedContent} type={type} /> : <LoadingSkeleton />;
-      default:        return <UnsupportedViewer name={file.name} src={file.url} size={file.size} />;
+      default:        return <UnsupportedViewer name={file.name} src={resolvedSrc} size={file.size} />;
     }
   }
+
 
   return (
     <Sheet open={open} onOpenChange={v => !v && onClose?.()}>
@@ -475,11 +509,11 @@ export default function DocumentViewer({ open, onClose, file }) {
 
           {/* Action buttons */}
           <div className="flex items-center gap-1 shrink-0">
-            {file?.url && (
+            {resolvedSrc && (
               <>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <a href={file.url} target="_blank" rel="noopener noreferrer">
+                    <a href={resolvedSrc} target="_blank" rel="noopener noreferrer">
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -489,7 +523,7 @@ export default function DocumentViewer({ open, onClose, file }) {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <a href={file.url} download={file.name}>
+                    <a href={resolvedSrc} download={file?.name}>
                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
                         <Download className="h-4 w-4" />
                       </Button>
@@ -499,6 +533,7 @@ export default function DocumentViewer({ open, onClose, file }) {
                 </Tooltip>
               </>
             )}
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={onClose}>

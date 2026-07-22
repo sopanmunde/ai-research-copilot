@@ -19,6 +19,10 @@ import {
   FileType,
   Archive,
   CheckCircle2,
+  LayoutGrid,
+  List,
+  Eye,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -42,27 +46,137 @@ const ACCEPTED_TYPES = [
 
 const MAX_FILE_SIZE_MB = 100;
 
-function getFileIcon(filename) {
-  const ext = filename?.split(".").pop()?.toLowerCase() || "";
-  if (["pdf"].includes(ext))
-    return { icon: FileType, color: "text-red-400", bg: "bg-red-950/40 border-red-900/50" };
-  if (["docx", "doc", "rtf", "odt"].includes(ext))
-    return { icon: FileText, color: "text-blue-400", bg: "bg-blue-950/40 border-blue-900/50" };
-  if (["xlsx", "xls", "csv"].includes(ext))
-    return { icon: FileSpreadsheet, color: "text-green-400", bg: "bg-green-950/40 border-green-900/50" };
-  if (["pptx", "ppt"].includes(ext))
-    return { icon: Presentation, color: "text-orange-400", bg: "bg-orange-950/40 border-orange-900/50" };
-  if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "svg"].includes(ext))
-    return { icon: ImageIcon, color: "text-purple-400", bg: "bg-purple-950/40 border-purple-900/50" };
-  if (["json", "jsonl", "xml", "yaml", "yml"].includes(ext))
-    return { icon: FileJson, color: "text-yellow-400", bg: "bg-yellow-950/40 border-yellow-900/50" };
-  if (["html", "htm", "md", "mdx", "rst"].includes(ext))
-    return { icon: FileCode, color: "text-cyan-400", bg: "bg-cyan-950/40 border-cyan-900/50" };
-  if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "rb", "php", "sh", "sql"].includes(ext))
-    return { icon: FileCode, color: "text-indigo-400", bg: "bg-indigo-950/40 border-indigo-900/50" };
-  if (["zip"].includes(ext))
-    return { icon: Archive, color: "text-muted-foreground", bg: "bg-muted/30 border-border/50" };
-  return { icon: FileIcon, color: "text-muted-foreground", bg: "bg-muted/30 border-border/50" };
+function RealisticDocIcon({ filename, className }) {
+  const ext = filename?.split(".").pop()?.toLowerCase() || ""
+
+  let theme = {
+    badge: "PDF",
+    bg: "from-red-500/20 via-red-500/10 to-rose-600/20",
+    border: "border-red-500/40",
+    headerBg: "bg-red-600 text-white",
+    linesColor: "bg-red-400/50",
+    IconComponent: FileText,
+    accent: "text-red-400",
+  }
+
+  if (["pdf"].includes(ext)) {
+    theme = {
+      badge: "PDF",
+      bg: "from-red-500/20 via-red-500/10 to-rose-600/20",
+      border: "border-red-500/40",
+      headerBg: "bg-red-600 text-white",
+      linesColor: "bg-red-400/50",
+      IconComponent: FileType,
+      accent: "text-red-400",
+    }
+  } else if (["doc", "docx", "rtf", "odt"].includes(ext)) {
+    theme = {
+      badge: "DOCX",
+      bg: "from-blue-500/20 via-blue-500/10 to-indigo-600/20",
+      border: "border-blue-500/40",
+      headerBg: "bg-blue-600 text-white",
+      linesColor: "bg-blue-400/50",
+      IconComponent: FileText,
+      accent: "text-blue-400",
+    }
+  } else if (["xls", "xlsx", "csv"].includes(ext)) {
+    theme = {
+      badge: "XLS",
+      bg: "from-emerald-500/20 via-emerald-500/10 to-teal-600/20",
+      border: "border-emerald-500/40",
+      headerBg: "bg-emerald-600 text-white",
+      linesColor: "bg-emerald-400/50",
+      IconComponent: FileSpreadsheet,
+      accent: "text-emerald-400",
+    }
+  } else if (["ppt", "pptx"].includes(ext)) {
+    theme = {
+      badge: "PPT",
+      bg: "from-orange-500/20 via-orange-500/10 to-amber-600/20",
+      border: "border-orange-500/40",
+      headerBg: "bg-orange-600 text-white",
+      linesColor: "bg-orange-400/50",
+      IconComponent: Presentation,
+      accent: "text-orange-400",
+    }
+  } else if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4),
+      bg: "from-purple-500/20 via-purple-500/10 to-pink-600/20",
+      border: "border-purple-500/40",
+      headerBg: "bg-purple-600 text-white",
+      linesColor: "bg-purple-400/50",
+      IconComponent: ImageIcon,
+      accent: "text-purple-400",
+    }
+  } else if (["json", "jsonl"].includes(ext)) {
+    theme = {
+      badge: "JSON",
+      bg: "from-amber-500/20 via-amber-500/10 to-yellow-600/20",
+      border: "border-amber-500/40",
+      headerBg: "bg-amber-600 text-white",
+      linesColor: "bg-amber-400/50",
+      IconComponent: FileJson,
+      accent: "text-amber-400",
+    }
+  } else if (["py", "js", "ts", "jsx", "tsx", "java", "cpp", "c", "cs", "go", "rs", "html", "css", "sh", "sql"].includes(ext)) {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4),
+      bg: "from-cyan-500/20 via-cyan-500/10 to-blue-600/20",
+      border: "border-cyan-500/40",
+      headerBg: "bg-cyan-600 text-white",
+      linesColor: "bg-cyan-400/50",
+      IconComponent: FileCode,
+      accent: "text-cyan-400",
+    }
+  } else if (["zip", "rar", "7z"].includes(ext)) {
+    theme = {
+      badge: "ZIP",
+      bg: "from-amber-600/20 via-amber-600/10 to-yellow-700/20",
+      border: "border-amber-600/40",
+      headerBg: "bg-amber-700 text-white",
+      linesColor: "bg-amber-500/50",
+      IconComponent: Archive,
+      accent: "text-amber-500",
+    }
+  } else {
+    theme = {
+      badge: ext.toUpperCase().slice(0, 4) || "TXT",
+      bg: "from-zinc-500/20 via-zinc-500/10 to-slate-600/20",
+      border: "border-zinc-500/40",
+      headerBg: "bg-zinc-600 text-white",
+      linesColor: "bg-zinc-400/50",
+      IconComponent: FileIcon,
+      accent: "text-zinc-400",
+    }
+  }
+
+  return (
+    <div className={cn("relative shrink-0 select-none w-7 h-8.5 text-[6.5px] group/docicon", className)}>
+      <div className={cn(
+        "relative w-full h-full rounded bg-gradient-to-b border shadow-xs flex flex-col overflow-hidden transition-all duration-300 group-hover/docicon:scale-105",
+        theme.bg,
+        theme.border
+      )}>
+        {/* Folded Corner */}
+        <div className="absolute top-0 right-0 w-2 h-2 bg-zinc-700/80 rounded-bl-sm border-l border-b border-white/20 z-10" />
+
+        {/* Ribbon Header Badge */}
+        <div className={cn("px-0.5 py-0.2 font-bold tracking-tight flex items-center justify-between shadow-xs leading-none", theme.headerBg)}>
+          <span>{theme.badge}</span>
+        </div>
+
+        {/* Document Body */}
+        <div className="flex-1 p-1 flex flex-col justify-between items-center opacity-90">
+          <theme.IconComponent className={cn("w-3.5 h-3.5 mt-0.5", theme.accent)} />
+          <div className="w-full space-y-0.5 mb-0.5">
+            <div className={cn("h-0.5 w-full rounded-full", theme.linesColor)} />
+            <div className={cn("h-0.5 w-3/4 rounded-full", theme.linesColor)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function DocumentLibrary({ open, onClose }) {
@@ -79,6 +193,7 @@ export default function DocumentLibrary({ open, onClose }) {
   const [deleteDocConfirmOpen, setDeleteDocConfirmOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState(null);
   const [uploadFileName, setUploadFileName] = useState("");
+  const [viewMode, setViewMode] = useState("grid");
 
   useEffect(() => {
     setMounted(true);
@@ -196,7 +311,7 @@ export default function DocumentLibrary({ open, onClose }) {
                   setTimeout(() => {
                     setUploadingStage(null);
                     fetchDocuments();
-                    toast.success(`Indexed ${data.chunks} chunks successfully.`);
+                    toast.success("Document indexed successfully.");
                   }, 2000);
                 }
               } catch (e) {
@@ -287,7 +402,7 @@ export default function DocumentLibrary({ open, onClose }) {
                 </div>
               )}
 
-              {/* Actions */}
+              {/* Actions & View Mode Toggle */}
               <div className="flex items-center gap-2 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -299,10 +414,36 @@ export default function DocumentLibrary({ open, onClose }) {
                     className="flex h-9 w-full rounded-xl border border-border bg-card/50 px-3 py-1 pl-8 text-[13px] font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
                   />
                 </div>
+
+                <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-xl border border-border/60 h-9">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    className={cn(
+                      "h-7.5 w-7.5 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                      viewMode === "grid" ? "bg-background shadow-xs text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    title="Card View"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={cn(
+                      "h-7.5 w-7.5 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                      viewMode === "list" ? "bg-background shadow-xs text-foreground font-bold" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    title="List View"
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!!uploadingStage}
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50 bg-primary text-white shadow-sm hover:bg-primary/90 h-9 px-4 py-2 gap-2"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-[13px] font-semibold transition-all disabled:opacity-50 bg-primary text-white shadow-sm hover:bg-primary/90 h-9 px-3.5 py-2 gap-1.5 cursor-pointer"
                 >
                   <UploadCloud className="h-4 w-4" />
                   Upload
@@ -324,20 +465,20 @@ export default function DocumentLibrary({ open, onClose }) {
                 onClick={() => !uploadingStage && fileInputRef.current?.click()}
                 animate={{ borderColor: isDragOver ? "hsl(var(--primary)/0.6)" : "hsl(var(--border))", backgroundColor: isDragOver ? "hsl(var(--primary)/0.06)" : "transparent" }}
                 className={cn(
-                  "mb-5 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors cursor-pointer select-none",
+                  "mb-5 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 text-center transition-colors cursor-pointer select-none",
                   uploadingStage && "pointer-events-none opacity-50"
                 )}
               >
-                <div className={cn("flex h-9 w-9 items-center justify-center rounded-full border transition-colors", isDragOver ? "border-primary/50 bg-primary/10" : "border-border bg-muted")}>
+                <div className={cn("flex h-8 w-8 items-center justify-center rounded-full border transition-colors", isDragOver ? "border-primary/50 bg-primary/10" : "border-border bg-muted")}>
                   <UploadCloud className={cn("h-4 w-4 transition-colors", isDragOver ? "text-primary" : "text-muted-foreground")} />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">{isDragOver ? "Drop to upload" : "Drag & drop or click to browse"}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">PDF, DOCX, XLSX, PPTX, Images, Code files, JSON, CSV and more · up to {MAX_FILE_SIZE_MB} MB</p>
+                  <p className="text-[10.5px] text-muted-foreground mt-0.5">PDF, DOCX, XLSX, PPTX, Images, Code, JSON, CSV & more · up to {MAX_FILE_SIZE_MB} MB</p>
                 </div>
               </motion.div>
 
-              {/* Document List */}
+              {/* Document Display (Cards or List) */}
               {isLoading ? (
                 <div className="flex h-32 items-center justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -352,10 +493,67 @@ export default function DocumentLibrary({ open, onClose }) {
                     Upload any file type — documents, images, spreadsheets, code — to use them in Deep Research mode.
                   </p>
                 </div>
+              ) : viewMode === "grid" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredDocs.map((doc) => {
+                    const ext = doc.filename.split(".").pop()?.toLowerCase() || "";
+                    const formattedSize = doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : "0 KB";
+                    return (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="group relative flex flex-col justify-between p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-950/85 hover:border-white/50 hover:shadow-[0_0_20px_rgba(255,255,255,0.12)] transition-all duration-300 shadow-sm overflow-hidden select-none"
+                      >
+                        {/* Glowing White Top Shine Beam */}
+                        <div className="absolute inset-x-0 -top-px h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <RealisticDocIcon filename={doc.filename} />
+                            <div className="overflow-hidden">
+                              <h4 className="truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors" title={doc.filename}>
+                                {doc.filename}
+                              </h4>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerDeleteConfirm(doc);
+                            }}
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                            title="Delete file"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-end text-[10.5px] font-mono text-muted-foreground">
+                          <a
+                            href={`${API_BASE_URL}/documents/${doc.id}/download`}
+                            target="_blank"
+                            rel="noreferrer"
+                            download={doc.filename}
+                            className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+                            title="Download file"
+                          >
+                            <Download className="h-3 w-3" />
+                            Save
+                          </a>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                  {filteredDocs.length === 0 && (
+                    <p className="col-span-2 text-center text-[12px] font-medium text-muted-foreground py-8">
+                      No documents match your search.
+                    </p>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-2">
                   {filteredDocs.map((doc) => {
-                    const { icon: DocIcon, color, bg } = getFileIcon(doc.filename);
                     return (
                       <motion.div
                         key={doc.id}
@@ -364,17 +562,15 @@ export default function DocumentLibrary({ open, onClose }) {
                         className="group flex items-center justify-between rounded-xl border border-border/60 bg-card/50 p-3 transition-all hover:bg-accent/30 hover:border-border"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border", bg)}>
-                            <DocIcon className={cn("h-4 w-4", color)} />
-                          </div>
+                          <RealisticDocIcon filename={doc.filename} />
                           <div className="overflow-hidden">
                             <h4 className="truncate text-[13px] font-semibold text-foreground leading-none" title={doc.filename}>
                               {doc.filename}
                             </h4>
                             <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
                               <span className="flex items-center gap-1">
-                                <Database className="h-3 w-3" />
-                                {doc.chunk_count} chunks
+                                <FileText className="h-3 w-3" />
+                                {doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : "0 KB"}
                               </span>
                               <span>•</span>
                               <span>{new Date(doc.uploaded_at).toLocaleDateString()}</span>
@@ -406,7 +602,7 @@ export default function DocumentLibrary({ open, onClose }) {
             onClose={() => { setDeleteDocConfirmOpen(false); setDocToDelete(null); }}
             onConfirm={confirmDelete}
             title="Delete Document?"
-            description={`Are you sure you want to permanently delete "${docToDelete?.filename || "this document"}"? This will remove all parsed text chunks.`}
+            description={`Are you sure you want to permanently delete "${docToDelete?.filename || "this document"}"? This will remove all parsed document data.`}
             confirmText="Delete"
             variant="destructive"
           />

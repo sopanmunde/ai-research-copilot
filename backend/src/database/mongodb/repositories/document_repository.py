@@ -30,6 +30,7 @@ async def save_document_metadata(
     }
     if file_bytes is not None:
         payload["file_bytes"] = Binary(file_bytes)
+        payload["file_size"] = len(file_bytes)
     if extra:
         payload.update(extra)
 
@@ -39,13 +40,38 @@ async def save_document_metadata(
 
 
 async def get_user_documents(user_id: str, limit: int = 50) -> List[Dict]:
-    docs = await _db()[COLLECTION_DOCUMENTS].find(
-        {"user_id": user_id},
-        {"file_bytes": 0}
-    ).sort("uploaded_at", -1).limit(limit).to_list(limit)
+    # Use aggregation to calculate the file_size dynamically if not explicitly stored
+    # without retrieving the massive binary payload (file_bytes)
+    pipeline = [
+        {"$match": {"user_id": user_id}},
+        {
+            "$project": {
+                "user_id": 1,
+                "filename": 1,
+                "file_type": 1,
+                "chunk_count": 1,
+                "uploaded_at": 1,
+                "file_size": {
+                    "$cond": [
+                        {"$gt": ["$file_size", None]},
+                        "$file_size",
+                        {
+                            "$cond": [
+                                {"$gt": ["$file_bytes", None]},
+                                {"$binarySize": "$file_bytes"},
+                                0
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {"$sort": {"uploaded_at": -1}},
+        {"$limit": limit}
+    ]
+    docs = await _db()[COLLECTION_DOCUMENTS].aggregate(pipeline).to_list(limit)
     for d in docs:
         d["id"] = str(d.pop("_id"))
-        d.pop("file_bytes", None)
         if "uploaded_at" in d and hasattr(d["uploaded_at"], "isoformat"):
             d["uploaded_at"] = d["uploaded_at"].isoformat()
     return docs
