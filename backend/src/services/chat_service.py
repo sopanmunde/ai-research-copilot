@@ -113,7 +113,6 @@ async def record_token_usage(user_id: str, provider_id: str, prompt: str, comple
         prompt_tokens = max(1, int(len(prompt) / 4))
         completion_tokens = max(1, int(len(completion) / 4))
         
-        # pricing rates per 1,000,000 tokens
         pricing = {
             "openai": (2.50, 10.00),
             "anthropic": (3.00, 15.00),
@@ -127,21 +126,22 @@ async def record_token_usage(user_id: str, provider_id: str, prompt: str, comple
         prompt_cost = (prompt_tokens / 1_000_000) * rates[0]
         completion_cost = (completion_tokens / 1_000_000) * rates[1]
         total_cost = prompt_cost + completion_cost
-        total_tokens = prompt_tokens + completion_tokens
         
-        from src.database.mongodb.connection import get_database
-        from src.core.constants import COLLECTION_PROVIDERS
+        from src.database.mongodb.repositories.brain_repository import log_telemetry_event_db
         
-        db = get_database()
-        await db[COLLECTION_PROVIDERS].update_one(
-            {"user_id": user_id, "id": provider_id},
-            {"$inc": {
-                "usageTokens": total_tokens,
-                "usageCost": total_cost
-            }}
-        )
+        await log_telemetry_event_db(user_id, {
+            "model": provider_id,
+            "provider": provider_id,
+            "tokensIn": prompt_tokens,
+            "tokensOut": completion_tokens,
+            "latency": 220,
+            "status": 200,
+            "cost": total_cost,
+            "cacheHit": False
+        })
     except Exception as e:
         logger.warning(f"Failed to record token usage in DB: {e}")
+
 
 
 async def _stream_chat_response_impl(
