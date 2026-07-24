@@ -1,16 +1,16 @@
 """Email routes — REST API endpoints for emails management in MongoDB."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Dict, List
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.email_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.email_repository import (
     get_user_emails,
     create_email,
     update_email_db,
     delete_email_metadata,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -29,7 +29,21 @@ async def list_emails(request: Request, current_user=Depends(get_current_user)):
 async def add_email(request: Request, email_data: Dict, current_user=Depends(get_current_user)):
     """Send or compose a new email."""
     user_id = str(current_user["_id"])
-    return await create_email(user_id, email_data)
+    result = await create_email(user_id, email_data)
+    
+    # If the email is sent (not draft), dispatch a real email
+    if email_data.get("folder", "sent") == "sent":
+        try:
+            from services.email_service import send_real_email
+            await send_real_email(
+                to_email=email_data.get("email"),
+                subject=email_data.get("subject", "(No Subject)"),
+                body=email_data.get("body", "")
+            )
+        except Exception as e:
+            logger.error(f"Failed to dispatch real SMTP email: {e}")
+            
+    return result
 
 
 @router.put("/{email_id}", response_model=Dict)

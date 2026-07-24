@@ -7,8 +7,8 @@ and ensures consistent citation structure for the frontend.
 from typing import List
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage
-from src.agents.langgraph.state import AgentState
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -54,7 +54,7 @@ async def evaluate_citations_relevance(
         prompt += f"Snippet {idx+1}: {snip[:250]}\n---\n"
 
     try:
-        from src.core.llm_factory import get_llm
+        from core.llm_factory import get_llm
         llm = get_llm(provider=provider, model_name=model_name, temperature=0.0)
         structured_llm = llm.with_structured_output(CitationRelevanceScorer)
         result = await structured_llm.ainvoke([SystemMessage(content=prompt)])

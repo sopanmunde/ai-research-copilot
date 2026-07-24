@@ -1,15 +1,15 @@
 """Event routes — REST API endpoints for calendar events management in MongoDB."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Dict, List
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.event_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.event_repository import (
     get_user_events,
     create_event,
     delete_event_metadata,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

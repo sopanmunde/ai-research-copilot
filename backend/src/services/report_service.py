@@ -1,9 +1,9 @@
 """Report service — generates and persists research reports."""
 from typing import Dict, Optional
-from src.rag.pipelines.report_pipeline import generate_report
-from src.rag.memory.research_memory import save_research_session
-from src.core.llm_factory import get_llm
-from src.core.logger import get_logger
+from rag.pipelines.report_pipeline import generate_report
+from rag.memory.research_memory import save_research_session
+from core.llm_factory import get_llm
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,8 +21,8 @@ async def create_report(
     Generates a research report and saves it to MongoDB.
     Returns the full report dict.
     """
-    from src.core.llm_factory import current_user_keys
-    from src.database.mongodb.repositories.brain_repository import get_user_keys
+    from core.llm_factory import current_user_keys
+    from database.mongodb.repositories.brain_repository import get_user_keys
 
     try:
         user_keys_list = await get_user_keys(user_id)

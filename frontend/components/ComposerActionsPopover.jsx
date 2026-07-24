@@ -69,7 +69,7 @@ function Divider() {
   return <div className="mx-2.5 my-1.5 h-px bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-700 to-transparent opacity-50" />;
 }
 
-export default function ComposerActionsPopover({ children, onFileSelect, activeAction = null, setMode = () => {} }) {
+export default function ComposerActionsPopover({ children, onFileSelect, activeAction = null, setMode = () => { } }) {
   const [open, setOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const fileInputRef = useRef(null);
@@ -100,6 +100,20 @@ export default function ComposerActionsPopover({ children, onFileSelect, activeA
       color: "text-blue-500 dark:text-blue-400",
       bg: "bg-blue-50 dark:bg-blue-500/10",
       action: () => { setOpen(false); fileInputRef.current?.click(); },
+    },
+    {
+      icon: Bot,
+      label: "AI",
+      color: "text-purple-500 dark:text-purple-400",
+      bg: "bg-purple-50 dark:bg-purple-500/10",
+      badge: activeAction === "copilot" ? "ACTIVE" : "COPILOT",
+      badgeStyle: activeAction === "copilot"
+        ? "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-200 dark:border-purple-700/50"
+        : "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400",
+      action: () => {
+        setMode("copilot");
+        toast.success("AI Copilot multi-agent mode activated");
+      },
     },
     {
       icon: Bot,

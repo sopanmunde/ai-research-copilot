@@ -1,4 +1,4 @@
 """Conversations router — kept for backward compatibility."""
-from src.api.conversations import router
+from api.conversations import router
 
 __all__ = ["router"]

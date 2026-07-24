@@ -12,6 +12,7 @@ import ChatPane from "./ChatPane";
 import Header from "./Header";
 import { INITIAL_TEMPLATES, INITIAL_FOLDERS } from "./mockData";
 import { useRouter } from "next/navigation";
+import { Menu } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { DashboardDocsTable } from "./DashboardDocsTable";
 import { EmailDashboard } from "./EmailDashboard";
@@ -144,6 +145,7 @@ export default function AIAssistantUI() {
 
   const [query, setQuery] = useState("");
   const searchRef = useRef(null);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState(null);
@@ -703,8 +705,40 @@ export default function AIAssistantUI() {
     );
   }
 
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!e.changedTouches || !e.changedTouches[0]) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - touchStartRef.current.x;
+    const deltaY = endY - touchStartRef.current.y;
+
+    // Trigger swipe if horizontal displacement dominates (vertical delta < 80px)
+    if (Math.abs(deltaY) < 80) {
+      if (deltaX > 60) {
+        // Swiped Left to Right -> Open Sidebar
+        setSidebarOpen(true);
+      } else if (deltaX < -60) {
+        // Swiped Right to Left -> Close Sidebar
+        setSidebarOpen(false);
+      }
+    }
+  };
+
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="relative flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    >
       {/* Background radial glows to match landing page */}
       <div
         className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-0 dark:opacity-[0.06] transition-opacity duration-300 z-0"
@@ -721,7 +755,7 @@ export default function AIAssistantUI() {
         }}
       />
 
-      <div className="relative z-10 flex h-full w-full overflow-hidden">
+      <div className="relative z-10 flex h-full w-full overflow-hidden p-0 md:p-4 md:gap-4">
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -756,19 +790,29 @@ export default function AIAssistantUI() {
           onUserUpdate={fetchUser}
         />
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-          <Header
-            createNewChat={createNewChat}
-            sidebarCollapsed={sidebarCollapsed}
-            setSidebarOpen={setSidebarOpen}
-            user={user}
-            onUserUpdate={fetchUser}
-            selectedBot={selectedBot}
-            setSelectedBot={setSelectedBot}
-            onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
-            onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
-            onOpenWorkflows={() => setIsWorkflowsOpen(true)}
-          />
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border/80 md:rounded-2xl md:bg-card/20 md:backdrop-blur-md">
+          {!["docs", "calendar", "email", "brain", "tasks", "notes"].includes(selectedId) && (
+            <Header
+              createNewChat={createNewChat}
+              sidebarCollapsed={sidebarCollapsed}
+              setSidebarOpen={setSidebarOpen}
+              user={user}
+              onUserUpdate={fetchUser}
+              selectedBot={selectedBot}
+              setSelectedBot={setSelectedBot}
+              onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
+              onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
+              onOpenWorkflows={() => setIsWorkflowsOpen(true)}
+            />
+          )}
+          {["docs", "calendar", "email", "brain", "tasks", "notes"].includes(selectedId) && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
+            >
+              <Menu className="size-4.5" />
+            </button>
+          )}
           {selectedId === "docs" ? (
             <div className="relative flex-1 overflow-y-auto bg-background pb-16">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)] pointer-events-none" />

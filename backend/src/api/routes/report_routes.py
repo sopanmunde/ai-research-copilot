@@ -5,25 +5,25 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from bson import ObjectId
 
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_REPORT, COLLECTION_REPORTS
-from src.core.security import get_current_user
-from src.database.mongodb.connection import get_database
-from src.services.report_service import create_report
-from src.rag.memory.research_memory import get_research_sessions
-from src.utils.markdown_export import build_markdown_report
-from src.services.export_service import (
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_REPORT, COLLECTION_REPORTS
+from core.security import get_current_user
+from database.mongodb.connection import get_database
+from services.report_service import create_report
+from rag.memory.research_memory import get_research_sessions
+from utils.markdown_export import build_markdown_report
+from services.export_service import (
     generate_pdf_report,
     generate_docx_report,
     generate_xlsx_report,
 )
-from src.services.third_party_integrations import (
+from services.third_party_integrations import (
     send_slack_webhook,
     send_teams_webhook,
     publish_to_notion,
     publish_to_confluence,
 )
-from src.database.mongodb.repositories.integrations_repository import get_integrations
+from database.mongodb.repositories.integrations_repository import get_integrations
 
 router = APIRouter()
 

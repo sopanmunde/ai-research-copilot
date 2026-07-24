@@ -24,7 +24,6 @@ import { ExportModal } from "./ExportModal";
 import {
   LLMProvider,
   ApiKey,
-  Message,
   ModelMetric,
   TelemetryLog,
   ProviderType,
@@ -36,7 +35,6 @@ import { BrainProviderSidebar } from "./dashboards/brain/BrainProviderSidebar";
 import { BrainOverviewTab } from "./dashboards/brain/BrainOverviewTab";
 import { BrainTelemetryTab } from "./dashboards/brain/BrainTelemetryTab";
 import { BrainConfigTab } from "./dashboards/brain/BrainConfigTab";
-import { BrainPlaygroundTab } from "./dashboards/brain/BrainPlaygroundTab";
 import { BrainMatrixTab } from "./dashboards/brain/BrainMatrixTab";
 import { BrainUsageSidebar } from "./dashboards/brain/BrainUsageSidebar";
 
@@ -58,83 +56,57 @@ export function BrainDashboard() {
   const [telemetryInterval, setTelemetryInterval] = useState<number>(2);
   const [telemetryWindow, setTelemetryWindow] = useState<"1m" | "5m" | "1h" | "24h">("5m");
 
-  const [liveTokensPerSec, setLiveTokensPerSec] = useState(148.5);
-  const [liveTtft, setLiveTtft] = useState(185);
-  const [liveP95, setLiveP95] = useState(340);
-  const [liveReqPerMin, setLiveReqPerMin] = useState(48);
-  const [liveVectorLatency, setLiveVectorLatency] = useState(18.2);
+  const [liveTokensPerSec, setLiveTokensPerSec] = useState(0);
+  const [liveTtft, setLiveTtft] = useState(0);
+  const [liveP95, setLiveP95] = useState(0);
+  const [liveReqPerMin, setLiveReqPerMin] = useState(0);
+  const [liveVectorLatency, setLiveVectorLatency] = useState(0);
 
-  const [telemetryStreamLogs, setTelemetryStreamLogs] = useState<TelemetryLog[]>([
-    { id: "req-101", timestamp: "20:15:42", model: "gpt-4o", tokensIn: 342, tokensOut: 1280, latency: 245, status: 200, traceId: "tr-9a8f7c6b", cost: 0.0210, cacheHit: false },
-    { id: "req-102", timestamp: "20:15:40", model: "claude-3-5-sonnet", tokensIn: 512, tokensOut: 890, latency: 310, status: 200, traceId: "tr-3e4f5a6b", cost: 0.0148, cacheHit: false },
-    { id: "req-103", timestamp: "20:15:38", model: "gemini-1.5-flash", tokensIn: 180, tokensOut: 450, latency: 175, status: 304, traceId: "tr-1b2c3d4e", cost: 0.0001, cacheHit: true },
-    { id: "req-104", timestamp: "20:15:35", model: "llama-3.1-70b", tokensIn: 640, tokensOut: 2100, latency: 48, status: 200, traceId: "tr-5f6e7d8c", cost: 0.0020, cacheHit: false },
-    { id: "req-105", timestamp: "20:15:31", model: "llama3.2-local", tokensIn: 95, tokensOut: 320, latency: 18, status: 200, traceId: "tr-9d8c7b6a", cost: 0.0000, cacheHit: false },
-    { id: "req-106", timestamp: "20:15:28", model: "gpt-4o-mini", tokensIn: 1200, tokensOut: 0, latency: 1120, status: 429, traceId: "tr-4a3b2c1d", cost: 0.0002, error: "Rate limit exceeded (429): Token quota exhausted for current minute window" },
-    { id: "req-107", timestamp: "20:15:22", model: "gemini-1.5-pro", tokensIn: 840, tokensOut: 0, latency: 2400, status: 500, traceId: "tr-7f8e9d0c", cost: 0.0000, error: "500 Internal Server Error: Provider upstream connection timeout during generation" }
-  ]);
+  const [telemetryStreamLogs, setTelemetryStreamLogs] = useState<TelemetryLog[]>([]);
 
-  const [throughputGraph, setThroughputGraph] = useState<number[]>([
-    120, 145, 130, 165, 180, 155, 190, 210, 175, 195, 220, 185, 160, 205, 190
-  ]);
+  const [throughputGraph, setThroughputGraph] = useState<number[]>([]);
 
-  // Live Telemetry Loop
+  // Live Real Telemetry Polling Loop
   useEffect(() => {
     if (!telemetryLive) return;
-    const timer = setInterval(() => {
-      const deltaTokens = (Math.random() - 0.5) * 20;
-      const deltaTtft = (Math.random() - 0.5) * 15;
-      setLiveTokensPerSec(prev => Math.max(80, Math.min(320, parseFloat((prev + deltaTokens).toFixed(1)))));
-      setLiveTtft(prev => Math.max(20, Math.min(600, Math.round(prev + deltaTtft))));
-      setLiveP95(prev => Math.max(100, Math.min(900, Math.round(prev + deltaTtft * 1.2))));
-      setLiveReqPerMin(prev => Math.max(10, Math.min(150, Math.round(prev + (Math.random() - 0.5) * 4))));
-      setLiveVectorLatency(prev => Math.max(5, Math.min(45, parseFloat((prev + (Math.random() - 0.5) * 2).toFixed(1)))));
 
-      setThroughputGraph(prev => [...prev.slice(1), Math.floor(100 + Math.random() * 120)]);
+    const pollRealTelemetry = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
 
-      const modelsList = ["gpt-4o", "claude-3-5-sonnet", "gemini-1.5-flash", "llama-3.1-70b", "llama3.2-local", "gpt-4o-mini", "gemini-1.5-pro"];
-      const randModel = modelsList[Math.floor(Math.random() * modelsList.length)];
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const [resStats, resLogs] = await Promise.all([
+          fetch(`${API_BASE_URL}/brain/telemetry/stats`, { headers }),
+          fetch(`${API_BASE_URL}/brain/telemetry`, { headers })
+        ]);
 
-      // Diverse HTTP Status Simulation (mostly 200, occasional 304, 429, 500)
-      const randVal = Math.random();
-      let status = 200;
-      let error: string | undefined = undefined;
-      let cacheHit = false;
+        if (resStats.ok) {
+          const stats = await resStats.json();
+          setLiveTokensPerSec(stats.liveTokensPerSec ?? 0);
+          setLiveTtft(stats.liveTtft ?? 0);
+          setLiveP95(stats.liveP95 ?? 0);
+          setLiveReqPerMin(stats.liveReqPerMin ?? 0);
+          setLiveVectorLatency(stats.liveVectorLatency ?? 0);
+        }
 
-      if (randVal > 0.92) {
-        status = 500;
-        error = `500 Internal Error: ${randModel} API gateway failed to respond within threshold.`;
-      } else if (randVal > 0.82) {
-        status = 429;
-        error = `429 Rate Limit: Request throttled on provider endpoint for ${randModel}.`;
-      } else if (randVal > 0.70) {
-        status = 304;
-        cacheHit = true;
+        if (resLogs.ok) {
+          const logs: TelemetryLog[] = await resLogs.json();
+          if (Array.isArray(logs)) {
+            setTelemetryStreamLogs(logs);
+            const graphPoints = logs.slice(0, 15).reverse().map((l) => {
+              if (l.latency && l.latency > 0) return Math.round(100000 / l.latency);
+              return 0;
+            });
+            setThroughputGraph(graphPoints);
+          }
+        }
+      } catch (e) {
+        console.error("Telemetry update failed:", e);
       }
+    };
 
-      const tokensIn = Math.floor(100 + Math.random() * 800);
-      const tokensOut = status >= 400 ? 0 : Math.floor(150 + Math.random() * 1500);
-      const latency = cacheHit ? Math.floor(8 + Math.random() * 25) : Math.floor(35 + Math.random() * 450);
-      const cost = cacheHit ? 0.0001 : parseFloat(((tokensIn * 0.000003) + (tokensOut * 0.000015)).toFixed(5));
-      const traceId = `tr-${Math.random().toString(36).substring(2, 10)}`;
-
-      const newLog: TelemetryLog = {
-        id: `req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        timestamp: timeStr,
-        model: randModel,
-        tokensIn,
-        tokensOut,
-        latency,
-        status,
-        traceId,
-        cost,
-        error,
-        cacheHit
-      };
-      setTelemetryStreamLogs(prev => [newLog, ...prev.slice(0, 49)]);
-    }, telemetryInterval * 1000);
-
+    pollRealTelemetry();
+    const timer = setInterval(pollRealTelemetry, telemetryInterval * 1000);
     return () => clearInterval(timer);
   }, [telemetryLive, telemetryInterval]);
 
@@ -143,12 +115,6 @@ export function BrainDashboard() {
   const [maxTokens, setMaxTokens] = useState<number>(2048);
   const [topP, setTopP] = useState<number>(0.9);
   const [systemPrompt, setSystemPrompt] = useState<string>("You are an advanced AI assistant powered by TriVisionX.");
-
-  // Playground Chat State
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [streamedText, setStreamedText] = useState("");
 
   // Benchmark speed states
   const [benchmarkStatus, setBenchmarkStatus] = useState<"idle" | "running" | "done">("idle");
@@ -170,8 +136,6 @@ export function BrainDashboard() {
   const [selectedModel, setSelectedModel] = useState("gpt-4o");
   const [localEndpoint, setLocalEndpoint] = useState("");
   const [endpointEdited, setEndpointEdited] = useState(false);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const allProviders = [...cloudProviders, ...localProviders];
   const listProviders = activeTab === "cloud" ? cloudProviders : localProviders;
@@ -202,10 +166,9 @@ export function BrainDashboard() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [resProviders, resKeys, resMessages, resTelemetry] = await Promise.all([
+      const [resProviders, resKeys, resTelemetry] = await Promise.all([
         fetch(`${API_BASE_URL}/brain/providers`, { headers }),
         fetch(`${API_BASE_URL}/brain/keys`, { headers }),
-        fetch(`${API_BASE_URL}/brain/playground/messages`, { headers }),
         fetch(`${API_BASE_URL}/brain/telemetry/stats`, { headers })
       ]);
 
@@ -217,10 +180,6 @@ export function BrainDashboard() {
       if (resKeys.ok) {
         const data = await resKeys.json();
         setApiKeys(data);
-      }
-      if (resMessages.ok) {
-        const data = await resMessages.json();
-        setChatMessages(data);
       }
       if (resTelemetry.ok) {
         const stats = await resTelemetry.json();
@@ -243,13 +202,6 @@ export function BrainDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  // Auto scroll playground chat
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [chatMessages, streamedText]);
 
   // Handle active provider selection
   const activateProvider = async (id: string) => {
@@ -316,6 +268,7 @@ export function BrainDashboard() {
       const setF = (p: LLMProvider) => p.id === id ? { ...p, status, latency } : p;
       setCloudProviders((p) => p.map(setF));
       setLocalProviders((p) => p.map(setF));
+      fetchData();
     } catch (e) {
       console.error("Failed connection ping", e);
       toast.error("Connection failed.");
@@ -323,6 +276,7 @@ export function BrainDashboard() {
       const setErr = (p: LLMProvider) => p.id === id ? { ...p, status: "error" as ProviderStatus } : p;
       setCloudProviders((p) => p.map(setErr));
       setLocalProviders((p) => p.map(setErr));
+      fetchData();
     } finally {
       setTestingId(null);
     }
@@ -363,181 +317,23 @@ export function BrainDashboard() {
         setCloudProviders(c => c.map(updateP));
         setLocalProviders(l => l.map(updateP));
         toast.success(`Speed test complete: ${finalSpeed} tok/s at ${finalLatency}ms latency!`);
+        fetchData();
       } else {
         const err = await res.json();
-        throw new Error(err.detail || "Server error");
+        const msg = typeof err.detail === "string" ? err.detail : typeof err.detail === "object" ? (err.detail.message || JSON.stringify(err.detail)) : err.message || "Server error";
+        throw new Error(msg);
       }
     } catch (e: any) {
       clearInterval(progressTimer);
       setBenchmarkProgress(0);
       setBenchmarkStatus("idle");
       console.error("Benchmark failed", e);
-      toast.error(`Benchmark failed: ${e.message || "Ensure a valid API key is set."}`);
-    }
-  };
-
-  // Playground Chat - Real Functional Streaming
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isGenerating) return;
-    const userPrompt = inputMessage.trim();
-    setInputMessage("");
-
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMsg = { role: "user" as const, content: userPrompt, timestamp };
-    let currentChatHistory = [...chatMessages];
-
-    try {
-      const token = localStorage.getItem("token");
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      };
-
-      const resUser = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(userMsg)
-      });
-      if (resUser.ok) {
-        const savedUserMsg = await resUser.json();
-        currentChatHistory = [...chatMessages, savedUserMsg];
-        setChatMessages(currentChatHistory);
-      } else {
-        currentChatHistory = [...chatMessages, userMsg];
-        setChatMessages(currentChatHistory);
-      }
-    } catch (e) {
-      console.error(e);
-      currentChatHistory = [...chatMessages, userMsg];
-      setChatMessages(currentChatHistory);
-    }
-
-    setIsGenerating(true);
-    setStreamedText("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const messagesPayload = currentChatHistory.map(m => ({
-        role: m.role,
-        content: m.content
-      }));
-
-      const res = await fetch(`${API_BASE_URL}/brain/playground/completion`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          provider: provider.id,
-          model: selectedModel,
-          messages: messagesPayload,
-          temperature,
-          max_tokens: maxTokens,
-          system_prompt: systemPrompt
-        })
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || "Playground request failed");
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body reader available");
-
-      const decoder = new TextDecoder();
-      let done = false;
-      let accumulatedText = "";
-      let buffer = "";
-
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const cleanLine = line.trim();
-            if (!cleanLine.startsWith("data: ")) continue;
-
-            const jsonStr = cleanLine.slice(6);
-            try {
-              const parsed = JSON.parse(jsonStr);
-              if (parsed.type === "token" && parsed.data) {
-                accumulatedText += parsed.data;
-                setStreamedText(accumulatedText);
-              } else if (parsed.type === "error") {
-                throw new Error(parsed.data || "In-stream error occurred");
-              } else if (parsed.done) {
-                done = true;
-                break;
-              }
-            } catch (jsonErr) {
-              // Ignore partial chunk syntax errors
-            }
-          }
-        }
-      }
-
-      const assistantMsg = {
-        role: "assistant" as const,
-        content: accumulatedText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        modelUsed: selectedModel
-      };
-
-      const resAssistant = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(assistantMsg)
-      });
-
-      if (resAssistant.ok) {
-        const savedAssistantMsg = await resAssistant.json();
-        setChatMessages(prev => [...prev, savedAssistantMsg]);
-      } else {
-        setChatMessages(prev => [...prev, assistantMsg]);
-      }
+      toast.error(e.message || "Benchmark failed. Ensure a valid API key is set.");
       fetchData();
-
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Failed to generate playground completion");
-
-      const errorMsg = {
-        role: "assistant" as const,
-        content: `Error: ${err.message || "Could not connect to the model."}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setChatMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setStreamedText("");
-      setIsGenerating(false);
     }
   };
 
-  const clearPlaygroundLogs = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/brain/playground/messages`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setChatMessages([{ role: "assistant", content: "Playground console cleared.", timestamp: "Just now" }]);
-        toast.success("Playground history cleared successfully");
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to clear playground history");
-    }
-  };
+
 
   const saveKey = async () => {
     if (!newLabel.trim() || !newKeyVal.trim()) return;
@@ -672,7 +468,6 @@ export function BrainDashboard() {
     { id: "overview", label: "CMD Center", icon: Sparkles, color: "text-primary" },
     { id: "telemetry", label: "Tracking", icon: Activity, color: "text-emerald-400" },
     { id: "configure", label: "Config", icon: Sliders, color: "text-blue-400" },
-    { id: "playground", label: "Playground", icon: Terminal, color: "text-purple-400" },
     { id: "matrix", label: "Metrics", icon: Scale, color: "text-amber-400" },
   ];
 
@@ -681,29 +476,29 @@ export function BrainDashboard() {
       <div className="flex h-full flex-col overflow-hidden bg-background">
         {/* ── TOP HEADER BAR ────────────────────────────────────────────── */}
         <div className="shrink-0 border-b border-border bg-card shadow-xs">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-3.5">
-              <div className="flex size-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 shadow-xs shrink-0">
                 <Brain className="size-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-base font-extrabold text-foreground leading-none flex items-center gap-2">
+                <h1 className="text-base font-extrabold text-foreground leading-none flex items-center gap-2 flex-wrap">
                   Brain Dashboard
                   <Badge variant="secondary" className="text-[10px] font-mono font-bold py-0.5 px-2 bg-primary/15 text-primary border border-primary/20">
                     v2.6 Real-Time
                   </Badge>
                 </h1>
-                <p className="text-xs font-medium text-muted-foreground mt-1">LLM provider engine controls, security API keys, performance benchmarks &amp; real-time telemetry</p>
+                <p className="text-xs font-medium text-muted-foreground mt-1 hidden sm:block">LLM provider engine controls, security API keys, performance benchmarks &amp; real-time telemetry</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {activeProvider && (
-                <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 shadow-2xs">
-                  <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">Active Engine:</span>
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 shadow-2xs">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">Active Engine:</span>
                   <span className="text-xs font-extrabold text-foreground">{activeProvider.name}</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold h-5 px-2 border-emerald-500/40 text-emerald-400">
-                    {activeProvider.type === "local" ? "Local Hardware" : "Cloud API"}
+                  <Badge variant="outline" className="text-[9px] font-semibold h-4.5 px-1.5 border-emerald-500/40 text-emerald-400">
+                    {activeProvider.type === "local" ? "Local" : "Cloud"}
                   </Badge>
                 </div>
               )}
@@ -711,67 +506,35 @@ export function BrainDashboard() {
                 size="sm"
                 variant="outline"
                 onClick={() => setIsExportOpen(true)}
-                className="h-9 text-xs font-bold gap-2 border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/20 shadow-xs cursor-pointer"
+                className="h-8 sm:h-9 text-xs font-bold gap-1.5 sm:gap-2 border-indigo-500/30 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/20 shadow-xs cursor-pointer"
               >
-                <Plug className="h-4 w-4" />
-                Export &amp; Integrations Hub
+                <Plug className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline sm:inline">Export &amp; Integrations Hub</span>
+                <span className="inline xs:hidden sm:hidden">Export</span>
               </Button>
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-0 border-t border-border divide-x divide-border bg-muted/30">
-            {[
-              { icon: Sparkles, label: "Total Tokens Generated", value: `${(totalTokens / 1_000_000).toFixed(2)}M`, note: "Monthly usage" },
-              { icon: Activity, label: "Est. Total Cost", value: `$${totalCost.toFixed(2)}`, note: "API pricing" },
-              { icon: Clock, label: "Active Latency", value: `${activeProvider?.latency || "—"} ms`, note: "TTFT Ping" },
-              { icon: Gauge, label: "Throughput Speed", value: `${activeProvider?.tokensPerSec || "—"} tok/s`, note: "Generation rate" },
-            ].map(({ icon: Icon, label, value, note }) => (
-              <div key={label} className="flex items-center gap-3.5 px-6 py-3">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted border border-border/80 shadow-xs">
-                  <Icon className="size-4.5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
-                  <div className="flex items-baseline gap-1.5 mt-0.5">
-                    <p className="text-base font-extrabold font-mono text-foreground leading-tight">{value}</p>
-                    <span className="text-[9.5px] text-muted-foreground font-mono font-medium">({note})</span>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
         {/* ── BODY ──────────────────────────────────────────────────────── */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* LEFT PROVIDER RAIL */}
-          <BrainProviderSidebar
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            listProviders={listProviders}
-            selectedProviderId={selectedProviderId}
-            selectProvider={selectProvider}
-          />
-
-          {/* MAIN CONFIGURATION / PLAYGROUND / TELEMETRY / MATRIX AREA */}
+          {/* MAIN CONFIGURATION / TELEMETRY / MATRIX AREA */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* UNIFIED TOP TAB NAVIGATION BAR */}
-            <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-2 sm:py-3 border-b border-border bg-card shrink-0 gap-2">
               <div className="flex items-center gap-2">
                 {mainTab === "overview" && <Sparkles className="size-4 text-primary animate-pulse" />}
                 {mainTab === "telemetry" && <Activity className="size-4 text-emerald-400 animate-pulse" />}
                 {mainTab === "configure" && <Sliders className="size-4 text-blue-400" />}
-                {mainTab === "playground" && <Terminal className="size-4 text-purple-400" />}
                 {mainTab === "matrix" && <Scale className="size-4 text-amber-400" />}
-                <h2 className="text-sm font-extrabold text-foreground capitalize">
+                <h2 className="text-sm font-extrabold text-foreground capitalize truncate">
                   {mainTab === "overview" ? "Command Center" :
                     mainTab === "telemetry" ? "Real-Time Telemetry" :
-                      mainTab === "configure" ? `${provider.name} Settings` :
-                        mainTab === "playground" ? "Interactive Playground" : "LLM Metrics Matrix"}
+                      mainTab === "configure" ? `${provider.name} Settings` : "LLM Metrics Matrix"}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1 bg-muted p-0.5 rounded-lg border border-border">
+              <div className="flex items-center gap-1 bg-muted p-0.5 rounded-lg border border-border overflow-x-auto scrollbar-none max-w-full">
                 {workspaceModes.map((item) => {
                   const Icon = item.icon;
                   const isActive = mainTab === item.id;
@@ -801,17 +564,10 @@ export function BrainDashboard() {
             <div className="flex-1 flex min-h-0 relative">
               {mainTab === "overview" && (
                 <BrainOverviewTab
-                  provider={provider}
-                  selectedModel={selectedModel}
                   liveTtft={liveTtft}
                   liveTokensPerSec={liveTokensPerSec}
                   liveReqPerMin={liveReqPerMin}
                   liveVectorLatency={liveVectorLatency}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  handleSendMessage={handleSendMessage}
-                  isGenerating={isGenerating}
-                  streamedText={streamedText}
                   fastestComparedModel={fastestComparedModel}
                   cheapestComparedModel={cheapestComparedModel}
                   highestQualityComparedModel={highestQualityComparedModel}
@@ -841,58 +597,54 @@ export function BrainDashboard() {
               )}
 
               {mainTab === "configure" && (
-                <BrainConfigTab
-                  provider={provider}
-                  activateProvider={activateProvider}
-                  testConnection={testConnection}
-                  testingId={testingId}
-                  selectedModel={selectedModel}
-                  setSelectedModel={setSelectedModel}
-                  temperature={temperature}
-                  setTemperature={setTemperature}
-                  maxTokens={maxTokens}
-                  setMaxTokens={setMaxTokens}
-                  topP={topP}
-                  setTopP={setTopP}
-                  systemPrompt={systemPrompt}
-                  setSystemPrompt={setSystemPrompt}
-                  benchmarkStatus={benchmarkStatus}
-                  runSpeedBenchmark={runSpeedBenchmark}
-                  benchmarkProgress={benchmarkProgress}
-                  benchmarkSpeed={benchmarkSpeed}
-                  benchmarkLatency={benchmarkLatency}
-                  endpoint={endpoint}
-                  setLocalEndpoint={setLocalEndpoint}
-                  setEndpointEdited={setEndpointEdited}
-                  providerKeys={providerKeys}
-                  addKeyMode={addKeyMode}
-                  setAddKeyMode={setAddKeyMode}
-                  newLabel={newLabel}
-                  setNewLabel={setNewLabel}
-                  newKeyVal={newKeyVal}
-                  setNewKeyVal={setNewKeyVal}
-                  showKey={showKey}
-                  setShowKey={setShowKey}
-                  saveKey={saveKey}
-                  deleteKey={deleteKey}
-                  toggleKey={toggleKey}
-                />
+                <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+                  <BrainProviderSidebar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    listProviders={listProviders}
+                    selectedProviderId={selectedProviderId}
+                    selectProvider={selectProvider}
+                  />
+                  <BrainConfigTab
+                    provider={provider}
+                    activateProvider={activateProvider}
+                    testConnection={testConnection}
+                    testingId={testingId}
+                    selectedModel={selectedModel}
+                    setSelectedModel={setSelectedModel}
+                    temperature={temperature}
+                    setTemperature={setTemperature}
+                    maxTokens={maxTokens}
+                    setMaxTokens={setMaxTokens}
+                    topP={topP}
+                    setTopP={setTopP}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={setSystemPrompt}
+                    benchmarkStatus={benchmarkStatus}
+                    runSpeedBenchmark={runSpeedBenchmark}
+                    benchmarkProgress={benchmarkProgress}
+                    benchmarkSpeed={benchmarkSpeed}
+                    benchmarkLatency={benchmarkLatency}
+                    endpoint={endpoint}
+                    setLocalEndpoint={setLocalEndpoint}
+                    setEndpointEdited={setEndpointEdited}
+                    providerKeys={providerKeys}
+                    addKeyMode={addKeyMode}
+                    setAddKeyMode={setAddKeyMode}
+                    newLabel={newLabel}
+                    setNewLabel={setNewLabel}
+                    newKeyVal={newKeyVal}
+                    setNewKeyVal={setNewKeyVal}
+                    showKey={showKey}
+                    setShowKey={setShowKey}
+                    saveKey={saveKey}
+                    deleteKey={deleteKey}
+                    toggleKey={toggleKey}
+                  />
+                </div>
               )}
 
-              {mainTab === "playground" && (
-                <BrainPlaygroundTab
-                  scrollRef={scrollRef}
-                  chatMessages={chatMessages}
-                  selectedModel={selectedModel}
-                  isGenerating={isGenerating}
-                  streamedText={streamedText}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  handleSendMessage={handleSendMessage}
-                  temperature={temperature}
-                  clearPlaygroundLogs={clearPlaygroundLogs}
-                />
-              )}
+
 
               {mainTab === "matrix" && (
                 <BrainMatrixTab

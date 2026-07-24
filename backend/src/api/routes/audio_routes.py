@@ -9,9 +9,9 @@ from fastapi.responses import StreamingResponse
 import httpx
 import base64
 import io
-from src.core.security import get_current_user
-from src.core.config import settings
-from src.core.logger import get_logger
+from core.security import get_current_user
+from core.config import settings
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

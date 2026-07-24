@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from bson import ObjectId
 from bson.errors import InvalidId
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS
-from src.core.logger import get_logger
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

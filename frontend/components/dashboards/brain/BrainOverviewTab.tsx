@@ -20,27 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  LLMProvider,
   ModelMetric,
   WEEKLY_TOKEN_DATA,
   ShimmerBorder,
-  ProviderLogo,
-  StatusChip,
   MainTabType,
 } from "./types";
 
 interface BrainOverviewTabProps {
-  provider: LLMProvider;
-  selectedModel: string;
   liveTtft: number;
   liveTokensPerSec: number;
   liveReqPerMin: number;
   liveVectorLatency: number;
-  inputMessage: string;
-  setInputMessage: (val: string) => void;
-  handleSendMessage: () => void;
-  isGenerating: boolean;
-  streamedText: string;
   fastestComparedModel?: ModelMetric;
   cheapestComparedModel?: ModelMetric;
   highestQualityComparedModel?: ModelMetric;
@@ -48,17 +38,10 @@ interface BrainOverviewTabProps {
 }
 
 export function BrainOverviewTab({
-  provider,
-  selectedModel,
   liveTtft,
   liveTokensPerSec,
   liveReqPerMin,
   liveVectorLatency,
-  inputMessage,
-  setInputMessage,
-  handleSendMessage,
-  isGenerating,
-  streamedText,
   fastestComparedModel,
   cheapestComparedModel,
   highestQualityComparedModel,
@@ -82,18 +65,11 @@ export function BrainOverviewTab({
               TriVisionX Brain Intelligence Command Center
             </h2>
             <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-              Orchestrate active AI models, monitor live token streaming, test completions in the playground, and evaluate benchmarks from a single unified workspace.
+              Orchestrate active AI models, monitor live token streaming, and evaluate benchmarks from a single unified workspace.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              size="sm"
-              onClick={() => setMainTab("playground")}
-              className="h-9 text-xs font-bold gap-2 bg-primary text-primary-foreground shadow-xs cursor-pointer"
-            >
-              <Terminal className="size-4" /> Open Full Playground
-            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -102,90 +78,15 @@ export function BrainOverviewTab({
             >
               <Activity className="size-4" /> Open Live Telemetry
             </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 1: Active Engine Spotlight & Quick Prompt Tester */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Active Brain Engine Control Card */}
-        <div className="p-5 rounded-xl border border-border/80 bg-card space-y-4 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
-            <div className="flex items-center gap-2.5">
-              <ProviderLogo logo={provider.logo} active={provider.isActive} size="sm" />
-              <div>
-                <h3 className="text-sm font-extrabold text-foreground">Active Brain Engine</h3>
-                <p className="text-xs text-muted-foreground font-medium">{provider.name} ({provider.type === "local" ? "Local Hardware" : "Cloud API"})</p>
-              </div>
-            </div>
-            <StatusChip status={provider.status} />
-          </div>
-
-          <div className="space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground font-medium">Default Model:</span>
-              <span className="font-bold text-foreground">{selectedModel}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground font-medium">Active Latency (TTFT):</span>
-              <span className="font-extrabold text-emerald-400">{liveTtft} ms</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground font-medium">Token Throughput:</span>
-              <span className="font-extrabold text-blue-400">{liveTokensPerSec} tok/s</span>
-            </div>
-          </div>
-
-          <div className="pt-2">
             <Button
               size="sm"
               variant="outline"
               onClick={() => setMainTab("configure")}
-              className="w-full h-8.5 text-xs font-bold gap-1.5 border-border cursor-pointer"
+              className="h-9 text-xs font-bold gap-2 border-blue-500/40 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 shadow-xs cursor-pointer"
             >
-              <Sliders className="size-3.5" /> Configure Active Engine Settings
+              <Sliders className="size-4" /> Configs
             </Button>
           </div>
-        </div>
-
-        {/* Quick Interactive Prompt Tester */}
-        <div className="lg:col-span-2 p-5 rounded-xl border border-border/80 bg-card space-y-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-4 text-primary" />
-              <h3 className="text-sm font-extrabold text-foreground">Quick Prompt Execution</h3>
-            </div>
-            <span className="text-xs font-mono font-bold text-muted-foreground">Active Model: {selectedModel}</span>
-          </div>
-
-          <div className="space-y-2 flex-1">
-            <Textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={`Type a prompt to test ${selectedModel} instantly...`}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-              className="min-h-[75px] text-xs bg-background border-border"
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Press Enter to execute prompt query</span>
-              <Button
-                size="sm"
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isGenerating}
-                className="h-8.5 text-xs font-bold gap-1.5 cursor-pointer"
-              >
-                {isGenerating ? <RefreshCw className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-                {isGenerating ? "Generating..." : "Execute Query"}
-              </Button>
-            </div>
-          </div>
-
-          {streamedText && (
-            <div className="p-3 rounded-lg border border-border bg-muted/30 text-xs font-mono text-foreground space-y-1">
-              <span className="text-xs text-primary font-bold block">Live Stream Completion Output:</span>
-              <p className="whitespace-pre-wrap">{streamedText}</p>
-            </div>
-          )}
         </div>
       </div>
 

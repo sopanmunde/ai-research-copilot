@@ -1,14 +1,14 @@
 """Integrations routes — API endpoints to manage user integration configurations."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Dict, Any
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.integrations_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.integrations_repository import (
     get_integrations,
     update_integrations,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

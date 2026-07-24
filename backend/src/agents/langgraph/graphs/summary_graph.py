@@ -3,11 +3,11 @@ src/agents/langgraph/graphs/summary_graph.py
 Summary workflow (Planner → Summarizer → Reporter) - skips deep retrieval
 """
 from langgraph.graph import StateGraph, END
-from src.agents.langgraph.state import AgentState
-from src.agents.langgraph.nodes.planner_node import planner_node
-from src.agents.langgraph.nodes.summarizer_node import summarizer_node
-from src.agents.langgraph.nodes.report_node import report_node
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.planner_node import planner_node
+from agents.langgraph.nodes.summarizer_node import summarizer_node
+from agents.langgraph.nodes.report_node import report_node
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status, Request, HTTPException
-from src.schemas.contact import ContactCreate
-from src.database.mongodb.repositories.contact_repository import save_contact_message
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_CONTACT
-from src.core.logger import get_logger
+from schemas.contact import ContactCreate
+from database.mongodb.repositories.contact_repository import save_contact_message
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_CONTACT
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

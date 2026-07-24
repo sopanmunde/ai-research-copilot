@@ -13,8 +13,8 @@ All endpoints require a valid JWT token (current_user dependency).
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from src.core.security import get_current_user
-from src.core.logger import get_logger
+from core.security import get_current_user
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -92,7 +92,7 @@ async def execute_code(
     import tempfile
     import os
 
-    from src.tools.code_tools import _is_safe_code
+    from tools.code_tools import _is_safe_code
 
     logger.info(
         f"[tools/execute] user={current_user.get('user_id')}, "
@@ -166,7 +166,7 @@ async def fetch_url(
     """
     Fetch the readable markdown content of a webpage via Jina Reader or Firecrawl.
     """
-    from src.tools.web_tools import fetch_webpage_content
+    from tools.web_tools import fetch_webpage_content
 
     logger.info(f"[tools/fetch-url] user={current_user.get('user_id')}, url={request.url[:80]}")
 
@@ -198,7 +198,7 @@ async def web_search_endpoint(
     Run a live web search via Tavily, SerpAPI, or Brave Search.
     Returns formatted results with titles, URLs, and snippets.
     """
-    from src.tools.web_tools import web_search
+    from tools.web_tools import web_search
 
     logger.info(f"[tools/search] user={current_user.get('user_id')}, query='{request.query[:60]}'")
 
@@ -222,7 +222,7 @@ async def github_repo_context(
     """
     Fetch high-level context about a GitHub repository (README, file tree, recent commits).
     """
-    from src.tools.github_tools import get_repo_context
+    from tools.github_tools import get_repo_context
 
     logger.info(f"[tools/github/repo] {request.owner}/{request.repo}")
 
@@ -250,7 +250,7 @@ async def create_issue(
     """
     Create a new GitHub issue in the specified repository.
     """
-    from src.tools.github_tools import create_github_issue
+    from tools.github_tools import create_github_issue
 
     logger.info(f"[tools/github/issue] {request.owner}/{request.repo}: '{request.title[:60]}'")
 

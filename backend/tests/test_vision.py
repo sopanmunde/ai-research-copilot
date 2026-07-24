@@ -11,7 +11,7 @@ from langchain_core.documents import Document
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.agents.langgraph.nodes.vision_extraction_node import (
+from agents.langgraph.nodes.vision_extraction_node import (
     encode_image_base64,
     extract_vision_data,
     extract_scanned_pdf,
@@ -26,8 +26,8 @@ def test_base64_encoding():
 
 
 @pytest.mark.asyncio
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_fallback_providers")
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_llm")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_fallback_providers")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_llm")
 async def test_extract_vision_data_success(mock_get_llm, mock_get_providers):
     # Mock LLM and fallback list
     mock_get_providers.return_value = ["google"]
@@ -57,8 +57,8 @@ async def test_extract_vision_data_success(mock_get_llm, mock_get_providers):
 
 
 @pytest.mark.asyncio
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_fallback_providers")
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_llm")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_fallback_providers")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_llm")
 async def test_extract_vision_data_failover(mock_get_llm, mock_get_providers):
     # Test fallback: google fails, openai succeeds
     mock_get_providers.return_value = ["google", "openai"]
@@ -93,7 +93,7 @@ async def test_extract_vision_data_failover(mock_get_llm, mock_get_providers):
 
 
 @pytest.mark.asyncio
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_llm")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_llm")
 async def test_extract_scanned_pdf_gemini_direct(mock_get_llm):
     # Mock LLM response for native PDF input
     mock_response = mock.MagicMock()
@@ -116,7 +116,7 @@ async def test_extract_scanned_pdf_gemini_direct(mock_get_llm):
 
 
 @pytest.mark.asyncio
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.extract_vision_data")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.extract_vision_data")
 async def test_extract_scanned_pdf_fallback_rendering(mock_extract_vision_data):
     # Mock PyMuPDF objects
     mock_fitz = mock.MagicMock()
@@ -148,8 +148,8 @@ async def test_extract_scanned_pdf_fallback_rendering(mock_extract_vision_data):
 
 
 @pytest.mark.asyncio
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.get_database")
-@mock.patch("src.agents.langgraph.nodes.vision_extraction_node.extract_vision_data")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.get_database")
+@mock.patch("agents.langgraph.nodes.vision_extraction_node.extract_vision_data")
 async def test_vision_extraction_node_image(mock_extract_vision, mock_get_db):
     # Mock MongoDB
     mock_collection = mock.MagicMock()

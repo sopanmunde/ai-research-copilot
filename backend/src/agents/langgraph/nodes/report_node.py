@@ -4,8 +4,8 @@ src/agents/langgraph/nodes/report_node.py — Report Agent
 Assembles the final markdown response from summary + citations.
 Adapts output format based on workflow_type.
 """
-from src.agents.langgraph.state import AgentState
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

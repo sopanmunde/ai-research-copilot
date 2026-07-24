@@ -11,8 +11,8 @@ from fastapi import UploadFile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
-from src.api.routes.audio_routes import transcribe, text_to_speech
+from agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
+from api.routes.audio_routes import transcribe, text_to_speech
 
 
 @pytest.mark.asyncio
@@ -36,7 +36,7 @@ async def test_voice_preprocessor_cleans_query_when_is_voice_true(sample_agent_s
     mock_response = MagicMock()
     mock_response.content = "Write a python function."
     
-    with patch("src.agents.langgraph.nodes.voice_preprocessing_node.get_llm") as mock_get_llm:
+    with patch("agents.langgraph.nodes.voice_preprocessing_node.get_llm") as mock_get_llm:
         mock_llm = MagicMock()
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_get_llm.return_value = mock_llm
@@ -73,7 +73,7 @@ async def test_api_transcribe_google_llm(mock_post):
     }
     mock_post.return_value = mock_response
     
-    with patch("src.api.routes.audio_routes.settings") as mock_settings:
+    with patch("api.routes.audio_routes.settings") as mock_settings:
         mock_settings.GOOGLE_API_KEY = "mock_google_key"
         
         res = await transcribe(file=mock_file, current_user={"_id": "user123"})
@@ -84,7 +84,7 @@ async def test_api_transcribe_google_llm(mock_post):
 
 @pytest.mark.asyncio
 async def test_api_tts_fails_when_no_google_key():
-    with patch("src.api.routes.audio_routes.settings") as mock_settings:
+    with patch("api.routes.audio_routes.settings") as mock_settings:
         mock_settings.GOOGLE_API_KEY = ""
         
         from fastapi import HTTPException
@@ -108,7 +108,7 @@ async def test_api_tts_returns_audio_when_key_present(mock_post):
     }
     mock_post.return_value = mock_response
     
-    with patch("src.api.routes.audio_routes.settings") as mock_settings:
+    with patch("api.routes.audio_routes.settings") as mock_settings:
         mock_settings.GOOGLE_API_KEY = "mock_google_key"
         
         response = await text_to_speech(text="test text", current_user={"_id": "user123"})

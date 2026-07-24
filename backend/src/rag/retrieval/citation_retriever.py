@@ -7,8 +7,8 @@ to each retrieved chunk for display in the frontend citation panel.
 import hashlib
 from typing import List, Dict, Any, Optional, Tuple
 from langchain_core.documents import Document
-from src.rag.retrieval.semantic_search import semantic_search
-from src.core.logger import get_logger
+from rag.retrieval.semantic_search import semantic_search
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

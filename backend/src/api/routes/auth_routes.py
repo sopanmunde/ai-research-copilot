@@ -1,11 +1,11 @@
 """Auth routes — register, login, profile management."""
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from datetime import datetime
-from src.core.security import authenticate_user, create_access_token, get_password_hash, get_current_user
-from src.schemas.user import UserCreate, UserLogin, UserUpdate, Token
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_USERS
-from src.core.limiter import limiter
+from core.security import authenticate_user, create_access_token, get_password_hash, get_current_user
+from schemas.user import UserCreate, UserLogin, UserUpdate, Token
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_USERS
+from core.limiter import limiter
 
 router = APIRouter()
 

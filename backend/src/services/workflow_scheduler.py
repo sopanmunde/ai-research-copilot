@@ -9,13 +9,13 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from src.database.mongodb.repositories.workflow_repository import (
+from database.mongodb.repositories.workflow_repository import (
     get_active_scheduled_workflows,
     get_active_event_workflows,
     get_workflow_by_id,
     record_workflow_log,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -44,7 +44,7 @@ async def execute_workflow_job(workflow_id: str, trigger_source: str = "cron", p
     provider = workflow.get("model_provider", "google")
 
     try:
-        from src.agents.langgraph.graph import get_graph
+        from agents.langgraph.graph import get_graph
         graph = get_graph(workflow_type)
 
         initial_state = {

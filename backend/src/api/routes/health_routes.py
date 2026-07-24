@@ -6,8 +6,8 @@ GET /api/health/  — returns service health, version, and status of all
 """
 import time
 from fastapi import APIRouter
-from src.core.config import settings
-from src.core.logger import get_logger
+from core.config import settings
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -17,7 +17,7 @@ async def _check_mongodb() -> dict:
     """Ping MongoDB and return latency."""
     start = time.monotonic()
     try:
-        from src.database.mongodb.connection import get_database
+        from database.mongodb.connection import get_database
         db = get_database()
         await db.command("ping")
         latency_ms = round((time.monotonic() - start) * 1000, 1)
@@ -30,7 +30,7 @@ def _check_pinecone() -> dict:
     """Verify Pinecone vector store is initialized."""
     start = time.monotonic()
     try:
-        from src.rag.vectorstores.pinecone_store import get_vector_store
+        from rag.vectorstores.pinecone_store import get_vector_store
         store = get_vector_store()
         latency_ms = round((time.monotonic() - start) * 1000, 1)
         index_name = getattr(store, "_index_name", settings.PINECONE_INDEX_NAME)
@@ -47,7 +47,7 @@ def _check_langgraph() -> dict:
     """Verify LangGraph workflow is compiled and ready."""
     start = time.monotonic()
     try:
-        from src.agents.langgraph.graph import get_graph
+        from agents.langgraph.graph import get_graph
         graph = get_graph()
         latency_ms = round((time.monotonic() - start) * 1000, 1)
         compiled = graph is not None
@@ -66,7 +66,7 @@ async def _check_redis() -> dict:
         return {"status": "disabled", "note": "REDIS_URL not configured"}
     start = time.monotonic()
     try:
-        from src.core.cache import _get_client
+        from core.cache import _get_client
         client = await _get_client()
         if client:
             await client.ping()

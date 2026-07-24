@@ -13,15 +13,15 @@ and multiple workflow types (research, coding, data_analysis, etc.)
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
-from src.core.security import get_current_user
-from src.schemas.chat import QueryRequest
-from src.database.mongodb.connection import get_database
-from src.database.mongodb.repositories.chat_repository import insert_message
-from src.services.chat_service import stream_chat_response
-from src.core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS, RATE_LIMIT_CHAT
-from src.middleware.prompt_injection_guard import scan_text, sanitize
-from src.core.limiter import limiter
-from src.core.logger import get_logger
+from core.security import get_current_user
+from schemas.chat import QueryRequest
+from database.mongodb.connection import get_database
+from database.mongodb.repositories.chat_repository import insert_message
+from services.chat_service import stream_chat_response
+from core.constants import COLLECTION_MESSAGES, COLLECTION_CONVERSATIONS, RATE_LIMIT_CHAT
+from middleware.prompt_injection_guard import scan_text, sanitize
+from core.limiter import limiter
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

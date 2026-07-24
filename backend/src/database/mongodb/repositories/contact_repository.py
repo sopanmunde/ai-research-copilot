@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_CONTACTS
-from src.schemas.contact import ContactCreate
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_CONTACTS
+from schemas.contact import ContactCreate
 
 def _db():
     return get_database()

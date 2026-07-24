@@ -503,10 +503,8 @@ export default function DocumentLibrary({ open, onClose }) {
                         key={doc.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="group relative flex flex-col justify-between p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-950/85 hover:border-white/50 hover:shadow-[0_0_20px_rgba(255,255,255,0.12)] transition-all duration-300 shadow-sm overflow-hidden select-none"
+                        className="group relative flex flex-col justify-between p-3.5 rounded-2xl border border-border/80 bg-card hover:border-border hover:shadow-md transition-all duration-300 shadow-sm overflow-hidden select-none"
                       >
-                        {/* Glowing White Top Shine Beam */}
-                        <div className="absolute inset-x-0 -top-px h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 overflow-hidden">
                             <RealisticDocIcon filename={doc.filename} />

@@ -6,7 +6,7 @@ If Redis is unavailable or REDIS_URL is empty, all operations
 are silent no-ops — the pipeline continues without caching.
 
 Usage:
-    from src.core.cache import cache_get, cache_set
+    from core.cache import cache_get, cache_set
 
     hit = await cache_get(key)
     if hit:
@@ -17,7 +17,7 @@ Usage:
 import json
 import hashlib
 from typing import Any, Optional
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,7 +30,7 @@ async def _get_client():
     if _redis_client is not None:
         return _redis_client
 
-    from src.core.config import settings
+    from core.config import settings
     if not settings.REDIS_URL:
         return None
 

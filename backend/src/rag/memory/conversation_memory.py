@@ -1,7 +1,7 @@
 """MongoDB-backed conversation memory for persistent chat context."""
 from typing import List, Dict
 from datetime import datetime
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

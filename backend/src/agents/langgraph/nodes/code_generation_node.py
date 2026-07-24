@@ -11,11 +11,11 @@ Upgraded features:
   - Tool binding: When CODING_TOOLS are available, uses llm.bind_tools() for
     function-calling capable models.
 """
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from src.agents.langgraph.state import AgentState
-from src.core.llm_factory import get_llm
-from src.agents.langgraph.nodes.utils import extract_text
-from src.core.logger import get_logger
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from agents.langgraph.state import AgentState
+from core.llm_factory import get_llm
+from agents.langgraph.nodes.utils import extract_text
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -108,7 +108,7 @@ async def code_generation_node(state: AgentState) -> dict:
         ]
     else:
         # --- First generation ---
-        messages = [SystemMessage(content=CODE_GENERATION_SYSTEM)]
+        messages: list[BaseMessage] = [SystemMessage(content=CODE_GENERATION_SYSTEM)]
 
         for turn in history[-4:]:
             role = turn.get("role", "")

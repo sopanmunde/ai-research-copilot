@@ -1,28 +1,23 @@
-"""Brain routes — REST API endpoints for LLM configurations, api keys, telemetry logs, and chat playground in MongoDB."""
+"""Brain routes — REST API endpoints for LLM configurations, api keys, and telemetry logs in MongoDB."""
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
 from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.brain_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.brain_repository import (
     get_user_providers,
     update_provider_db,
     get_user_keys,
     create_key_db,
     update_key_db,
     delete_key_db,
-    get_playground_messages,
-    create_playground_message_db,
-    clear_playground_messages_db,
     log_telemetry_event_db,
     get_telemetry_logs_db,
     get_telemetry_stats_db,
 )
-from src.services.chat_service import stream_playground_completion
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -51,12 +46,6 @@ class ApiKeyUpdateModel(BaseModel):
     isActive: Optional[bool] = None
     lastUsed: Optional[str] = None
 
-class PlaygroundMessageModel(BaseModel):
-    role: str = Field("user", pattern="^(user|assistant|system)$")
-    content: str = Field(..., min_length=1)
-    timestamp: Optional[str] = None
-    modelUsed: Optional[str] = None
-
 class TelemetryLogModel(BaseModel):
     model: str
     provider: Optional[str] = "openai"
@@ -68,14 +57,6 @@ class TelemetryLogModel(BaseModel):
     cost: float = Field(0.0, ge=0.0)
     cacheHit: bool = False
     error: Optional[str] = None
-
-class PlaygroundCompletionRequest(BaseModel):
-    provider: str
-    model: str
-    messages: List[Dict]
-    temperature: float = Field(0.7, ge=0.0, le=2.0)
-    max_tokens: int = Field(2048, ge=1, le=32768)
-    system_prompt: Optional[str] = None
 
 
 # ─── Providers Endpoints ───
@@ -192,64 +173,6 @@ async def get_telemetry_stats(
     return await get_telemetry_stats_db(user_id)
 
 
-# ─── Playground Chat Sandbox Endpoints ───
-
-@router.get("/playground/messages", response_model=List[Dict])
-@limiter.limit(RATE_LIMIT_DEFAULT)
-async def list_messages(request: Request, current_user=Depends(get_current_user)):
-    """Retrieve playground chat history."""
-    user_id = str(current_user["_id"])
-    return await get_playground_messages(user_id)
-
-
-@router.post("/playground/messages", response_model=Dict)
-@limiter.limit(RATE_LIMIT_DEFAULT)
-async def add_message(
-    request: Request,
-    msg_data: PlaygroundMessageModel,
-    current_user=Depends(get_current_user),
-):
-    """Save user or assistant message to playground history."""
-    user_id = str(current_user["_id"])
-    return await create_playground_message_db(user_id, msg_data.model_dump())
-
-
-@router.delete("/playground/messages")
-@limiter.limit(RATE_LIMIT_DEFAULT)
-async def clear_messages(request: Request, current_user=Depends(get_current_user)):
-    """Clear playground chat history."""
-    user_id = str(current_user["_id"])
-    await clear_playground_messages_db(user_id)
-    return {"message": "Chat history cleared successfully"}
-
-
-@router.post("/playground/completion")
-@limiter.limit(RATE_LIMIT_DEFAULT)
-async def playground_completion(
-    request: Request,
-    req_data: PlaygroundCompletionRequest,
-    current_user=Depends(get_current_user),
-):
-    """Securely streams completion for playground chat sandbox using custom settings and user credentials."""
-    user_id = str(current_user["_id"])
-    return StreamingResponse(
-        stream_playground_completion(
-            provider=req_data.provider,
-            model=req_data.model,
-            messages=req_data.messages,
-            temperature=req_data.temperature,
-            max_tokens=req_data.max_tokens,
-            system_prompt=req_data.system_prompt,
-            user_id=user_id,
-        ),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
-
-
 @router.post("/providers/{provider_id}/ping")
 @limiter.limit(RATE_LIMIT_DEFAULT)
 async def ping_provider(
@@ -259,8 +182,8 @@ async def ping_provider(
 ):
     """Real connection ping. Instantiates the LLM, runs a probe, and logs telemetry."""
     import time
-    from src.core.llm_factory import get_llm, current_user_keys
-    from src.database.mongodb.repositories.brain_repository import get_user_keys
+    from core.llm_factory import get_llm, current_user_keys
+    from database.mongodb.repositories.brain_repository import get_user_keys
 
     user_id = str(current_user["_id"])
 
@@ -298,17 +221,23 @@ async def ping_provider(
         return {"status": "connected", "latency": latency_ms}
     except Exception as e:
         logger.error(f"Ping failed for provider {provider_id}: {e}")
+        err_str = str(e)
+        if "API key not valid" in err_str or "API_KEY_INVALID" in err_str or "INVALID_ARGUMENT" in err_str:
+            detail_msg = f"Invalid API Key for provider '{provider_id}'. Please add a valid API key in Credentials or backend .env file."
+        else:
+            detail_msg = err_str
+
         await log_telemetry_event_db(user_id, {
             "model": provider_id,
             "provider": provider_id,
             "tokensIn": 2,
             "tokensOut": 0,
             "latency": 5000,
-            "status": 500,
-            "error": str(e),
+            "status": 400,
+            "error": detail_msg,
             "cost": 0.0
         })
-        return {"status": "error", "detail": str(e)}
+        return {"status": "error", "detail": detail_msg}
 
 
 @router.post("/providers/{provider_id}/benchmark")
@@ -320,8 +249,8 @@ async def benchmark_provider(
 ):
     """Runs a real latency and throughput speed test using a sample prompt."""
     import time
-    from src.core.llm_factory import get_llm, current_user_keys
-    from src.database.mongodb.repositories.brain_repository import get_user_keys, update_provider_db
+    from core.llm_factory import get_llm, current_user_keys
+    from database.mongodb.repositories.brain_repository import get_user_keys, update_provider_db
 
     user_id = str(current_user["_id"])
 
@@ -375,17 +304,23 @@ async def benchmark_provider(
         return {"latency": latency, "tokensPerSec": tokens_per_sec}
     except Exception as e:
         logger.error(f"Benchmark failed for provider {provider_id}: {e}")
+        err_str = str(e)
+        if "API key not valid" in err_str or "API_KEY_INVALID" in err_str or "INVALID_ARGUMENT" in err_str:
+            detail_msg = f"Invalid API Key for provider '{provider_id}'. Please enter a valid API key in the Credentials section or update your backend .env file."
+        else:
+            detail_msg = f"Benchmark speed test failed: {err_str}"
+
         await log_telemetry_event_db(user_id, {
             "model": provider_id,
             "provider": provider_id,
             "tokensIn": 10,
             "tokensOut": 0,
             "latency": 1000,
-            "status": 500,
-            "error": str(e),
+            "status": 400,
+            "error": detail_msg,
             "cost": 0.0
         })
         raise HTTPException(
-            status_code=500,
-            detail=f"Benchmark speed test failed: {str(e)}"
+            status_code=400,
+            detail=detail_msg
         )

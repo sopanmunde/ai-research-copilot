@@ -55,6 +55,7 @@ import {
   PinOff,
   Download,
   Check,
+  Cpu,
 } from "lucide-react"
 import {
   flexRender,
@@ -625,6 +626,64 @@ function DragHandle({ id }: { id: UniqueIdentifier }) {
 }
 
 
+const convertDocToTask = async (doc: Document) => {
+  try {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: `[Review Doc] ${doc.filename}`,
+        description: `Document Name: ${doc.filename}\nType: ${doc.file_type}\nSize: ${doc.file_size ? (doc.file_size / 1024).toFixed(1) + ' KB' : 'N/A'}`,
+        type: "Documentation",
+        status: "todo",
+        priority: "medium",
+        tags: ["gallery-doc"],
+        subtasks: [],
+        history: [{ timestamp: new Date().toLocaleTimeString(), action: "Task created from Document" }],
+      }),
+    });
+    if (res.ok) {
+      toast.success("Task created for Document! View in Task Dashboard.");
+    } else {
+      toast.error("Failed to create Task.");
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error("Network error creating Task.");
+  }
+};
+
+const convertDocToNote = async (doc: Document) => {
+  try {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/notes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: `[Doc Summary] ${doc.filename}`,
+        content: `Document: ${doc.filename}\nType: ${doc.file_type}\nUploaded: ${new Date(doc.uploaded_at).toLocaleString()}\n\nSummary:\nExtracted document asset for project reference.`,
+        category: "ideas",
+        favorite: false,
+      }),
+    });
+    if (res.ok) {
+      toast.success("Document Note created! View in Notes Dashboard.");
+    } else {
+      toast.error("Failed to create Note.");
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error("Network error creating Note.");
+  }
+};
+
 function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Document) => void): ColumnDef<Document>[] {
   return [
     {
@@ -717,9 +776,15 @@ function makeDocColumns(onView: (doc: Document) => void, onDelete: (doc: Documen
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem onClick={() => onView(row.original)} className="gap-2">
               <Eye className="h-3.5 w-3.5" /> View details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => convertDocToTask(row.original)} className="gap-2 text-indigo-400">
+              <FileText className="h-3.5 w-3.5" /> Convert to Task
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => convertDocToNote(row.original)} className="gap-2 text-purple-400">
+              <FileCode className="h-3.5 w-3.5" /> Create Note
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2">
               <RefreshCw className="h-3.5 w-3.5" /> Re-index
@@ -1131,16 +1196,16 @@ function DocumentDataTable({
   return (
     <>
       <div className="flex flex-col gap-4">
-        {/* Table Toolbar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/30 p-3 rounded-xl border border-border/50">
+        {/* Table Toolbar Container */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3.5 rounded-2xl border border-border/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300">
           <div className="relative flex-1 max-w-sm">
             <Input
               placeholder="Search documents by name..."
               value={(table.getColumn("filename")?.getFilterValue() as string) ?? ""}
               onChange={(e) => table.getColumn("filename")?.setFilterValue(e.target.value)}
-              className="w-full pl-9 h-9 bg-background border-input focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring transition-colors"
+              className="w-full pl-9 h-8.5 bg-muted/20 border-border rounded-xl focus-visible:ring-1 focus-visible:ring-border transition-colors text-xs"
             />
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" />
           </div>
 
           <Button
@@ -1148,12 +1213,12 @@ function DocumentDataTable({
             disabled={uploading}
             variant="default"
             size="sm"
-            className="h-9 cursor-pointer ml-auto"
+            className="h-8.5 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl px-3.5 shadow-sm ml-auto cursor-pointer"
           >
             {uploading ? (
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
+              <Loader className="mr-2 h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-3.5 w-3.5" />
             )}
             Upload New
           </Button>
@@ -1170,19 +1235,13 @@ function DocumentDataTable({
                   <div
                     key={doc.id}
                     className={cn(
-                      "group/card relative flex flex-col justify-between h-[225px] p-3.5 rounded-xl border bg-zinc-950/85 border-zinc-800/80 backdrop-blur-2xl transition-all duration-300 shadow-md hover:border-white/50 hover:shadow-[0_0_22px_rgba(255,255,255,0.15)] hover:-translate-y-1.5 overflow-hidden cursor-pointer select-none",
+                      "group/card relative flex flex-col justify-between h-[225px] p-3.5 rounded-2xl border bg-card border-border/80 transition-all duration-300 shadow-md hover:border-border hover:shadow-lg hover:-translate-y-1 overflow-hidden cursor-pointer select-none",
                       isSelected
-                        ? "border-white/70 ring-2 ring-white/20 bg-zinc-900/90"
-                        : "border-zinc-800/80 hover:border-white/40"
+                        ? "border-foreground/50 ring-2 ring-foreground/20 bg-muted/30"
+                        : "border-border/80 hover:border-foreground/40"
                     )}
                     onClick={() => openViewer(doc)}
                   >
-                    {/* Glowing Top Ambient White Shine Beam on Card Hover */}
-                    <div className="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-transparent via-white/90 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 shadow-[0_0_12px_rgba(255,255,255,0.9)]" />
-
-                    {/* White Sheen Glass Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
-
                     {/* Top Header Row (Realistic Icon + Filename + Selection Checkbox) */}
                     <div className="flex items-center justify-between gap-2 z-10">
                       <div className="flex items-center gap-1.5 overflow-hidden min-w-0">
@@ -1263,7 +1322,7 @@ function DocumentDataTable({
             </div>
           )
         ) : (
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs transition-all duration-300">
             <DndContext
               collisionDetection={closestCenter}
               modifiers={[restrictToVerticalAxis]}
@@ -1272,7 +1331,7 @@ function DocumentDataTable({
               id={sortableId}
             >
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-muted">
+                <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur-md">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (

@@ -17,22 +17,23 @@ Agent mapping (image label → node name):
   Report agent    → report_node    (final markdown assembly)
 """
 from langgraph.graph import StateGraph, END
-from src.agents.langgraph.state import AgentState
-from src.agents.langgraph.nodes.planner_node import planner_node
-from src.agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
-from src.agents.langgraph.nodes.retriever_node import retriever_node
-from src.agents.langgraph.nodes.web_research_node import web_research_node
-from src.agents.langgraph.nodes.summarizer_node import summarizer_node
-from src.agents.langgraph.nodes.citation_node import citation_node
-from src.agents.langgraph.nodes.report_node import report_node
-from src.agents.langgraph.nodes.vision_extraction_node import vision_extraction_node
-from src.agents.langgraph.nodes.memory_retrieval_node import memory_retrieval_node
-from src.agents.langgraph.nodes.code_generation_node import code_generation_node
-from src.agents.langgraph.nodes.code_review_node import code_review_node
-from src.agents.langgraph.nodes.testing_node import testing_node
-from src.agents.langgraph.nodes.data_analysis_node import data_analysis_node
-from src.agents.langgraph.graphs.factory import get_workflow_for_mode
-from src.core.logger import get_logger
+from langgraph.graph.state import CompiledStateGraph
+from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.planner_node import planner_node
+from agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
+from agents.langgraph.nodes.retriever_node import retriever_node
+from agents.langgraph.nodes.web_research_node import web_research_node
+from agents.langgraph.nodes.summarizer_node import summarizer_node
+from agents.langgraph.nodes.citation_node import citation_node
+from agents.langgraph.nodes.report_node import report_node
+from agents.langgraph.nodes.vision_extraction_node import vision_extraction_node
+from agents.langgraph.nodes.memory_retrieval_node import memory_retrieval_node
+from agents.langgraph.nodes.code_generation_node import code_generation_node
+from agents.langgraph.nodes.code_review_node import code_review_node
+from agents.langgraph.nodes.testing_node import testing_node
+from agents.langgraph.nodes.data_analysis_node import data_analysis_node
+from agents.langgraph.graphs.factory import get_workflow_for_mode
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,7 +63,7 @@ def _should_retrieve(state: AgentState) -> str:
     return route
 
 
-def build_graph() -> StateGraph:
+def build_graph() -> CompiledStateGraph:
     """
     Assemble and compile the LangGraph multi-agent research workflow.
 
@@ -127,9 +128,14 @@ def get_graph(workflow_type: str = "research"):
         global _compiled_graph
         if _compiled_graph is None:
             _compiled_graph = build_graph()
+        if isinstance(_compiled_graph, StateGraph):
+            _compiled_graph = _compiled_graph.compile()
         return _compiled_graph
 
-    return get_workflow_for_mode(workflow_type)
+    graph = get_workflow_for_mode(workflow_type)
+    if isinstance(graph, StateGraph):
+        graph = graph.compile()
+    return graph
 
 
 def reset_graph():

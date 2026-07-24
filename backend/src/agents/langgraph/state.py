@@ -7,7 +7,8 @@ Agent pipeline (matches image workflow):
   Research Agent → Retrieval Agent → Citation Agent → Summary Agent → Report Agent
   (planner_node) → (retriever_node) → (citation_node) → (summarizer_node) → (report_node)
 """
-from typing import TypedDict, List, Dict, Any, Annotated, Optional
+from typing import List, Dict, Any, Annotated, Optional
+from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage
 

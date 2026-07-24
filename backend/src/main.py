@@ -13,20 +13,30 @@ Architecture (matches image workflow):
     /api/conversations — Conversation history
     /api/health   — Health check
 """
+import os
+import sys
+from pathlib import Path
+
+# Ensure src directory is in sys.path
+_src_dir = str(Path(__file__).resolve().parent)
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
 print("Importing main.py... Fastapi")
 import time
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Any, cast
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 from starlette.responses import Response
 
-from src.middleware.fastapi_compression import CompressionMiddleware
+from middleware.fastapi_compression import CompressionMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
-from src.core.limiter import limiter
+from core.limiter import limiter
 
 in_flight_requests = 0
 shutdown_started = False
@@ -65,7 +75,7 @@ async def drain_inflight_requests(timeout: float):
     global shutdown_started, in_flight_requests
     shutdown_started = True
     
-    logger = get_logger("src.main.shutdown")
+    logger = get_logger("main.shutdown")
     logger.info(f"Draining in-flight requests. Currently active: {in_flight_requests}")
     start_time = time.time()
     
@@ -85,7 +95,7 @@ def register_signal_handlers():
     signals without breaking Uvicorn's termination loop.
     """
     import signal
-    logger = get_logger("src.main.signals")
+    logger = get_logger("main.signals")
     original_handlers = {}
 
     def handle_signal(sig, frame):
@@ -103,33 +113,33 @@ def register_signal_handlers():
             pass
 
 print("Importing config...")
-from src.core.config import settings
-from src.core.logger import get_logger
+from core.config import settings
+from core.logger import get_logger
 print("Importing mongo indexes...")
-from src.database.mongodb.indexes import create_indexes
-from src.middleware.request_logger import RequestLoggerMiddleware
+from database.mongodb.indexes import create_indexes
+from middleware.request_logger import RequestLoggerMiddleware
 
 print("Importing routers...")
-from src.api.routes.auth_routes import router as auth_router
-from src.api.routes.google_auth import router as google_auth_router
-from src.api.routes.github_auth import router as github_auth_router
-from src.api.routes.chat_routes import router as chat_router
-from src.api.routes.upload_routes import router as upload_router
-from src.api.routes.report_routes import router as report_router
-from src.api.routes.contact_routes import router as contact_router
-from src.api.routes.health_routes import router as health_router
-from src.api.routes.models_routes import router as models_router
-from src.api.conversations import router as conversations_router
-from src.api.routes.task_routes import router as task_router
-from src.api.routes.event_routes import router as event_router
-from src.api.routes.email_routes import router as email_router
-from src.api.routes.brain_routes import router as brain_router
-from src.api.routes.notes_routes import router as notes_router
-from src.api.routes.integrations_routes import router as integrations_router
-from src.api.routes.audio_routes import router as audio_router
-from src.api.routes.audit_routes import router as audit_router
-from src.api.routes.workflow_routes import router as workflow_router
-from src.api.routes.tools_routes import router as tools_router
+from api.routes.auth_routes import router as auth_router
+from api.routes.google_auth import router as google_auth_router
+from api.routes.github_auth import router as github_auth_router
+from api.routes.chat_routes import router as chat_router
+from api.routes.upload_routes import router as upload_router
+from api.routes.report_routes import router as report_router
+from api.routes.contact_routes import router as contact_router
+from api.routes.health_routes import router as health_router
+from api.routes.models_routes import router as models_router
+from api.conversations import router as conversations_router
+from api.routes.task_routes import router as task_router
+from api.routes.event_routes import router as event_router
+from api.routes.email_routes import router as email_router
+from api.routes.brain_routes import router as brain_router
+from api.routes.notes_routes import router as notes_router
+from api.routes.integrations_routes import router as integrations_router
+from api.routes.audio_routes import router as audio_router
+from api.routes.audit_routes import router as audit_router
+from api.routes.workflow_routes import router as workflow_router
+from api.routes.tools_routes import router as tools_router
 
 logger = get_logger(__name__)
 print("main.py imports complete.")
@@ -151,21 +161,21 @@ async def lifespan(app: FastAPI):
         logger.error(f"MongoDB index creation failed: {e}")
 
     try:
-        from src.rag.vectorstores.pinecone_store import get_vector_store
+        from rag.vectorstores.pinecone_store import get_vector_store
         get_vector_store()
         logger.info("[OK] Pinecone vector store connected")
     except Exception as e:
         logger.warning(f"Pinecone connection failed (non-fatal): {e}")
 
     try:
-        from src.agents.langgraph.graph import get_graph
+        from agents.langgraph.graph import get_graph
         get_graph()
         logger.info("[OK] LangGraph 5-agent workflow compiled")
     except Exception as e:
         logger.warning(f"LangGraph compilation failed (non-fatal): {e}")
 
     try:
-        from src.core.cache import _get_client
+        from core.cache import _get_client
         client = await _get_client()
         if client:
             logger.info("[OK] Redis cache connected")
@@ -175,10 +185,16 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Redis check failed (non-fatal): {e}")
 
     try:
-        from src.services.workflow_scheduler import start_scheduler, shutdown_scheduler
+        from services.workflow_scheduler import start_scheduler, shutdown_scheduler
         await start_scheduler()
     except Exception as e:
         logger.warning(f"Workflow scheduler initialization failed (non-fatal): {e}")
+
+    try:
+        from services.event_notification_scheduler import start_event_scheduler
+        await start_event_scheduler()
+    except Exception as e:
+        logger.warning(f"Event notification scheduler initialization failed (non-fatal): {e}")
 
     logger.info("Application ready [OK]")
     yield
@@ -186,13 +202,19 @@ async def lifespan(app: FastAPI):
     shutdown_start = time.time()
 
     try:
-        from src.services.workflow_scheduler import shutdown_scheduler
+        from services.event_notification_scheduler import shutdown_event_scheduler
+        await shutdown_event_scheduler()
+    except Exception as e:
+        logger.warning(f"Failed to shutdown event notification scheduler: {e}")
+
+    try:
+        from services.workflow_scheduler import shutdown_scheduler
         await shutdown_scheduler()
     except Exception as e:
         logger.warning(f"Failed to shutdown workflow scheduler: {e}")
     
     try:
-        from src.services.chat_service import signal_sse_shutdown
+        from services.chat_service import signal_sse_shutdown
         await signal_sse_shutdown()
         logger.info(f"[OK] SSE streams notified in {time.time() - shutdown_start:.4f}s")
     except Exception as e:
@@ -207,7 +229,7 @@ async def lifespan(app: FastAPI):
 
     try:
         t_start = time.time()
-        from src.database.mongodb.connection import get_mongo_client
+        from database.mongodb.connection import get_mongo_client
         get_mongo_client().close()
         logger.info(f"[OK] MongoDB client connection closed in {time.time() - t_start:.4f}s")
     except Exception as e:
@@ -215,7 +237,7 @@ async def lifespan(app: FastAPI):
 
     try:
         t_start = time.time()
-        from src.core.cache import _get_client
+        from core.cache import _get_client
         client = await _get_client()
         if client is not None:
             await client.close()
@@ -225,7 +247,7 @@ async def lifespan(app: FastAPI):
 
     try:
         t_start = time.time()
-        from src.core.http import close_http_client
+        from core.http import close_http_client
         await close_http_client()
         logger.info(f"[OK] Shared HTTP client closed in {time.time() - t_start:.4f}s")
     except Exception as e:
@@ -250,7 +272,7 @@ def create_app() -> FastAPI:
     )
 
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, cast(Any, _rate_limit_exceeded_handler))
 
     origins = [
         settings.FRONTEND_URL,

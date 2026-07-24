@@ -11,20 +11,20 @@ from langchain_core.documents import Document
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.database.mongodb.repositories.user_memory_repository import (
+from database.mongodb.repositories.user_memory_repository import (
     save_user_fact,
     get_user_facts,
     delete_user_fact,
 )
-from src.agents.langgraph.nodes.memory_retrieval_node import memory_retrieval_node
-from src.services.chat_service import extract_and_save_user_facts
+from agents.langgraph.nodes.memory_retrieval_node import memory_retrieval_node
+from services.chat_service import extract_and_save_user_facts
 
 
 class TestUserMemoryRepository:
     """Validate MongoDB CRUD operations for user fact storage."""
 
     @pytest.mark.asyncio
-    @mock.patch("src.database.mongodb.repositories.user_memory_repository._db")
+    @mock.patch("database.mongodb.repositories.user_memory_repository._db")
     async def test_save_user_fact_new(self, mock_db):
         # Mock database calls
         mock_collection = mock.MagicMock()
@@ -45,7 +45,7 @@ class TestUserMemoryRepository:
         mock_collection.insert_one.assert_called_once()
 
     @pytest.mark.asyncio
-    @mock.patch("src.database.mongodb.repositories.user_memory_repository._db")
+    @mock.patch("database.mongodb.repositories.user_memory_repository._db")
     async def test_save_user_fact_duplicate(self, mock_db):
         # Mock finding an existing fact
         mock_collection = mock.MagicMock()
@@ -65,8 +65,8 @@ class TestMemoryRetrievalNode:
     """Validate that memory_retrieval_node injects context successfully."""
 
     @pytest.mark.asyncio
-    @mock.patch("src.agents.langgraph.nodes.memory_retrieval_node.get_user_facts")
-    @mock.patch("src.agents.langgraph.nodes.memory_retrieval_node.get_vector_store")
+    @mock.patch("agents.langgraph.nodes.memory_retrieval_node.get_user_facts")
+    @mock.patch("agents.langgraph.nodes.memory_retrieval_node.get_vector_store")
     async def test_memory_retrieval_node_updates_state(self, mock_get_store, mock_get_facts):
         # Mock MongoDB user facts
         mock_get_facts.return_value = [
@@ -99,8 +99,8 @@ class TestMemoryRetrievalNode:
 
 
 @pytest.mark.asyncio
-@mock.patch("src.services.chat_service.get_llm")
-@mock.patch("src.database.mongodb.repositories.user_memory_repository.save_user_fact")
+@mock.patch("services.chat_service.get_llm")
+@mock.patch("database.mongodb.repositories.user_memory_repository.save_user_fact")
 async def test_extract_and_save_user_facts(mock_save_fact, mock_get_llm):
     # Mock LLM fact extraction response
     mock_response = mock.MagicMock()

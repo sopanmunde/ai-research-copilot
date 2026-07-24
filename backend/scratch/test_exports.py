@@ -7,12 +7,12 @@ import sys
 # Ensure backend root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.services.export_service import (
+from services.export_service import (
     generate_pdf_report,
     generate_docx_report,
     generate_xlsx_report,
 )
-from src.services.third_party_integrations import (
+from services.third_party_integrations import (
     send_slack_webhook,
     send_teams_webhook,
 )

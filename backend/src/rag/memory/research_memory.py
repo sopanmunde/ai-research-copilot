@@ -1,7 +1,7 @@
 """Research memory — saves complete research sessions to MongoDB."""
 from datetime import datetime
 from typing import List, Dict, Optional
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

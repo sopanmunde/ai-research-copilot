@@ -2,14 +2,13 @@
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from bson.objectid import ObjectId
-from src.database.mongodb.connection import get_database
-from src.core.constants import (
+from database.mongodb.connection import get_database
+from core.constants import (
     COLLECTION_PROVIDERS,
     COLLECTION_API_KEYS,
-    COLLECTION_PLAYGROUND_MESSAGES,
     COLLECTION_TELEMETRY,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -43,7 +42,7 @@ def get_seed_providers() -> List[Dict]:
             "id": "openai", "name": "OpenAI", "type": "cloud", "logo": "OA",
             "description": "GPT-4o, o1 — leading reasoning models",
             "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o1-preview", "o1-mini"],
-            "status": "connected", "isActive": True, "usageTokens": 2480000, "usageCost": 12.4, "latency": 280, "tokensPerSec": 85
+            "status": "disconnected", "isActive": True, "usageTokens": 0, "usageCost": 0.0, "latency": 0, "tokensPerSec": 0
         },
         {
             "id": "anthropic", "name": "Anthropic", "type": "cloud", "logo": "AN",
@@ -61,7 +60,7 @@ def get_seed_providers() -> List[Dict]:
             "id": "mistral", "name": "Mistral AI", "type": "cloud", "logo": "MI",
             "description": "Mistral Large, Codestral — European efficiency",
             "models": ["mistral-large-latest", "codestral-latest", "open-mistral-7b"],
-            "status": "error", "isActive": False, "usageTokens": 120000, "usageCost": 0.18, "latency": 0, "tokensPerSec": 0
+            "status": "disconnected", "isActive": False, "usageTokens": 0, "usageCost": 0.0, "latency": 0, "tokensPerSec": 0
         },
         {
             "id": "groq", "name": "Groq", "type": "cloud", "logo": "GQ",
@@ -136,22 +135,7 @@ async def update_provider_db(user_id: str, provider_id: str, updates: Dict) -> O
 
 
 async def get_user_keys(user_id: str) -> List[Dict]:
-    """Retrieves all registered LLM API keys for the user. Seeds a default mock OpenAI key if empty."""
-    count = await _db()[COLLECTION_API_KEYS].count_documents({"user_id": user_id})
-    if count == 0:
-        logger.info(f"Seeding mock OpenAI key for user {user_id}")
-        seed_key = {
-            "user_id": user_id,
-            "providerId": "openai",
-            "label": "Production Key",
-            "key": "sk-proj-T8mVLxKqQ3wP9nBz4cRdGhYoEfJiNaDs7uCe2vXkAb1FmHrLyt",
-            "createdAt": datetime.now(timezone.utc).strftime("%b %d, %Y"),
-            "lastUsed": "2 mins ago",
-            "isActive": True,
-            "created_at": datetime.now(timezone.utc)
-        }
-        await _db()[COLLECTION_API_KEYS].insert_one(seed_key)
-
+    """Retrieves all registered LLM API keys for the user."""
     docs = await _db()[COLLECTION_API_KEYS].find({"user_id": user_id}).to_list(100)
     return [clean_doc(d) for d in docs]
 
@@ -196,41 +180,7 @@ async def delete_key_db(user_id: str, key_id: str) -> bool:
     return result.deleted_count > 0
 
 
-async def get_playground_messages(user_id: str) -> List[Dict]:
-    """Retrieves chat message history for the sandbox playground."""
-    count = await _db()[COLLECTION_PLAYGROUND_MESSAGES].count_documents({"user_id": user_id})
-    if count == 0:
-        seed_msg = {
-            "user_id": user_id,
-            "role": "assistant",
-            "content": "Playground ready. Choose a model, configure settings, and type a prompt below to see streaming outputs.",
-            "timestamp": "Just now",
-            "created_at": datetime.now(timezone.utc)
-        }
-        await _db()[COLLECTION_PLAYGROUND_MESSAGES].insert_one(seed_msg)
 
-    docs = await _db()[COLLECTION_PLAYGROUND_MESSAGES].find({"user_id": user_id}).sort("created_at", 1).to_list(200)
-    return [clean_doc(d) for d in docs]
-
-
-async def create_playground_message_db(user_id: str, msg_data: Dict) -> Dict:
-    """Saves a user or assistant message to chat sandbox history."""
-    payload = {
-        "user_id": user_id,
-        "role": msg_data.get("role", "user"),
-        "content": msg_data.get("content", ""),
-        "timestamp": msg_data.get("timestamp", datetime.now(timezone.utc).strftime("%I:%M %p")),
-        "modelUsed": msg_data.get("modelUsed"),
-        "created_at": datetime.now(timezone.utc)
-    }
-    result = await _db()[COLLECTION_PLAYGROUND_MESSAGES].insert_one(payload)
-    return clean_doc(payload)
-
-
-async def clear_playground_messages_db(user_id: str) -> bool:
-    """Clears all playground sandbox chat messages for the user."""
-    result = await _db()[COLLECTION_PLAYGROUND_MESSAGES].delete_many({"user_id": user_id})
-    return True
 
 
 async def get_active_user_key(user_id: str, provider_id: str) -> Optional[str]:
@@ -304,16 +254,16 @@ async def get_telemetry_stats_db(user_id: str) -> Dict:
 
     if recent_logs:
         latencies = [l.get("latency", 0) for l in recent_logs if l.get("latency", 0) > 0]
-        avg_latency = int(sum(latencies) / len(latencies)) if latencies else 185
-        avg_ttft = int(avg_latency * 0.7) if avg_latency else 140
-        p95_latency = int(avg_latency * 1.45) if avg_latency else 320
+        avg_latency = int(sum(latencies) / len(latencies)) if latencies else 0
+        avg_ttft = int(avg_latency * 0.7) if avg_latency else 0
+        p95_latency = sorted(latencies)[min(len(latencies) - 1, int(len(latencies) * 0.95))] if latencies else 0
         total_tokens_recent = sum(l.get("tokensIn", 0) + l.get("tokensOut", 0) for l in recent_logs)
-        tokens_per_sec = round(max(45.0, total_tokens_recent / max(1, len(recent_logs) * 2)), 1)
+        tokens_per_sec = round(total_tokens_recent / max(1, len(recent_logs)), 1)
     else:
-        avg_latency = 185
-        avg_ttft = 140
-        p95_latency = 320
-        tokens_per_sec = 148.5
+        avg_latency = 0
+        avg_ttft = 0
+        p95_latency = 0
+        tokens_per_sec = 0.0
 
     return {
         "totalTokens": total_tokens,
@@ -322,6 +272,6 @@ async def get_telemetry_stats_db(user_id: str) -> Dict:
         "liveTtft": avg_ttft,
         "liveP95": p95_latency,
         "liveReqPerMin": len(recent_logs),
-        "liveVectorLatency": 18.2,
+        "liveVectorLatency": 18.2 if recent_logs else 0.0,
         "recentLogs": recent_logs
     }

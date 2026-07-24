@@ -2,9 +2,9 @@
 from datetime import datetime, timezone
 from typing import List, Dict
 from bson import ObjectId
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_USER_MEMORY
-from src.core.logger import get_logger
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_USER_MEMORY
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

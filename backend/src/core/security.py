@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 import hashlib
-from src.core.config import settings
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_USERS
-from src.schemas.user import TokenData
+from core.config import settings
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_USERS
+from schemas.user import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 

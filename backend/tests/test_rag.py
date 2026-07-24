@@ -22,7 +22,7 @@ class TestChunking:
     """Validate the recursive and semantic chunking strategies."""
 
     def test_recursive_chunk_returns_list(self):
-        from src.rag.ingestion.chunking import recursive_chunk
+        from rag.ingestion.chunking import recursive_chunk
         from langchain_core.documents import Document
 
         docs = [Document(page_content="This is a test document. " * 100)]
@@ -31,7 +31,7 @@ class TestChunking:
         assert len(chunks) > 1, "Large document should produce multiple chunks"
 
     def test_semantic_chunk_returns_list(self):
-        from src.rag.ingestion.chunking import semantic_chunk
+        from rag.ingestion.chunking import semantic_chunk
         from langchain_core.documents import Document
 
         docs = [Document(page_content="Paragraph one.\n\nParagraph two.\n\nParagraph three. " * 30)]
@@ -40,7 +40,7 @@ class TestChunking:
         assert len(chunks) > 0
 
     def test_chunk_metadata_preserved(self):
-        from src.rag.ingestion.chunking import recursive_chunk
+        from rag.ingestion.chunking import recursive_chunk
         from langchain_core.documents import Document
 
         meta = {"filename": "test.pdf", "source": "test.pdf", "user_id": "user_123"}
@@ -55,20 +55,20 @@ class TestTextCleaning:
     """Validate the text cleaning pipeline."""
 
     def test_clean_text_removes_null_bytes(self):
-        from src.rag.ingestion.embedding_pipeline import clean_text
+        from rag.ingestion.embedding_pipeline import clean_text
         dirty = "Hello\x00World\x01Test"
         result = clean_text(dirty)
         assert "\x00" not in result
         assert "\x01" not in result
 
     def test_clean_text_normalizes_blank_lines(self):
-        from src.rag.ingestion.embedding_pipeline import clean_text
+        from rag.ingestion.embedding_pipeline import clean_text
         text = "Line one\n\n\n\n\nLine two"
         result = clean_text(text)
         assert "\n\n\n" not in result
 
     def test_clean_documents_drops_short(self):
-        from src.rag.ingestion.embedding_pipeline import clean_documents
+        from rag.ingestion.embedding_pipeline import clean_documents
         from langchain_core.documents import Document
         docs = [
             Document(page_content="Short"),
@@ -84,7 +84,7 @@ class TestCitationNode:
 
     @pytest.mark.asyncio
     async def test_citation_node_deduplicates(self):
-        from src.agents.langgraph.nodes.citation_node import citation_node
+        from agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
             {"doc_id": "abc123", "source": "paper.pdf", "page": 1, "snippet": "..."},
@@ -97,7 +97,7 @@ class TestCitationNode:
 
     @pytest.mark.asyncio
     async def test_citation_confidence_decays(self):
-        from src.agents.langgraph.nodes.citation_node import citation_node
+        from agents.langgraph.nodes.citation_node import citation_node
 
         citations = [
             {"doc_id": f"id{i}", "source": f"doc{i}.pdf", "page": i, "snippet": f"snippet{i}"}
@@ -115,7 +115,7 @@ class TestReportNode:
 
     @pytest.mark.asyncio
     async def test_report_node_includes_summary(self):
-        from src.agents.langgraph.nodes.report_node import report_node
+        from agents.langgraph.nodes.report_node import report_node
 
         state = {
             "summary": "## Analysis\n\nThis is the synthesized answer.",
@@ -128,7 +128,7 @@ class TestReportNode:
 
     @pytest.mark.asyncio
     async def test_report_node_appends_references(self):
-        from src.agents.langgraph.nodes.report_node import report_node
+        from agents.langgraph.nodes.report_node import report_node
 
         state = {
             "summary": "Summary text.",
@@ -149,7 +149,7 @@ class TestReportNode:
 
     @pytest.mark.asyncio
     async def test_report_mode_adds_methodology(self):
-        from src.agents.langgraph.nodes.report_node import report_node
+        from agents.langgraph.nodes.report_node import report_node
 
         state = {
             "summary": "Summary.",
@@ -169,7 +169,7 @@ class TestWorkflowRegistry:
     """Validate the workflow metadata registry."""
 
     def test_workflow_info_structure(self):
-        from src.workflows.research_workflow import get_workflow_info
+        from workflows.research_workflow import get_workflow_info
 
         info = get_workflow_info("research")
         assert "type" in info
@@ -180,7 +180,7 @@ class TestWorkflowRegistry:
         assert info["definition"]["nodes"][0] == "planner"
 
     def test_node_names_order(self):
-        from src.workflows.research_workflow import get_node_names
+        from workflows.research_workflow import get_node_names
 
         names = get_node_names("research")
         assert names[0] == "planner"
@@ -189,7 +189,7 @@ class TestWorkflowRegistry:
         assert names[-1] == "reporter"
 
     def test_coding_workflow_nodes(self):
-        from src.workflows.research_workflow import get_node_names
+        from workflows.research_workflow import get_node_names
 
         names = get_node_names("coding")
         assert names[0] == "planner"
@@ -199,7 +199,7 @@ class TestWorkflowRegistry:
         assert names[-1] == "reporter"
 
     def test_data_analysis_workflow_nodes(self):
-        from src.workflows.research_workflow import get_node_names
+        from workflows.research_workflow import get_node_names
 
         names = get_node_names("data_analysis")
         assert names[0] == "planner"
@@ -207,7 +207,7 @@ class TestWorkflowRegistry:
         assert names[-1] == "reporter"
 
     def test_all_workflows_includes_new_types(self):
-        from src.workflows.research_workflow import get_all_workflows
+        from workflows.research_workflow import get_all_workflows
 
         workflows = get_all_workflows()
         assert "research" in workflows

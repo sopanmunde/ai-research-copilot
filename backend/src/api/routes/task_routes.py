@@ -2,19 +2,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from typing import Dict, List
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.task_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.task_repository import (
     get_user_tasks,
     create_task,
     update_task_db,
     delete_task_metadata,
 )
-from src.database.mongodb.repositories.integrations_repository import get_integrations
-from src.services.third_party_integrations import create_jira_issue
-from src.services.export_service import generate_xlsx_report
-from src.core.logger import get_logger
+from database.mongodb.repositories.integrations_repository import get_integrations
+from services.third_party_integrations import create_jira_issue
+from services.export_service import generate_xlsx_report
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

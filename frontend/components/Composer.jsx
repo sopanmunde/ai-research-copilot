@@ -80,13 +80,14 @@ function AttachedFilePill({ file, uploading, onRemove }) {
 
 
 function getActionLabel(action) {
-  const map = { research: "Deep search", agent: "Agent", image: "Image", study: "Study", web: "Web search", canvas: "Canvas", calendar: "Calendar" };
+  const map = { research: "Deep search", agent: "Agent", copilot: "AI Copilot", image: "Image", study: "Study", web: "Web search", canvas: "Canvas", calendar: "Calendar" };
   return map[action] || action;
 }
 
 function getActionIcon(action) {
   if (action === "research") return <FlaskConical className="h-3.5 w-3.5" />;
   if (action === "agent") return <Bot className="h-3.5 w-3.5" />;
+  if (action === "copilot") return <BrainCircuit className="h-3.5 w-3.5" />;
   if (action === "image") return <Palette className="h-3.5 w-3.5" />;
   if (action === "study") return <BookOpen className="h-3.5 w-3.5" />;
   if (action === "web") return <Globe className="h-3.5 w-3.5" />;
@@ -167,13 +168,18 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     const lastSpaceIdx = Math.max(text.lastIndexOf(" "), text.lastIndexOf("\n"));
     const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
     
-    // The word must start with "/"
-    if (text[wordStart] !== "/") return { mode: null, query: null };
+    // The word must start with "/" or "@"
+    if (text[wordStart] !== "/" && text[wordStart] !== "@") return { mode: null, query: null };
     
     const commandWord = text.slice(wordStart);
     
+    if (commandWord.startsWith("@")) {
+      const query = commandWord.slice(1);
+      return { mode: "copilot", query: query.toLowerCase() };
+    }
+    
     // Check for prefixes with trailing slash
-    const prefixes = ["/skills/", "/tasks/", "/gallery/", "/docs/", "/email/", "/notes/", "/mcp/", "/lsp/", "/acp/"];
+    const prefixes = ["/copilot/", "/skills/", "/tasks/", "/gallery/", "/docs/", "/email/", "/notes/", "/mcp/", "/lsp/", "/acp/"];
     for (const prefix of prefixes) {
       if (commandWord.toLowerCase().startsWith(prefix)) {
         const query = commandWord.slice(prefix.length);
@@ -247,6 +253,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
   }, [slashMode]);
 
   const ROOT_COMMANDS = [
+    { id: "category:copilot", label: "/copilot/", subtitle: "Trigger AI Copilot multi-agent workflows", icon: Bot, isFolder: true },
     { id: "category:skills", label: "/skills/", subtitle: "Reference dynamic skills context", icon: Cpu, isFolder: true },
     { id: "category:tasks", label: "/tasks/", subtitle: "Reference existing tasks from dashboard", icon: CheckSquare, isFolder: true },
     { id: "category:gallery", label: "/gallery/", subtitle: "Reference uploaded documents & files", icon: FolderHeart, isFolder: true },
@@ -335,6 +342,19 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
         icon: Code
       }));
     }
+    if (slashMode === "copilot") {
+      return [
+        { id: "acp:copilot", label: "AI Copilot Multi-Agent Orchestrator", category: "Copilot Triggers", icon: Bot },
+        { id: "acp:planner", label: "Copilot Planner & Roadmap Architect", category: "Copilot Triggers", icon: BrainCircuit },
+        { id: "acp:research", label: "Copilot Deep Web Research & Synthesis", category: "Copilot Triggers", icon: FlaskConical },
+        { id: "acp:coder", label: "Copilot Code Refactoring & Generation", category: "Copilot Triggers", icon: Code },
+        { id: "acp:review", label: "Copilot Security & Code Audit", category: "Copilot Triggers", icon: CheckSquare },
+        { id: "acp:summarizer", label: "Copilot Executive Document Summarizer", category: "Copilot Triggers", icon: FileText },
+        { id: "acp:data", label: "Copilot Data Analytics & Visualization", category: "Copilot Triggers", icon: Sliders },
+        { id: "acp:vision", label: "Copilot Multimodal OCR & Image Vision", category: "Copilot Triggers", icon: Palette },
+        { id: "acp:testing", label: "Copilot Automated Test Suite Runner", category: "Copilot Triggers", icon: Zap }
+      ];
+    }
     if (slashMode === "acp") {
       return [
         { id: "acp:autocomplete", label: "Agentic Autopilot", category: "ACP Tools", icon: Terminal }
@@ -365,7 +385,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     else if (feat.id.startsWith("skill:")) prefix = "Skill: ";
     else if (feat.id.startsWith("mcp:")) prefix = "MCP: ";
     else if (feat.id.startsWith("lsp:")) prefix = "LSP: ";
-    else if (feat.id.startsWith("acp:")) prefix = "ACP: ";
+    else if (feat.id.startsWith("acp:")) prefix = feat.id.includes("copilot") || feat.id.includes("planner") || feat.id.includes("research") || feat.id.includes("coder") || feat.id.includes("review") || feat.id.includes("summarizer") || feat.id.includes("data") || feat.id.includes("vision") || feat.id.includes("testing") ? "Copilot: " : "ACP: ";
 
     const displayFeature = {
       ...feat,

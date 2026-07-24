@@ -9,12 +9,12 @@ from typing import List, Dict, Any, Optional
 from langchain_core.messages import HumanMessage
 from langchain_core.documents import Document
 
-from src.agents.langgraph.state import AgentState
-from src.core.llm_factory import get_llm, get_fallback_providers
-from src.agents.langgraph.nodes.utils import extract_text
-from src.core.logger import get_logger
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_DOCUMENTS
+from agents.langgraph.state import AgentState
+from core.llm_factory import get_llm, get_fallback_providers
+from agents.langgraph.nodes.utils import extract_text
+from core.logger import get_logger
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_DOCUMENTS
 
 logger = get_logger(__name__)
 
@@ -225,7 +225,7 @@ async def extract_scanned_pdf(
             f"[Vision Extraction] Failed to import PyMuPDF (fitz): {e}. "
             f"Scanned PDF extraction is not supported in this environment. Falling back to text-based extraction."
         )
-        from src.rag.ingestion.pdf_loader import load_pdf
+        from rag.ingestion.pdf_loader import load_pdf
         return await load_pdf(pdf_bytes, filename)
 
     documents: List[Document] = []

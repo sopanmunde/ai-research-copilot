@@ -1,10 +1,10 @@
 """MongoDB index definitions — separated from connection logic."""
-from src.database.mongodb.connection import get_database
-from src.core.constants import (
+from database.mongodb.connection import get_database
+from core.constants import (
     COLLECTION_USERS, COLLECTION_CONVERSATIONS,
     COLLECTION_MESSAGES, COLLECTION_DOCUMENTS, COLLECTION_REPORTS,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

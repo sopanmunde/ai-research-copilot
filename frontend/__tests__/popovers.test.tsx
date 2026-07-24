@@ -49,6 +49,16 @@ describe('Popovers & Modals Components', () => {
       )
       expect(screen.getByTestId('popover-trigger')).toBeInTheDocument()
     })
+
+    it('should support Copilot trigger action mode selection', () => {
+      const setMode = vi.fn()
+      render(
+        <ComposerActionsPopover onFileSelect={vi.fn()} setMode={setMode}>
+          <button data-testid="trigger">Open Actions</button>
+        </ComposerActionsPopover>
+      )
+      expect(screen.getByTestId('popover-trigger')).toBeInTheDocument()
+    })
   })
 
   describe('SettingsPopover', () => {

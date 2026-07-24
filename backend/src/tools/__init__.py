@@ -11,11 +11,11 @@ Tool Categories:
   - github_tools: get_repo_context, create_github_issue, post_pr_comment
 """
 
-from src.tools.web_tools import web_search, fetch_webpage_content
-from src.tools.code_tools import python_code_executor, format_code
-from src.tools.file_tools import read_workspace_file, write_workspace_file, list_workspace_directory, apply_git_diff
-from src.tools.rag_tools import search_knowledge_base, query_user_workspace
-from src.tools.github_tools import get_repo_context, create_github_issue, post_pr_comment
+from tools.web_tools import web_search, fetch_webpage_content
+from tools.code_tools import python_code_executor, format_code
+from tools.file_tools import read_workspace_file, write_workspace_file, list_workspace_directory, apply_git_diff
+from tools.rag_tools import search_knowledge_base, query_user_workspace
+from tools.github_tools import get_repo_context, create_github_issue, post_pr_comment
 
 # All available tools (bind these to LLM via llm.bind_tools(ALL_TOOLS))
 ALL_TOOLS = [

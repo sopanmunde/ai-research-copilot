@@ -12,9 +12,13 @@ import {
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
+  ChevronDown,
+  ChevronUp,
   Cpu,
-  Search
+  Search,
+  X
 } from 'lucide-react'
+import { cn } from "@/lib/utils"
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,6 +46,8 @@ interface CalendarEvent {
   description?: string
   location?: string
   allDay?: boolean
+  emailNotifications?: string[] // ["2d", "1d", "5h", "1h", "30m", "5m", "start"]
+  notificationEmail?: string
 }
 
 type CalendarViewType = 'day' | 'week' | 'month' | 'year' | 'agenda'
@@ -89,6 +95,7 @@ export function CalendarDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTime, setSelectedTime] = useState<string | null>('10:00')
   const [aiSync, setAiSync] = useState(true)
+  const [isAutopilotDirectivesOpen, setIsAutopilotDirectivesOpen] = useState(false)
 
   // Simulation & Logs state (with color mapping)
   const [isSimulating, setIsSimulating] = useState(false)
@@ -130,6 +137,64 @@ export function CalendarDashboard() {
     fetchEvents()
   }, [])
 
+  const convertEventToTask = async (evt: CalendarEvent) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: `[Event Followup] ${evt.title}`,
+          description: evt.description || `Event meeting task for ${evt.title}`,
+          type: "Feature",
+          status: "todo",
+          priority: "high",
+          tags: ["calendar-import"],
+          subtasks: [],
+          history: [{ timestamp: new Date().toLocaleTimeString(), action: "Task created from Calendar Event" }],
+        }),
+      });
+      if (res.ok) {
+        toast.success("Task created from Event! View in Task Dashboard.");
+      } else {
+        toast.error("Failed to create task from Event.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Network error creating task.");
+    }
+  };
+
+  const convertEventToNote = async (evt: CalendarEvent) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: `[Meeting Notes] ${evt.title}`,
+          content: `Event: ${evt.title}\nTime: ${evt.from} - ${evt.to}\nLocation: ${evt.location || "N/A"}\n\nNotes:\n${evt.description || ""}`,
+          category: "work",
+          favorite: false,
+        }),
+      });
+      if (res.ok) {
+        toast.success("Meeting Notes saved! View in Notes Dashboard.");
+      } else {
+        toast.error("Failed to save Meeting Notes.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Network error creating Note.");
+    }
+  };
+
   // Dialog / Modal Form States
   const [isAddEventOpen, setIsAddEventOpen] = useState(false)
   const [newEventTitle, setNewEventTitle] = useState('')
@@ -141,6 +206,18 @@ export function CalendarDashboard() {
   const [newEventAllDay, setNewEventAllDay] = useState(false)
   const [newEventLocation, setNewEventLocation] = useState('')
   const [newEventEtiquette, setNewEventEtiquette] = useState<'blue' | 'yellow' | 'purple' | 'pink' | 'green' | 'orange'>('blue')
+  const [newEventNotifications, setNewEventNotifications] = useState<string[]>(['2d', '1d', '5h', '1h', '30m', '5m', 'start'])
+  const [newNotificationEmail, setNewNotificationEmail] = useState('')
+
+  const notificationTimesList = [
+    { id: '2d', label: '2 Days' },
+    { id: '1d', label: '1 Day' },
+    { id: '5h', label: '5 Hours' },
+    { id: '1h', label: '1 Hour' },
+    { id: '30m', label: '30 Mins' },
+    { id: '5m', label: '5 Mins' },
+    { id: 'start', label: 'Start' },
+  ]
 
   // Etiquette Color Styling Config
   const etiquetteColors: Record<CalendarEvent['type'] | 'system', { label: string; border: string; bg: string; dot: string }> = {
@@ -319,7 +396,9 @@ export function CalendarDashboard() {
       type: newEventEtiquette,
       description: newEventDescription,
       location: newEventLocation,
-      allDay: newEventAllDay
+      allDay: newEventAllDay,
+      emailNotifications: newEventNotifications,
+      notificationEmail: newNotificationEmail
     }
 
     try {
@@ -480,327 +559,453 @@ export function CalendarDashboard() {
     }
   }
 
+  const [showVisuals, setShowVisuals] = useState(true)
+
+  // Compute metrics for visual telemetry
+  const todayStr = new Date().toDateString()
+  const todayEvents = events.filter(e => new Date(e.from).toDateString() === todayStr)
+  const upcomingCount = events.filter(e => new Date(e.from).getTime() >= new Date().getTime()).length
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full min-h-[500px] bg-background">
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2.5">
           <RefreshCw className="size-6 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground font-semibold">Loading calendar pipelines...</span>
+          <span className="text-xs text-muted-foreground font-semibold">Loading calendar pipelines & autopilot...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="relative flex-1 overflow-y-auto bg-background pb-16">
+    <div className="relative flex-1 overflow-y-auto bg-background p-4 md:p-6 space-y-5">
       
-      {/* Root Create Event Dialog */}
+      {/* Root Create Event Dialog Overlay */}
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-        <DialogContent className="sm:max-w-[400px] p-5 bg-zinc-950 text-zinc-50 border-zinc-800 gap-0">
-          <DialogHeader className="flex flex-row items-center justify-between pb-3 border-b border-zinc-800">
-            <DialogTitle className="text-base font-bold">Create Event</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[500px] p-0 bg-card/95 text-foreground border border-border/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] backdrop-blur-xl gap-0 overflow-hidden transition-all duration-300">
           
-          <div className="space-y-3 py-3">
-            {/* Title */}
-            <div className="space-y-1">
-              <Label htmlFor="title" className="text-xs text-zinc-400 font-medium">Title</Label>
-              <Input
-                id="title"
-                placeholder="Event Title"
-                value={newEventTitle}
-                onChange={(e) => setNewEventTitle(e.target.value)}
-                className="bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs focus-visible:ring-zinc-700"
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-1">
-              <Label htmlFor="description" className="text-xs text-zinc-400 font-medium">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Description details"
-                value={newEventDescription}
-                onChange={(e) => setNewEventDescription(e.target.value)}
-                className="bg-zinc-900 border-zinc-800 text-zinc-100 min-h-[60px] text-xs focus-visible:ring-zinc-700"
-              />
-            </div>
-
-            {/* Start Date & Start Time */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-400 font-medium">Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs px-3 hover:bg-zinc-900"
-                    >
-                      <span>{formatOrdinalDate(newEventStartDate)}</span>
-                      <CalendarIcon className="size-3.5 text-zinc-500" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-850">
-                    <Calendar
-                      mode="single"
-                      selected={newEventStartDate}
-                      onSelect={(d) => d && setNewEventStartDate(d)}
-                    />
-                  </PopoverContent>
-                </Popover>
+          {/* Container 1: Hero Glass Header */}
+          <div className="relative px-6 pt-6 pb-5 border-b border-border/60 bg-gradient-to-b from-muted/50 via-card/80 to-card overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 size-40 bg-gradient-to-br from-indigo-500/15 to-purple-500/0 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3.5">
+                <div className="size-11 rounded-2xl bg-gradient-to-b from-card to-muted border border-border/80 shadow-[0_4px_12px_rgba(0,0,0,0.12)] flex items-center justify-center shrink-0">
+                  <CalendarIcon className="size-5 text-foreground drop-shadow-xs" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-extrabold text-foreground tracking-tight">
+                    New Event Node
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                    Schedule calendar block & set notifications
+                  </DialogDescription>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-400 font-medium">Start Time</Label>
-                <Select value={newEventStartTime} onValueChange={setNewEventStartTime}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 bg-zinc-950 border-zinc-850">
-                    {timeDropdownOptions.map(t => (
-                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* End Date & End Time */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-400 font-medium">End Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs px-3 hover:bg-zinc-900"
-                    >
-                      <span>{formatOrdinalDate(newEventEndDate)}</span>
-                      <CalendarIcon className="size-3.5 text-zinc-500" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-zinc-950 border-zinc-850">
-                    <Calendar
-                      mode="single"
-                      selected={newEventEndDate}
-                      onSelect={(d) => d && setNewEventEndDate(d)}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs text-zinc-400 font-medium">End Time</Label>
-                <Select value={newEventEndTime} onValueChange={setNewEventEndTime}>
-                  <SelectTrigger className="bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 bg-zinc-950 border-zinc-850">
-                    {timeDropdownOptions.map(t => (
-                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* All day */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="all-day"
-                checked={newEventAllDay}
-                onChange={(e) => setNewEventAllDay(e.target.checked)}
-                className="rounded border-zinc-800 bg-zinc-900 text-zinc-100 size-4 cursor-pointer"
-              />
-              <Label htmlFor="all-day" className="text-xs text-zinc-300 font-medium cursor-pointer">All day</Label>
-            </div>
-
-            {/* Location */}
-            <div className="space-y-1">
-              <Label htmlFor="location" className="text-xs text-zinc-400 font-medium">Location</Label>
-              <Input
-                id="location"
-                placeholder="Location details"
-                value={newEventLocation}
-                onChange={(e) => setNewEventLocation(e.target.value)}
-                className="bg-zinc-900 border-zinc-800 text-zinc-100 h-8.5 text-xs focus-visible:ring-zinc-700"
-              />
-            </div>
-
-            {/* Etiquette (Colors) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400 font-medium">Etiquette</Label>
-              <div className="flex items-center gap-2.5">
-                {['blue', 'yellow', 'purple', 'pink', 'green', 'orange'].map((colorKey) => {
-                  const key = colorKey as 'blue' | 'yellow' | 'purple' | 'pink' | 'green' | 'orange'
-                  const colorConfig = etiquetteColors[key]
-                  const isSelected = newEventEtiquette === key
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setNewEventEtiquette(key)}
-                      className={`size-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                        isSelected ? 'border-sky-500 scale-110' : 'border-zinc-800 hover:border-zinc-650'
-                      } ${colorConfig.dot}`}
-                      type="button"
-                    >
-                      {isSelected && <div className="size-1.5 rounded-full bg-zinc-950 dark:bg-white" />}
-                    </button>
-                  )
-                })}
-              </div>
+              <button
+                onClick={() => setIsAddEventOpen(false)}
+                className="size-8 rounded-xl bg-muted/40 hover:bg-muted border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:translate-y-0.5"
+              >
+                <Trash2 className="hidden" />
+                <X className="size-4" />
+              </button>
             </div>
           </div>
+          
+          {/* Scrollable Form Body */}
+          <div className="p-6 space-y-4 text-xs max-h-[75vh] overflow-y-auto scrollbar-thin">
 
-          <DialogFooter className="flex gap-2 border-t border-zinc-800 pt-3 mt-1">
+            {/* Container 2: Core Details Card */}
+            <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-muted/30 to-muted/10 p-4 space-y-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider block">
+                Event Information
+              </span>
+
+              {/* Title */}
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-[11px] font-bold text-foreground flex items-center gap-1">
+                  Event Title <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="E.g., Team Sync & Architecture Review..."
+                  value={newEventTitle}
+                  onChange={(e) => setNewEventTitle(e.target.value)}
+                  className="text-xs h-10 bg-background/80 border-border/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_0_0_2px_rgba(120,80,255,0.2)] transition-all placeholder:text-muted-foreground/50 font-medium"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-[11px] font-bold text-foreground">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Meeting agenda, goals, preparation..."
+                  value={newEventDescription}
+                  onChange={(e) => setNewEventDescription(e.target.value)}
+                  className="text-xs bg-background/80 border-border/80 min-h-[70px] resize-none rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_0_0_2px_rgba(120,80,255,0.2)] transition-all placeholder:text-muted-foreground/50"
+                />
+              </div>
+
+              {/* Location */}
+              <div className="space-y-1.5">
+                <Label htmlFor="location" className="text-[11px] font-bold text-foreground">Location / Meeting Link</Label>
+                <Input
+                  id="location"
+                  placeholder="E.g., Google Meet URL or Room 402..."
+                  value={newEventLocation}
+                  onChange={(e) => setNewEventLocation(e.target.value)}
+                  className="text-xs h-9 bg-background/80 border-border/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] placeholder:text-muted-foreground/50"
+                />
+              </div>
+            </div>
+
+            {/* Container 3: Time & Schedule Card */}
+            <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-muted/30 to-muted/10 p-4 space-y-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider block">
+                Schedule & Timing
+              </span>
+
+              {/* Start Date & Start Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-foreground">Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between bg-background/80 border-border/80 text-foreground h-9 text-xs px-3 rounded-xl shadow-xs"
+                      >
+                        <span className="truncate">{formatOrdinalDate(newEventStartDate)}</span>
+                        <CalendarIcon className="size-3.5 text-muted-foreground shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-card border-border rounded-2xl shadow-xl">
+                      <Calendar
+                        mode="single"
+                        selected={newEventStartDate}
+                        onSelect={(d) => d && setNewEventStartDate(d)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-foreground">Start Time</Label>
+                  <Select value={newEventStartTime} onValueChange={setNewEventStartTime}>
+                    <SelectTrigger className="bg-background/80 border-border/80 text-foreground h-9 text-xs rounded-xl shadow-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 bg-card border-border rounded-xl">
+                      {timeDropdownOptions.map(t => (
+                        <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* End Date & End Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-foreground">End Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between bg-background/80 border-border/80 text-foreground h-9 text-xs px-3 rounded-xl shadow-xs"
+                      >
+                        <span className="truncate">{formatOrdinalDate(newEventEndDate)}</span>
+                        <CalendarIcon className="size-3.5 text-muted-foreground shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-card border-border rounded-2xl shadow-xl">
+                      <Calendar
+                        mode="single"
+                        selected={newEventEndDate}
+                        onSelect={(d) => d && setNewEventEndDate(d)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-foreground">End Time</Label>
+                  <Select value={newEventEndTime} onValueChange={setNewEventEndTime}>
+                    <SelectTrigger className="bg-background/80 border-border/80 text-foreground h-9 text-xs rounded-xl shadow-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 bg-card border-border rounded-xl">
+                      {timeDropdownOptions.map(t => (
+                        <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* All day */}
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="all-day"
+                  checked={newEventAllDay}
+                  onChange={(e) => setNewEventAllDay(e.target.checked)}
+                  className="rounded-md border-border bg-muted text-foreground size-4 cursor-pointer accent-primary"
+                />
+                <Label htmlFor="all-day" className="text-xs text-foreground font-semibold cursor-pointer select-none">All day event</Label>
+              </div>
+            </div>
+
+            {/* Container 4: Color Etiquette & Notifications */}
+            <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-muted/30 to-muted/10 p-4 space-y-3.5 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
+              
+              {/* Etiquette (Colors) */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider block">
+                  Etiquette Tag Color
+                </span>
+                <div className="flex items-center gap-3">
+                  {['blue', 'yellow', 'purple', 'pink', 'green', 'orange'].map((colorKey) => {
+                    const key = colorKey as 'blue' | 'yellow' | 'purple' | 'pink' | 'green' | 'orange'
+                    const colorConfig = etiquetteColors[key]
+                    const isSelected = newEventEtiquette === key
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setNewEventEtiquette(key)}
+                        className={`size-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${
+                          isSelected ? 'border-foreground scale-110 shadow-sm' : 'border-border/60 hover:border-foreground/50'
+                        } ${colorConfig.dot}`}
+                        type="button"
+                        title={colorConfig.label}
+                      >
+                        {isSelected && <div className="size-2 rounded-full bg-background" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Target Notification Email */}
+              <div className="space-y-1.5 pt-1">
+                <Label htmlFor="notification-email" className="text-[11px] font-bold text-foreground">Notification Target Email</Label>
+                <Input
+                  id="notification-email"
+                  placeholder="user@trivisionx.ai (default account)"
+                  value={newNotificationEmail}
+                  onChange={(e) => setNewNotificationEmail(e.target.value)}
+                  className="text-xs h-9 bg-background/80 border-border/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] placeholder:text-muted-foreground/50"
+                />
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Container 5: Action Footer */}
+          <DialogFooter className="px-6 py-4 border-t border-border/70 bg-gradient-to-b from-card to-muted/40 flex items-center justify-between gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
+              size="sm"
               onClick={() => setIsAddEventOpen(false)}
-              className="bg-transparent border-zinc-800 text-zinc-300 h-8.5 text-xs hover:bg-zinc-900"
+              className="h-10 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-xl px-4 transition-all active:translate-y-0.5"
             >
               Cancel
             </Button>
+            
             <Button
+              disabled={!newEventTitle.trim()}
               onClick={handleSaveNewEvent}
-              className="bg-white text-zinc-950 hover:bg-zinc-200 h-8.5 text-xs font-semibold"
+              className="h-10 text-xs font-extrabold rounded-xl px-6 bg-gradient-to-b from-foreground via-foreground to-foreground/90 text-background hover:from-foreground/90 hover:to-foreground shadow-[0_6px_20px_rgba(0,0,0,0.25)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 transition-all gap-2"
             >
-              Save
+              <Plus className="size-4" />
+              Save Event Node
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="relative px-6 py-8 lg:px-8 max-w-7xl mx-auto space-y-8">
-        
-        {/* ─── Header Section ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400">
-                <CalendarIcon className="mr-1 size-3" /> Calendar System
-              </span>
-              {aiSync && (
-                <span className="inline-flex items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/5">
-                  <span className="relative flex h-1.5 w-1.5 mr-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                  </span>
-                  Autopilot Synced
-                </span>
-              )}
+      {/* ─── Brain Dashboard Style Top Visual Telemetry Banner ─── */}
+      <div className="flex flex-col gap-3 p-4.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative transition-all duration-300">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-2xl bg-foreground/5 border border-border flex items-center justify-center text-foreground shadow-xs shrink-0">
+              <CalendarIcon className="size-5" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-4xl">
-              Scheduler & Logs
-            </h1>
-            <p className="max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
-              Manage appointments and view event lists. Click any block or calendar cell directly to pop up the event creation dialog.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold tracking-tight text-foreground">
+                  Calendar &amp; Scheduling Hub
+                </h1>
+                <Badge variant="outline" className="text-[9px] px-2 py-0.5 font-bold uppercase tracking-wider bg-muted/60 border-border text-muted-foreground shadow-xs">
+                  v3.0 Autopilot
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                Autonomous AI Agent scheduling, multi-view calendar canvas &amp; SMTP email notifications
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Create Event Button (Transparent / Outline style) */}
             <Button
+              size="sm"
               variant="outline"
-              onClick={() => handleBlockClick(new Date())}
-              className="h-9.5 text-xs border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900 bg-transparent text-zinc-800 dark:text-zinc-200 shadow-xs"
+              onClick={() => setShowVisuals(!showVisuals)}
+              className="h-8.5 text-xs font-semibold border-border hover:bg-muted gap-1.5 px-3 rounded-xl transition-all shadow-xs"
             >
-              <Plus className="mr-1.5 size-3.5" /> Create Event
+              <Cpu className="size-3.5" />
+              <span>{showVisuals ? "Hide Analytics" : "Show Analytics"}</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => handleBlockClick(new Date())}
+              className="h-8.5 text-xs font-semibold bg-foreground hover:bg-foreground/90 text-background gap-1.5 px-3 rounded-xl shadow-md border border-foreground/10 cursor-pointer transition-all hover:scale-102"
+            >
+              <Plus className="size-3.5" />
+              <span>Create Event</span>
             </Button>
           </div>
         </div>
 
-        {/* ─── Main Grid Layout ───────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* LEFT SIDEBAR PANEL */}
-          <div className="lg:col-span-4 space-y-6">
-            
-            {/* Quick selector (Mini-calendar & Preset triggers) */}
-            <DashboardCard className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <CalendarIcon className="size-4 text-zinc-500" />
-                <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">Quick Selector</span>
-              </div>
-              
-              {/* Presets Row */}
-              <div className="grid grid-cols-2 gap-1.5 mb-3.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickSelect('today')}
-                  className="text-[10px] h-7 px-2 font-semibold bg-zinc-50/50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800/80 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickSelect('tomorrow')}
-                  className="text-[10px] h-7 px-2 font-semibold bg-zinc-50/50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800/80 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Tomorrow
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickSelect('next-week')}
-                  className="text-[10px] h-7 px-2 font-semibold bg-zinc-50/50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800/80 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Next Mon
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickSelect('next-month')}
-                  className="text-[10px] h-7 px-2 font-semibold bg-zinc-50/50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800/80 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Next Month
-                </Button>
-              </div>
-
-              <div className="flex justify-center border border-zinc-200 dark:border-zinc-800 rounded-xl p-2 bg-zinc-50/50 dark:bg-zinc-950/20">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="w-full bg-transparent scale-95"
-                  modifiers={{
-                    booked: (date) => isDateBooked(date)
-                  }}
-                  modifiersClassNames={{
-                    booked: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-zinc-500 font-semibold relative"
-                  }}
-                />
-              </div>
-            </DashboardCard>
-
-            {/* AI Autopilot Controls (Colored indicators) */}
-            <DashboardCard>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-zinc-500" />
-                  <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Autopilot Directives</span>
+        {/* Visual Analytics Telemetry Bar */}
+        {showVisuals && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-border/40 select-none">
+            {/* Metric 1: Total Events & Today Schedule */}
+            <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <CalendarIcon className="size-4" />
                 </div>
-                {aiSync && (
-                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:bg-emerald-500/5">
-                    <span className="relative flex h-1.5 w-1.5 mr-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Today &amp; Total</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold text-foreground">{todayEvents.length} today</span>
+                    <span className="text-[10px] text-muted-foreground">({events.length} total)</span>
+                  </div>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                Live
+              </Badge>
+            </div>
+
+            {/* Metric 2: AI Autopilot Latency */}
+            <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Sparkles className="size-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">AI Autopilot</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold text-foreground">{aiSync ? "Active" : "Disabled"}</span>
+                    <span className="text-[10px] text-emerald-500 font-mono">~115ms</span>
+                  </div>
+                </div>
+              </div>
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" title="Active Engine" />
+            </div>
+
+            {/* Metric 3: SMTP Email Reminders Gateway */}
+            <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Clock className="size-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Email Reminders</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold text-foreground">TLS 587</span>
+                    <span className="text-[10px] text-muted-foreground">100% Delivery</span>
+                  </div>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-muted border-border text-muted-foreground">
+                Ready
+              </Badge>
+            </div>
+
+            {/* Metric 4: Upcoming Events Ratio */}
+            <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+              <div className="flex items-center gap-2">
+                <div className="size-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                  <ChevronRight className="size-4" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Upcoming Events</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-bold text-foreground">{upcomingCount} upcoming</span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-12 bg-muted/60 h-1.5 rounded-full overflow-hidden border border-border/40">
+                <div className="bg-foreground h-full rounded-full" style={{ width: `${Math.min(100, (upcomingCount / (events.length || 1)) * 100)}%` }} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Main Workspace Grid Container ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        {/* ─── LEFT SIDEBAR PANEL (Width 4/12) ─── */}
+        <div className="lg:col-span-4 space-y-5">
+          
+          {/* CONTAINER 1: AI Autopilot Directives & Rules (Collapsible with Zoom/Scale Trigger) */}
+          <div className={cn(
+            "bg-card border rounded-2xl p-4 transition-all duration-300 relative",
+            isAutopilotDirectivesOpen
+              ? "border-foreground/40 ring-2 ring-foreground/15 shadow-[0_12px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] scale-102 z-20 animate-in fade-in-0 zoom-in-95"
+              : "border-border/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:border-foreground/30 hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)]"
+          )}>
+            {/* Click Trigger Header */}
+            <div
+              onClick={() => setIsAutopilotDirectivesOpen(!isAutopilotDirectivesOpen)}
+              className="flex items-center justify-between cursor-pointer select-none group"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-foreground group-hover:rotate-12 transition-transform duration-200" />
+                <div>
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider block">Autopilot Directives</span>
+                  {!isAutopilotDirectivesOpen && (
+                    <span className="text-[10px] text-muted-foreground font-medium block truncate">
+                      {aiSync ? "Active auto-booking rules (Click to open)" : "Disabled (Click to configure)"}
                     </span>
-                    Active
-                  </span>
-                )}
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                {aiSync && (
+                  <Badge variant="outline" className="text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-bold shadow-xs">
+                    Active
+                  </Badge>
+                )}
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  className="size-7 rounded-xl text-muted-foreground group-hover:text-foreground hover:bg-muted shrink-0"
+                >
+                  {isAutopilotDirectivesOpen ? <ChevronUp className="size-4 text-foreground" /> : <ChevronDown className="size-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Expanded Directives Body with Zoom-In effect */}
+            {isAutopilotDirectivesOpen && (
+              <div className="space-y-3.5 pt-3.5 mt-3 border-t border-border/60 animate-in fade-in-0 zoom-in-95 duration-200">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="ai-sync-switch" className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                      Auto-booking rules
+                    <Label htmlFor="ai-sync-switch" className="text-xs font-semibold text-foreground block">
+                      Auto-booking engine
                     </Label>
-                    <p className="text-[10px] text-zinc-500 leading-normal">
-                      Automatically approve matching slots.
+                    <p className="text-[10px] text-muted-foreground leading-normal">
+                      Approve slots matching rules.
                     </p>
                   </div>
                   <Switch
@@ -816,202 +1021,279 @@ export function CalendarDashboard() {
                   />
                 </div>
 
-                <Separator className="bg-zinc-100 dark:bg-zinc-800/80" />
+                <Separator className="bg-border/60" />
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-zinc-850 dark:text-zinc-200">
+                  <Label className="text-xs font-semibold text-foreground">
                     Instructions Prompt
                   </Label>
                   <Textarea
                     value={aiInstructions}
                     onChange={(e) => setAiInstructions(e.target.value)}
-                    className="text-xs min-h-[50px] border-zinc-200 dark:border-zinc-800 focus:border-zinc-400 dark:focus:border-zinc-700 bg-transparent resize-none leading-normal"
+                    className="text-xs min-h-[55px] border-border bg-muted/20 focus:border-border text-foreground rounded-xl resize-none leading-normal"
                   />
                 </div>
 
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={runAutopilotSimulation}
+                    disabled={isSimulating}
+                    className="flex-1 text-xs border-border hover:bg-muted text-foreground font-semibold rounded-xl h-8.5 shadow-xs"
+                  >
+                    {isSimulating ? (
+                      <span className="flex items-center gap-1.5">
+                        <RefreshCw className="size-3 animate-spin text-foreground" /> Simulating Agent...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Cpu className="size-3 text-foreground" /> Simulate Auto-Booking
+                      </span>
+                    )}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsAutopilotDirectivesOpen(false)}
+                    className="h-8.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-xl px-3 font-semibold cursor-pointer"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* CONTAINER 2: Quick Navigation & Date Selector */}
+          <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 space-y-3">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="size-4 text-foreground" />
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">Quick Selector</span>
+              </div>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-muted border-border text-muted-foreground shadow-xs">
+                Calendar
+              </Badge>
+            </div>
+
+            {/* Presets Row */}
+            <div className="grid grid-cols-2 gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect('today')}
+                className="text-[10px] h-7 px-2 font-semibold border-border hover:bg-muted text-foreground rounded-xl shadow-xs"
+              >
+                Today
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect('tomorrow')}
+                className="text-[10px] h-7 px-2 font-semibold border-border hover:bg-muted text-foreground rounded-xl shadow-xs"
+              >
+                Tomorrow
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect('next-week')}
+                className="text-[10px] h-7 px-2 font-semibold border-border hover:bg-muted text-foreground rounded-xl shadow-xs"
+              >
+                Next Mon
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickSelect('next-month')}
+                className="text-[10px] h-7 px-2 font-semibold border-border hover:bg-muted text-foreground rounded-xl shadow-xs"
+              >
+                Next Month
+              </Button>
+            </div>
+
+            <div className="flex justify-center border border-border/60 rounded-xl p-2 bg-muted/10 shadow-inner">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="w-full bg-transparent scale-95"
+                modifiers={{
+                  booked: (date) => isDateBooked(date)
+                }}
+                modifiersClassNames={{
+                  booked: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-foreground font-semibold relative"
+                }}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* ─── RIGHT CALENDAR VIEW PANEL (Width 8/12) ─── */}
+        <div className="lg:col-span-8 space-y-5 flex flex-col">
+          
+          {/* CONTAINER 5: Toolbar & Control Ribbon */}
+          <div className="bg-card border border-border/80 rounded-2xl p-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-wrap">
+            
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Year Navigation Controls */}
+              <div className="flex items-center border border-border rounded-xl overflow-hidden bg-muted/20 shadow-xs">
                 <Button
-                  variant="outline"
-                  onClick={runAutopilotSimulation}
-                  disabled={isSimulating}
-                  className="w-full text-xs border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 shadow-xs"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (!selectedDate) return
+                    const newDate = new Date(selectedDate)
+                    newDate.setFullYear(newDate.getFullYear() - 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="h-8.5 w-8.5 rounded-none border-r border-border hover:bg-muted"
+                  title="Previous Year"
                 >
-                  {isSimulating ? (
-                    <span className="flex items-center gap-1.5">
-                      <RefreshCw className="size-3 animate-spin" /> Simulating Agent...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <Cpu className="size-3" /> Simulate Auto-Booking
-                    </span>
-                  )}
+                  <ChevronsLeft className="size-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleNavigateDate('prev')}
+                  className="h-8.5 w-8.5 rounded-none border-r border-border hover:bg-muted"
+                  title="Previous"
+                >
+                  <ChevronLeft className="size-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleNavigateDate('next')}
+                  className="h-8.5 w-8.5 rounded-none border-r border-border hover:bg-muted"
+                  title="Next"
+                >
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (!selectedDate) return
+                    const newDate = new Date(selectedDate)
+                    newDate.setFullYear(newDate.getFullYear() + 1)
+                    setSelectedDate(newDate)
+                  }}
+                  className="h-8.5 w-8.5 rounded-none hover:bg-muted"
+                  title="Next Year"
+                >
+                  <ChevronsRight className="size-4 text-muted-foreground" />
                 </Button>
               </div>
-            </DashboardCard>
 
-            {/* Activity Logs (Color-coded) */}
-            <DashboardCard className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Activity Logs Console</span>
-                <button
-                  onClick={() => setLogs([])}
-                  className="text-[10px] font-semibold text-zinc-400 hover:text-zinc-850 dark:hover:text-zinc-200"
-                >
-                  Clear
-                </button>
+              {/* Dynamic Today Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDate(new Date())}
+                className="h-8.5 border-border text-xs shadow-xs hover:bg-muted bg-transparent rounded-xl font-semibold"
+              >
+                Today ({new Date().getDate()})
+              </Button>
+              
+              <span className="text-sm font-bold text-foreground ml-1 truncate max-w-[150px] sm:max-w-[220px]">
+                {headerViewTitle}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Search events..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8.5 pl-8 text-xs w-[130px] sm:w-[155px] border-border bg-muted/20 shadow-none rounded-xl"
+                />
               </div>
-              <div className="h-[115px] rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-900 text-zinc-300 dark:bg-zinc-950 p-2.5 text-[9.5px] font-mono overflow-y-auto leading-normal space-y-1 shadow-inner scrollbar-none">
-                {logs.map((log) => {
-                  const dotColor = log.type && etiquetteColors[log.type] ? etiquetteColors[log.type].dot : 'bg-zinc-550'
-                  return (
-                    <div key={log.id} className="flex gap-2 items-center">
-                      <span className={`size-1.5 rounded-full shrink-0 ${dotColor}`} />
-                      <span className="text-zinc-600 select-none">&gt;</span>
-                      <span className="break-all">{log.text}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </DashboardCard>
+
+              {/* Dropdown view selector (Day, Week, Month, Year, Agenda) */}
+              <Select value={currentView} onValueChange={(v: CalendarViewType) => setCurrentView(v)}>
+                <SelectTrigger className="h-8.5 w-[100px] text-xs border-border shadow-none bg-muted/20 rounded-xl font-semibold">
+                  <SelectValue placeholder="View" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border rounded-xl shadow-lg">
+                  <SelectItem value="day">Day</SelectItem>
+                  <SelectItem value="week">Week</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                  <SelectItem value="year">Year</SelectItem>
+                  <SelectItem value="agenda">Agenda</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
           </div>
 
-          {/* RIGHT CALENDAR VIEW PANEL (Width: 8/12) */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* CONTAINER 6: Main Calendar Display Canvas */}
+          <div className="bg-card border border-border/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_35px_rgba(0,0,0,0.5)] transition-all duration-300 flex-1 overflow-hidden min-h-[520px]">
             
-            {/* TOOLBAR */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 bg-white/70 dark:bg-zinc-950/20 backdrop-blur-md shadow-xs">
-              
-              <div className="flex items-center gap-2">
-                {/* Year Navigation Controls */}
-                <div className="flex items-center border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-background">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (!selectedDate) return
-                      const newDate = new Date(selectedDate)
-                      newDate.setFullYear(newDate.getFullYear() - 1)
-                      setSelectedDate(newDate)
-                    }}
-                    className="h-8.5 w-8.5 rounded-none border-r border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    title="Previous Year"
-                  >
-                    <ChevronsLeft className="size-4 text-zinc-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleNavigateDate('prev')}
-                    className="h-8.5 w-8.5 rounded-none border-r border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    title="Previous"
-                  >
-                    <ChevronLeft className="size-4 text-zinc-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleNavigateDate('next')}
-                    className="h-8.5 w-8.5 rounded-none border-r border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    title="Next"
-                  >
-                    <ChevronRight className="size-4 text-zinc-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      if (!selectedDate) return
-                      const newDate = new Date(selectedDate)
-                      newDate.setFullYear(newDate.getFullYear() + 1)
-                      setSelectedDate(newDate)
-                    }}
-                    className="h-8.5 w-8.5 rounded-none hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    title="Next Year"
-                  >
-                    <ChevronsRight className="size-4 text-zinc-500" />
-                  </Button>
+            {/* Day View */}
+            {currentView === 'day' && (
+              <div className="flex flex-col h-full bg-muted/10 rounded-xl overflow-hidden border border-border/60">
+                <div className="p-3 border-b border-border/60 font-semibold text-xs text-muted-foreground uppercase tracking-wider bg-muted/20 flex items-center justify-between">
+                  <span>Day Schedule Timeline</span>
+                  <Badge variant="outline" className="text-[9px] bg-muted border-border text-muted-foreground">
+                    {searchedEvents.filter(e => new Date(e.from).toDateString() === selectedDate?.toDateString()).length} events
+                  </Badge>
                 </div>
+                <div className="flex-1 overflow-y-auto max-h-[500px] divide-y divide-border/40 scrollbar-thin">
+                  {dayTimelineHours.map(hour => {
+                    const matched = searchedEvents.find(e => {
+                      const hourNum = hour.substring(0, 2)
+                      const evHourNum = new Date(e.from).getHours().toString().padStart(2, '0')
+                      return evHourNum === hourNum && new Date(e.from).toDateString() === selectedDate?.toDateString()
+                    })
 
-                {/* Dynamic Today Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedDate(new Date())}
-                  className="h-8.5 border-zinc-200 dark:border-zinc-800 text-xs shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 bg-transparent"
-                >
-                  Today ({new Date().getDate()})
-                </Button>
-                
-                <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 ml-1 truncate max-w-[150px] sm:max-w-[220px]">
-                  {headerViewTitle}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 pointer-events-none" />
-                  <Input
-                    type="text"
-                    placeholder="Search blocks..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-8.5 pl-8 text-xs w-[130px] sm:w-[155px] border-zinc-200 dark:border-zinc-800 bg-background shadow-none"
-                  />
-                </div>
-
-                {/* Dropdown view selector (Day, Week, Month, Year, Agenda) */}
-                <Select value={currentView} onValueChange={(v: CalendarViewType) => setCurrentView(v)}>
-                  <SelectTrigger className="h-8.5 w-[95px] text-xs border-zinc-200 dark:border-zinc-800 shadow-none bg-background">
-                    <SelectValue placeholder="View" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-zinc-200 dark:border-zinc-800">
-                    <SelectItem value="day">Day</SelectItem>
-                    <SelectItem value="week">Week</SelectItem>
-                    <SelectItem value="month">Month</SelectItem>
-                    <SelectItem value="year">Year</SelectItem>
-                    <SelectItem value="agenda">Agenda</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-            </div>
-
-            {/* MAIN CALENDAR DISPLAY WINDOW */}
-            <DashboardCard className="flex-1 p-0 overflow-visible min-h-[500px]">
-              
-              {/* Day View */}
-              {currentView === 'day' && (
-                <div className="flex flex-col h-full bg-background/30 rounded-xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50">
-                  <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 font-semibold text-xs text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-950/20">
-                    Day Schedule Timeline
-                  </div>
-                  <div className="flex-1 overflow-y-auto max-h-[500px] divide-y divide-zinc-100 dark:divide-zinc-900">
-                    {dayTimelineHours.map(hour => {
-                      const matched = searchedEvents.find(e => {
-                        const hourNum = hour.substring(0, 2)
-                        const evHourNum = new Date(e.from).getHours().toString().padStart(2, '0')
-                        return evHourNum === hourNum && new Date(e.from).toDateString() === selectedDate?.toDateString()
-                      })
-
-                      return (
-                        <div key={hour} className="flex min-h-[60px] relative hover:bg-zinc-50/50 dark:hover:bg-zinc-900/10 transition-colors">
-                          <div className="w-16 p-3.5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 text-right border-r border-zinc-200/60 dark:border-zinc-800/50 bg-zinc-50/20 dark:bg-zinc-950/5">
-                            {hour}
-                          </div>
-                          <div className="flex-1 p-2 relative flex items-center">
-                            {matched ? (
-                              <div
-                                onClick={() => matched && handleBlockClick(new Date(matched.from))}
-                                className={`w-full border rounded-lg p-2.5 pl-4 text-xs relative group/event transition-all cursor-pointer hover:bg-zinc-100/30 dark:hover:bg-zinc-900/50 ${
-                                  matched.type && etiquetteColors[matched.type] ? etiquetteColors[matched.type].border : 'border-zinc-200 dark:border-zinc-800'
-                                }`}
-                              >
-                                <div className={`absolute inset-y-2 left-2 w-0.5 rounded-full ${
-                                  matched.type && etiquetteColors[matched.type] ? etiquetteColors[matched.type].dot : 'bg-zinc-500'
-                                }`} />
-                                <div className="flex items-center justify-between">
-                                  <div className="font-semibold text-zinc-800 dark:text-zinc-200">{matched.title}</div>
+                    return (
+                      <div key={hour} className="flex min-h-[60px] relative hover:bg-muted/20 transition-colors">
+                        <div className="w-16 p-3.5 text-[10px] font-semibold text-muted-foreground text-right border-r border-border/60 bg-muted/10">
+                          {hour}
+                        </div>
+                        <div className="flex-1 p-2 relative flex items-center">
+                          {matched ? (
+                            <div
+                              onClick={() => matched && handleBlockClick(new Date(matched.from))}
+                              className={`w-full border rounded-xl p-2.5 pl-4 text-xs relative group/event transition-all cursor-pointer bg-card border-border shadow-xs hover:border-foreground/30`}
+                            >
+                              <div className={`absolute inset-y-2 left-2 w-1 rounded-full ${
+                                matched.type && etiquetteColors[matched.type] ? etiquetteColors[matched.type].dot : 'bg-muted-foreground'
+                              }`} />
+                              <div className="flex items-center justify-between">
+                                <div className="font-bold text-foreground">{matched.title}</div>
+                                <div className="flex items-center gap-1 opacity-0 group-hover/event:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      convertEventToTask(matched);
+                                    }}
+                                    className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
+                                    title="Convert event to Task"
+                                  >
+                                    + Task
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      convertEventToNote(matched);
+                                    }}
+                                    className="h-5 px-1.5 text-[10px] font-semibold text-foreground hover:bg-muted rounded-md"
+                                    title="Save event as Meeting Note"
+                                  >
+                                    + Note
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -1019,103 +1301,172 @@ export function CalendarDashboard() {
                                       e.stopPropagation()
                                       handleDeleteEvent(matched.id)
                                     }}
-                                    className="opacity-0 group-hover/event:opacity-100 size-5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                                    className="size-5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md"
                                   >
                                     <Trash2 className="size-3" />
                                   </Button>
                                 </div>
-                                <div className="text-[10px] text-zinc-500 mt-0.5 flex justify-between">
-                                  <span>{formatDateRange(new Date(matched.from), new Date(matched.to))}</span>
-                                  {matched.location && <span className="opacity-80">Location: {matched.location}</span>}
-                                </div>
                               </div>
-                            ) : (
-                              <div
-                                onClick={() => selectedDate && handleBlockClick(selectedDate, hour)}
-                                className="w-full h-full cursor-pointer flex items-center pl-4 text-zinc-455 hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-all rounded-lg"
-                              >
-                                <span className="opacity-0 hover:opacity-100 text-[10.5px] font-semibold text-zinc-400 flex items-center gap-1">
-                                  <Plus className="size-3" /> Book {hour}
-                                </span>
+                              <div className="text-[10px] text-muted-foreground mt-0.5 flex justify-between">
+                                <span>{formatDateRange(new Date(matched.from), new Date(matched.to))}</span>
+                                {matched.location && <span className="opacity-80">Location: {matched.location}</span>}
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => selectedDate && handleBlockClick(selectedDate, hour)}
+                              className="w-full h-full cursor-pointer flex items-center pl-4 text-muted-foreground/40 hover:text-foreground hover:bg-muted/20 transition-all rounded-xl"
+                            >
+                              <span className="opacity-0 hover:opacity-100 text-[10.5px] font-semibold flex items-center gap-1">
+                                <Plus className="size-3" /> Book {hour}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Week View */}
-              {currentView === 'week' && (
-                <div className="overflow-x-auto w-full scrollbar-none">
-                  <div className="grid grid-cols-7 h-full bg-background/30 rounded-xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50 divide-x divide-zinc-200 dark:divide-zinc-800 min-w-[700px] md:min-w-0 min-h-[460px]">
-                    {weekDays.map(day => {
-                      const isToday = day.toDateString() === new Date().toDateString()
-                      const isSelected = day.toDateString() === selectedDate?.toDateString()
-                      const dayEvents = searchedEvents.filter(e => new Date(e.from).toDateString() === day.toDateString())
+            {/* Week View */}
+            {currentView === 'week' && (
+              <div className="overflow-x-auto w-full scrollbar-none">
+                <div className="grid grid-cols-7 h-full bg-muted/10 rounded-xl overflow-hidden border border-border/60 divide-x divide-border/60 min-w-[700px] md:min-w-0 min-h-[460px]">
+                  {weekDays.map(day => {
+                    const isToday = day.toDateString() === new Date().toDateString()
+                    const isSelected = day.toDateString() === selectedDate?.toDateString()
+                    const dayEvents = searchedEvents.filter(e => new Date(e.from).toDateString() === day.toDateString())
+
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        onClick={() => {
+                          setSelectedDate(day)
+                        }}
+                        className={`flex flex-col h-full min-h-[400px] cursor-pointer hover:bg-muted/20 transition-colors ${
+                          isSelected ? 'bg-muted/30' : ''
+                        }`}
+                      >
+                        <div className="p-3 text-center border-b border-border/60 bg-muted/20 flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                            {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                          </span>
+                          <span className={`text-sm font-semibold rounded-full size-6 flex items-center justify-center mt-1 transition-all ${
+                            isToday ? 'bg-foreground text-background font-bold shadow-xs' : 'text-foreground'
+                          }`}>
+                            {day.getDate()}
+                          </span>
+                        </div>
+                        <div
+                          onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                              handleBlockClick(day)
+                            }
+                          }}
+                          className="flex-1 p-2 space-y-1.5 overflow-y-auto max-h-[380px] scrollbar-thin"
+                        >
+                          {dayEvents.map(event => (
+                            <div
+                              key={event.id}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleBlockClick(new Date(event.from))
+                              }}
+                              className={`border rounded-xl p-2 text-[10.5px] relative pl-4 leading-normal group/event cursor-pointer bg-card border-border shadow-xs hover:border-foreground/30`}
+                            >
+                              <div className={`absolute inset-y-1.5 left-1.5 w-1 rounded-full ${
+                                event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
+                              }`} />
+                              <div className="font-bold text-foreground truncate">{event.title}</div>
+                              <div className="text-[9px] text-muted-foreground mt-0.5 font-medium">
+                                {new Date(event.from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteEvent(event.id)
+                                }}
+                                className="absolute right-1 top-1 opacity-0 group-hover/event:opacity-100 p-0.5 text-muted-foreground hover:text-foreground"
+                              >
+                                <Trash2 className="size-2.5" />
+                              </button>
+                            </div>
+                          ))}
+                          {dayEvents.length === 0 && (
+                            <div className="h-full flex items-center justify-center text-[10px] text-muted-foreground/40 italic select-none py-12 pointer-events-none">
+                              Free
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Month View */}
+            {currentView === 'month' && (
+              <div className="overflow-x-auto w-full scrollbar-none">
+                <div className="flex flex-col h-full bg-muted/10 rounded-xl overflow-hidden border border-border/60 min-w-[750px] md:min-w-0 min-h-[500px]">
+                  <div className="grid grid-cols-7 border-b border-border/60 bg-muted/20 text-center py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                  </div>
+                  <div className="grid grid-cols-7 grid-rows-6 flex-1 divide-y divide-x divide-border/60 min-h-[460px]">
+                    {monthDays.map(({ date, isCurrentMonth }) => {
+                      const isToday = date.toDateString() === new Date().toDateString()
+                      const isSelected = date.toDateString() === selectedDate?.toDateString()
+                      const dayEvents = searchedEvents.filter(e => new Date(e.from).toDateString() === date.toDateString())
 
                       return (
                         <div
-                          key={day.toISOString()}
+                          key={date.toISOString()}
                           onClick={() => {
-                            setSelectedDate(day)
+                            handleBlockClick(date)
                           }}
-                          className={`flex flex-col h-full min-h-[400px] cursor-pointer hover:bg-zinc-50/20 dark:hover:bg-zinc-900/5 transition-colors ${
-                            isSelected ? 'bg-zinc-50/20 dark:bg-zinc-900/5' : ''
+                          className={`min-h-[75px] p-2 flex flex-col justify-between cursor-pointer hover:bg-muted/30 transition-colors group/cell ${
+                            isSelected ? 'bg-muted/40 font-semibold' : ''
                           }`}
                         >
-                          <div className="p-3 text-center border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20 flex flex-col items-center">
-                            <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase">
-                              {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                            </span>
-                            <span className={`text-sm font-semibold rounded-full size-6 flex items-center justify-center mt-1 transition-all ${
-                              isToday ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-bold' : 'text-zinc-700 dark:text-zinc-300'
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-semibold rounded-full size-5.5 flex items-center justify-center ${
+                              isToday
+                                ? 'bg-foreground text-background font-bold shadow-xs'
+                                : isCurrentMonth
+                                ? 'text-foreground'
+                                : 'text-muted-foreground/40'
                             }`}>
-                              {day.getDate()}
+                              {date.getDate()}
                             </span>
                           </div>
-                          <div
-                            onClick={(e) => {
-                              if (e.target === e.currentTarget) {
-                                handleBlockClick(day)
-                              }
-                            }}
-                            className="flex-1 p-2 space-y-1.5 overflow-y-auto max-h-[380px]"
-                          >
-                            {dayEvents.map(event => (
+
+                          <div className="mt-1 space-y-1 max-h-[50px] overflow-hidden pr-0.5">
+                            {dayEvents.slice(0, 2).map(event => (
                               <div
                                 key={event.id}
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleBlockClick(new Date(event.from))
                                 }}
-                                className={`border rounded-lg p-2 text-[10.5px] relative pl-4 leading-normal group/event cursor-pointer hover:bg-zinc-150/40 dark:hover:bg-zinc-900/60 ${
-                                  event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].border : 'border-zinc-200 dark:border-zinc-800'
-                                }`}
+                                className={`border border-border/60 bg-card rounded-lg px-1.5 py-0.5 text-[9px] font-semibold truncate relative pl-3.5 text-foreground shadow-xs`}
                               >
-                                <div className={`absolute inset-y-1.5 left-1.5 w-0.5 rounded-full ${
-                                  event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-zinc-550'
+                                <div className={`absolute inset-y-1 left-1.5 w-1 rounded-full ${
+                                  event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
                                 }`} />
-                                <div className="font-semibold text-zinc-800 dark:text-zinc-200 truncate">{event.title}</div>
-                                <div className="text-[9px] text-zinc-400 mt-0.5 font-medium">
-                                  {new Date(event.from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDeleteEvent(event.id)
-                                  }}
-                                  className="absolute right-1 top-1 opacity-0 group-hover/event:opacity-100 p-0.5 text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-50"
-                                >
-                                  <Trash2 className="size-2.5" />
-                                </button>
+                                {event.title}
                               </div>
                             ))}
-                            {dayEvents.length === 0 && (
-                              <div className="h-full flex items-center justify-center text-[10px] text-zinc-300 dark:text-zinc-700 italic select-none py-12 pointer-events-none">
-                                Free
+                            {dayEvents.length > 2 && (
+                              <div className="text-[8.5px] text-muted-foreground text-center font-bold">
+                                +{dayEvents.length - 2} more
                               </div>
                             )}
                           </div>
@@ -1124,214 +1475,142 @@ export function CalendarDashboard() {
                     })}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Month View */}
-              {currentView === 'month' && (
-                <div className="overflow-x-auto w-full scrollbar-none">
-                  <div className="flex flex-col h-full bg-background/30 rounded-xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50 min-w-[750px] md:min-w-0 min-h-[500px]">
-                    <div className="grid grid-cols-7 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/20 text-center py-2 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                      <div>Sun</div>
-                      <div>Mon</div>
-                      <div>Tue</div>
-                      <div>Wed</div>
-                      <div>Thu</div>
-                      <div>Fri</div>
-                      <div>Sat</div>
-                    </div>
-                    <div className="grid grid-cols-7 grid-rows-6 flex-1 divide-y divide-x divide-zinc-200/60 dark:divide-zinc-800/50 min-h-[460px]">
-                      {monthDays.map(({ date, isCurrentMonth }) => {
-                        const isToday = date.toDateString() === new Date().toDateString()
-                        const isSelected = date.toDateString() === selectedDate?.toDateString()
-                        const dayEvents = searchedEvents.filter(e => new Date(e.from).toDateString() === date.toDateString())
-
-                        return (
-                          <div
-                            key={date.toISOString()}
-                            onClick={() => {
-                              handleBlockClick(date)
-                            }}
-                            className={`min-h-[75px] p-2 flex flex-col justify-between cursor-pointer hover:bg-zinc-50/40 dark:hover:bg-zinc-900/5 transition-colors group/cell ${
-                              isSelected ? 'bg-zinc-50/20 dark:bg-zinc-900/5' : ''
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className={`text-xs font-semibold rounded-full size-5.5 flex items-center justify-center ${
-                                isToday
-                                  ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 font-bold'
-                                  : isCurrentMonth
-                                  ? 'text-zinc-700 dark:text-zinc-300'
-                                  : 'text-zinc-350 dark:text-zinc-650'
-                              }`}>
-                                {date.getDate()}
-                              </span>
-                            </div>
-
-                            <div className="mt-1 space-y-1 max-h-[50px] overflow-hidden pr-0.5">
-                              {dayEvents.slice(0, 2).map(event => (
-                                <div
-                                  key={event.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleBlockClick(new Date(event.from))
-                                  }}
-                                  className={`border rounded px-1.5 py-0.5 text-[9px] font-semibold truncate relative pl-3.5 ${
-                                    event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].bg + ' ' + etiquetteColors[event.type].border : 'bg-zinc-100 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 text-zinc-750 dark:text-zinc-300'
-                                  }`}
-                                >
-                                  <div className={`absolute inset-y-1 left-1.5 w-0.5 rounded ${
-                                    event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-zinc-400'
-                                  }`} />
-                                  {event.title}
-                                </div>
-                              ))}
-                              {dayEvents.length > 2 && (
-                                <div className="text-[8.5px] text-zinc-400 dark:text-zinc-500 text-center font-bold">
-                                  +{dayEvents.length - 2} more
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Year View */}
-              {currentView === 'year' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 sm:p-6 overflow-y-auto max-h-[500px]">
-                  {yearMonths.map(month => {
-                    const monthName = month.toLocaleDateString('en-US', { month: 'long' })
-                    
-                    const year = month.getFullYear()
-                    const mVal = month.getMonth()
-                    const daysInMonth = new Date(year, mVal + 1, 0).getDate()
-                    const startDay = new Date(year, mVal, 1).getDay()
-
-                    return (
-                      <div
-                        key={month.toISOString()}
-                        className="border border-zinc-150 dark:border-zinc-850 rounded-xl p-3.5 bg-zinc-50/20 dark:bg-zinc-950/10 flex flex-col justify-between"
-                      >
-                        <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-800 pb-1 mb-2">
-                          {monthName}
-                        </h4>
-                        
-                        <div className="grid grid-cols-7 gap-0.5 text-[8.5px] text-center text-zinc-400 font-semibold select-none">
-                          {Array.from({ length: startDay }).map((_, i) => (
-                            <div key={`offset-${i}`} />
-                          ))}
-                          
-                          {Array.from({ length: daysInMonth }).map((_, i) => {
-                            const dateVal = new Date(year, mVal, i + 1)
-                            const isSelected = dateVal.toDateString() === selectedDate?.toDateString()
-                            const hasEvents = events.some(e => new Date(e.from).toDateString() === dateVal.toDateString())
-
-                            return (
-                              <div
-                                key={i}
-                                onClick={() => {
-                                  setSelectedDate(dateVal)
-                                  setCurrentView('month')
-                                }}
-                                className={`size-3.5 flex items-center justify-center rounded-full cursor-pointer hover:bg-zinc-250 dark:hover:bg-zinc-855 transition-all ${
-                                  isSelected
-                                    ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900 font-bold'
-                                    : hasEvents
-                                    ? 'border border-zinc-400 dark:border-zinc-650 font-bold'
-                                    : ''
-                                }`}
-                              >
-                                {i + 1}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Agenda View */}
-              {currentView === 'agenda' && (
-                <div className="flex flex-col h-full bg-background/30 rounded-xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/50 min-h-[460px]">
-                  <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 font-semibold text-xs text-zinc-500 uppercase tracking-wider bg-zinc-50/50 dark:bg-zinc-950/20">
-                    Agenda Block Schedule List
-                  </div>
+            {/* Year View */}
+            {currentView === 'year' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 overflow-y-auto max-h-[500px] scrollbar-thin">
+                {yearMonths.map(month => {
+                  const monthName = month.toLocaleDateString('en-US', { month: 'long' })
                   
-                  <div className="flex-1 overflow-y-auto max-h-[440px] p-4 divide-y divide-zinc-200 dark:divide-zinc-800 space-y-4">
-                    {searchedEvents
-                      .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime())
-                      .map(event => {
-                        const evDate = new Date(event.from)
-                        return (
-                          <div key={event.id} className="pt-4 flex flex-col sm:flex-row sm:items-start gap-4 group/agenda">
-                            <div className="sm:w-32 shrink-0 flex flex-row sm:flex-col items-baseline sm:items-start gap-2">
-                              <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                                {evDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                              </span>
-                              <span className="text-xs text-zinc-400 font-semibold">
-                                {evDate.toLocaleDateString('en-US', { weekday: 'long' })}
-                              </span>
-                            </div>
+                  const year = month.getFullYear()
+                  const mVal = month.getMonth()
+                  const daysInMonth = new Date(year, mVal + 1, 0).getDate()
+                  const startDay = new Date(year, mVal, 1).getDay()
 
+                  return (
+                    <div
+                      key={month.toISOString()}
+                      className="border border-border/60 rounded-xl p-3.5 bg-muted/10 flex flex-col justify-between"
+                    >
+                      <h4 className="text-xs font-bold text-foreground border-b border-border/60 pb-1 mb-2">
+                        {monthName}
+                      </h4>
+                      
+                      <div className="grid grid-cols-7 gap-0.5 text-[8.5px] text-center text-muted-foreground font-semibold select-none">
+                        {Array.from({ length: startDay }).map((_, i) => (
+                          <div key={`offset-${i}`} />
+                        ))}
+                        
+                        {Array.from({ length: daysInMonth }).map((_, i) => {
+                          const dateVal = new Date(year, mVal, i + 1)
+                          const isSelected = dateVal.toDateString() === selectedDate?.toDateString()
+                          const hasEvents = events.some(e => new Date(e.from).toDateString() === dateVal.toDateString())
+
+                          return (
                             <div
-                              onClick={() => handleBlockClick(evDate)}
-                              className={`flex-1 border rounded-xl p-4 cursor-pointer bg-zinc-50/30 dark:bg-zinc-900/5 hover:bg-zinc-50 dark:hover:bg-zinc-900/10 transition-colors relative pl-6 ${
-                                event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].border : 'border-zinc-200 dark:border-zinc-800'
+                              key={i}
+                              onClick={() => {
+                                setSelectedDate(dateVal)
+                                setCurrentView('month')
+                              }}
+                              className={`size-4 flex items-center justify-center rounded-full cursor-pointer hover:bg-muted transition-all ${
+                                isSelected
+                                  ? 'bg-foreground text-background font-bold'
+                                  : hasEvents
+                                  ? 'border border-border font-bold text-foreground'
+                                  : ''
                               }`}
                             >
-                              <div className={`absolute inset-y-4 left-3 w-0.5 rounded-full ${
-                                event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-zinc-400'
-                              }`} />
-                              <div className="flex items-start justify-between gap-4">
-                                <div>
-                                  <h4 className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{event.title}</h4>
-                                  <div className="text-xs text-zinc-500 mt-1 flex items-center gap-1">
-                                    <Clock className="size-3" />
-                                    {formatDateRange(new Date(event.from), new Date(event.to))}
-                                  </div>
-                                  {event.description && (
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">
-                                      {event.description}
-                                    </p>
-                                  )}
+                              {i + 1}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Agenda View */}
+            {currentView === 'agenda' && (
+              <div className="flex flex-col h-full bg-muted/10 rounded-xl overflow-hidden border border-border/60 min-h-[460px]">
+                <div className="p-3 border-b border-border/60 font-semibold text-xs text-muted-foreground uppercase tracking-wider bg-muted/20 flex items-center justify-between">
+                  <span>Agenda Block Schedule List</span>
+                  <Badge variant="outline" className="text-[9px] bg-muted border-border text-muted-foreground">
+                    {searchedEvents.length} Total Agenda Blocks
+                  </Badge>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto max-h-[440px] p-4 divide-y divide-border/60 space-y-4 scrollbar-thin">
+                  {searchedEvents
+                    .sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime())
+                    .map(event => {
+                      const evDate = new Date(event.from)
+                      return (
+                        <div key={event.id} className="pt-4 flex flex-col sm:flex-row sm:items-start gap-4 group/agenda">
+                          <div className="sm:w-32 shrink-0 flex flex-row sm:flex-col items-baseline sm:items-start gap-2">
+                            <span className="text-sm font-bold text-foreground">
+                              {evDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-semibold">
+                              {evDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                            </span>
+                          </div>
+
+                          <div
+                            onClick={() => handleBlockClick(evDate)}
+                            className={`flex-1 border rounded-xl p-4 cursor-pointer bg-card border-border/80 hover:border-foreground/30 shadow-xs transition-colors relative pl-6`}
+                          >
+                            <div className={`absolute inset-y-4 left-3 w-1 rounded-full ${
+                              event.type && etiquetteColors[event.type] ? etiquetteColors[event.type].dot : 'bg-muted-foreground'
+                            }`} />
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h4 className="text-sm font-bold text-foreground">{event.title}</h4>
+                                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-mono">
+                                  <Clock className="size-3" />
+                                  {formatDateRange(new Date(event.from), new Date(event.to))}
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDeleteEvent(event.id)
-                                  }}
-                                  className="opacity-0 group-hover/agenda:opacity-100 size-8 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
-                                >
-                                  <Trash2 className="size-4" />
-                                </Button>
+                                {event.description && (
+                                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                                    {event.description}
+                                  </p>
+                                )}
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteEvent(event.id)
+                                }}
+                                className="opacity-0 group-hover/agenda:opacity-100 size-8 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
                             </div>
                           </div>
-                        )
-                      })}
+                        </div>
+                      )
+                    })}
 
-                    {searchedEvents.length === 0 && (
-                      <div className="py-16 text-center text-sm text-zinc-400 dark:text-zinc-500 italic border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                        No events found matching your query.
-                      </div>
-                    )}
-                  </div>
+                  {searchedEvents.length === 0 && (
+                    <div className="py-16 text-center text-sm text-muted-foreground italic border border-dashed border-border rounded-xl">
+                      No events found matching your query.
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-            </DashboardCard>
           </div>
-
         </div>
 
       </div>
+
     </div>
   )
 }

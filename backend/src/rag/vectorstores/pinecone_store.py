@@ -5,9 +5,9 @@ from functools import lru_cache
 from typing import List, Optional, Dict, Any
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.documents import Document
-from src.rag.embeddings.google_embeddings import get_embeddings
-from src.core.config import settings
-from src.core.logger import get_logger
+from rag.embeddings.google_embeddings import get_embeddings
+from core.config import settings
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -31,7 +31,7 @@ def get_vector_store() -> PineconeVectorStore:
 
 def get_semantic_retriever(top_k: int = None, filter: Optional[Dict] = None):
     """Standard semantic similarity retriever with optional metadata filter."""
-    from src.core.constants import DEFAULT_TOP_K
+    from core.constants import DEFAULT_TOP_K
     k = top_k or DEFAULT_TOP_K
     store = get_vector_store()
     search_kwargs: Dict[str, Any] = {"k": k}
@@ -45,7 +45,7 @@ def get_mmr_retriever(top_k: int = None, filter: Optional[Dict] = None):
     MMR (Maximal Marginal Relevance) retriever — balances relevance and diversity.
     Reduces redundancy in retrieved chunks.
     """
-    from src.core.constants import DEFAULT_TOP_K, MMR_LAMBDA
+    from core.constants import DEFAULT_TOP_K, MMR_LAMBDA
     k = top_k or DEFAULT_TOP_K
     store = get_vector_store()
     search_kwargs: Dict[str, Any] = {
