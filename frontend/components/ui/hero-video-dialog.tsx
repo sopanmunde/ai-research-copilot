@@ -72,15 +72,15 @@ const animationVariants = {
 
 const getEmbedUrl = (src: string) => {
   try {
-    if (includes("youtube.com/embed/")) {
+    if (src.includes("youtube.com/embed/")) {
       return src
     }
-    if (includes("youtu.be/")) {
-      const parts = split("youtu.be/")
+    if (src.includes("youtu.be/")) {
+      const parts = src.split("youtu.be/")
       const id = parts[parts.length - 1].split(/[?#]/)[0]
       return `https://www.youtube.com/embed/${id}?autoplay=1`
     }
-    if (includes("youtube.com/watch")) {
+    if (src.includes("youtube.com/watch")) {
       const url = new URL(src)
       const id = url.searchParams.get("v")
       if (id) {
@@ -109,7 +109,7 @@ export function HeroVideoDialog({
 
   const selectedAnimation = animationVariants[animationStyle]
   const resolvedVideoSrc = getEmbedUrl(videoSrc)
-  const isLocalVideo = resolvedVideoendsWith(".mp4") || resolvedVideoendsWith(".webm") || resolvedVideostartsWith("/") || !resolvedVideostartsWith("http");
+  const isLocalVideo = resolvedVideoSrc.endsWith(".mp4") || resolvedVideoSrc.endsWith(".webm") || resolvedVideoSrc.startsWith("/") || !resolvedVideoSrc.startsWith("http");
 
   return (
     <div className={cn(!hideTrigger && "relative", className)}>
