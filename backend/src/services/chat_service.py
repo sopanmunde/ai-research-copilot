@@ -608,6 +608,7 @@ async def stream_chat_response(
     model_name: Optional[str] = None,
     http_request: Optional[Request] = None,
     filename: Optional[str] = None,
+    is_voice: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
     Orchestrates Quick Mode or Agent Mode and yields SSE events.
@@ -629,6 +630,7 @@ async def stream_chat_response(
                 model_provider=model_provider,
                 model_name=model_name,
                 filename=filename,
+                is_voice=is_voice,
             ):
                 await queue.put(chunk)
             await queue.put(None)  # Sentinel for success

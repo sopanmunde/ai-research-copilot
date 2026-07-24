@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   images: {
 
   },
-  output: "standalone", // Uncomment to enable standalone mode for Docker
+  outputFileTracingRoot: path.resolve(__dirname),
   turbopack: {
     root: path.resolve(__dirname),
   },

@@ -1984,22 +1984,22 @@ export function TaskDashboard() {
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     {([
-                      { value: "Feature", icon: Sparkles, activeStyle: "from-violet-500/20 to-purple-500/10 border-violet-500/50 text-violet-600 dark:text-violet-300 shadow-[0_3px_10px_rgba(139,92,246,0.2)]" },
-                      { value: "Bug", icon: AlertCircle, activeStyle: "from-rose-500/20 to-red-500/10 border-rose-500/50 text-rose-600 dark:text-rose-300 shadow-[0_3px_10px_rgba(244,63,94,0.2)]" },
+                      { value: "Feature", label: "Feature", icon: Sparkles, activeStyle: "from-violet-500/20 to-purple-500/10 border-violet-500/50 text-violet-600 dark:text-violet-300 shadow-[0_3px_10px_rgba(139,92,246,0.2)]" },
+                      { value: "Bug", label: "Bug", icon: AlertCircle, activeStyle: "from-rose-500/20 to-red-500/10 border-rose-500/50 text-rose-600 dark:text-rose-300 shadow-[0_3px_10px_rgba(244,63,94,0.2)]" },
                       { value: "Documentation", label: "Docs", icon: FileText, activeStyle: "from-blue-500/20 to-sky-500/10 border-blue-500/50 text-blue-600 dark:text-blue-300 shadow-[0_3px_10px_rgba(59,130,246,0.2)]" },
-                    ] as const).map((item) => (
+                    ] as const).map(({ value, label, icon: Icon, activeStyle }) => (
                       <button
-                        key={item.value}
-                        onClick={() => setNewType(item.value)}
+                        key={value}
+                        onClick={() => setNewType(value)}
                         className={cls(
                           "flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl border text-[10.5px] font-bold transition-all duration-200 cursor-pointer select-none relative overflow-hidden",
-                          newType === item.value
-                            ? `bg-gradient-to-b ${item.activeStyle} -translate-y-0.5`
+                          newType === value
+                            ? `bg-gradient-to-b ${activeStyle} -translate-y-0.5`
                             : "border-border/60 bg-card/60 text-muted-foreground hover:bg-card hover:text-foreground shadow-[0_2px_4px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 active:translate-y-0"
                         )}
                       >
-                        <item.icon className="size-3.5 shrink-0" />
-                        <span className="truncate">{item.label || item.value}</span>
+                        <Icon className="size-3.5 shrink-0" />
+                        <span className="truncate">{label}</span>
                       </button>
                     ))}
                   </div>
@@ -2095,231 +2095,231 @@ export function TaskDashboard() {
         {/* Task Specification Dialog removed — now rendered as inline page panel above */}
         {false && (
           <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-          <DialogContent className="max-w-2xl bg-card border-border p-0 shadow-lg gap-0 flex flex-col max-h-[85vh] overflow-hidden">
-            <DialogHeader className="p-4 border-b border-border flex flex-row items-center justify-between space-y-0">
-              <DialogTitle className="text-xs font-bold text-muted-foreground font-mono uppercase tracking-wide">
-                Task Specification
-              </DialogTitle>
-            </DialogHeader>
+            <DialogContent className="max-w-2xl bg-card border-border p-0 shadow-lg gap-0 flex flex-col max-h-[85vh] overflow-hidden">
+              <DialogHeader className="p-4 border-b border-border flex flex-row items-center justify-between space-y-0">
+                <DialogTitle className="text-xs font-bold text-muted-foreground font-mono uppercase tracking-wide">
+                  Task Specification
+                </DialogTitle>
+              </DialogHeader>
 
-            {selectedTask && (
-              <>
-                <ScrollArea className="flex-1 overflow-y-auto">
-                  <div className="p-6 space-y-5 text-xs">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[10px] font-mono text-zinc-500 font-semibold">{selectedTask.code}</span>
-                        <span className="text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-850 rounded px-1.5 py-0.2 text-zinc-500 dark:text-zinc-400">
-                          {selectedTask.type}
-                        </span>
-                      </div>
-                      <h3 className="text-base font-bold text-foreground">{selectedTask.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-2 leading-relaxed bg-muted/20 border border-border/30 rounded-lg p-3">
-                        {selectedTask.description}
-                      </p>
-                    </div>
-
-                    {/* Task Meta details */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-muted/10 border border-border/40 rounded-lg p-3.5">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium block">Current Status</span>
-                        <Select
-                          value={selectedTask.status}
-                          onValueChange={(val) => handleMoveStatus(selectedTask.id, val as any)}
-                        >
-                          <SelectTrigger className="h-7 text-[11px] bg-background/50 border-border/60">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="text-[11px]">
-                            <SelectItem value="backlog">Backlog</SelectItem>
-                            <SelectItem value="todo">To Do</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="done">Completed</SelectItem>
-                            <SelectItem value="canceled">Canceled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium block">Priority Rank</span>
-                        <div className="flex items-center h-7">
-                          <Badge variant="outline" className={cls(
-                            "text-[9px] font-bold border px-2 py-0.5 uppercase border-zinc-200 dark:border-zinc-800 rounded",
-                            selectedTask.priority === "high" ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-extrabold" :
-                              selectedTask.priority === "medium" ? "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400" :
-                                "bg-transparent text-zinc-400"
-                          )}>
-                            {selectedTask.priority} Priority
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium block">Responsible Node</span>
-                        <div className="flex items-center gap-1.5 h-7">
-                          <span className="size-4.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[8px] font-bold font-mono flex items-center justify-center border border-border text-foreground">
-                            {selectedTask.assignee.avatarInitials}
+              {selectedTask && (
+                <>
+                  <ScrollArea className="flex-1 overflow-y-auto">
+                    <div className="p-6 space-y-5 text-xs">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[10px] font-mono text-zinc-500 font-semibold">{selectedTask?.code}</span>
+                          <span className="text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-850 rounded px-1.5 py-0.2 text-zinc-500 dark:text-zinc-400">
+                            {selectedTask?.type}
                           </span>
-                          <span className="text-[11px] text-foreground font-medium">{selectedTask.assignee.name}</span>
+                        </div>
+                        <h3 className="text-base font-bold text-foreground">{selectedTask?.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-2 leading-relaxed bg-muted/20 border border-border/30 rounded-lg p-3">
+                          {selectedTask?.description}
+                        </p>
+                      </div>
+
+                      {/* Task Meta details */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 bg-muted/10 border border-border/40 rounded-lg p-3.5">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-muted-foreground font-medium block">Current Status</span>
+                          <Select
+                            value={selectedTask?.status}
+                            onValueChange={(val) => selectedTask && handleMoveStatus(selectedTask.id, val as any)}
+                          >
+                            <SelectTrigger className="h-7 text-[11px] bg-background/50 border-border/60">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="text-[11px]">
+                              <SelectItem value="backlog">Backlog</SelectItem>
+                              <SelectItem value="todo">To Do</SelectItem>
+                              <SelectItem value="in-progress">In Progress</SelectItem>
+                              <SelectItem value="done">Completed</SelectItem>
+                              <SelectItem value="canceled">Canceled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-muted-foreground font-medium block">Priority Rank</span>
+                          <div className="flex items-center h-7">
+                            <Badge variant="outline" className={cls(
+                              "text-[9px] font-bold border px-2 py-0.5 uppercase border-zinc-200 dark:border-zinc-800 rounded",
+                              selectedTask?.priority === "high" ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-extrabold" :
+                                selectedTask?.priority === "medium" ? "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400" :
+                                  "bg-transparent text-zinc-400"
+                            )}>
+                              {selectedTask?.priority} Priority
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-muted-foreground font-medium block">Responsible Node</span>
+                          <div className="flex items-center gap-1.5 h-7">
+                            <span className="size-4.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[8px] font-bold font-mono flex items-center justify-center border border-border text-foreground">
+                              {selectedTask?.assignee.avatarInitials}
+                            </span>
+                            <span className="text-[11px] text-foreground font-medium">{selectedTask?.assignee.name}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-muted-foreground font-medium block">Deadline Date</span>
+                          <div className="flex items-center gap-1 h-7 text-[11px] text-muted-foreground font-mono">
+                            <CalendarIcon className="size-3 text-muted-foreground" />
+                            <span>{selectedTask?.dueDate}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground font-medium block">Deadline Date</span>
-                        <div className="flex items-center gap-1 h-7 text-[11px] text-muted-foreground font-mono">
-                          <CalendarIcon className="size-3 text-muted-foreground" />
-                          <span>{selectedTask.dueDate}</span>
+                      {/* Subtask checklist progress bar */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs font-semibold text-foreground">
+                          <span>Subtask Checklists</span>
+                          <span className="font-mono text-muted-foreground">{selectedTask?.progress}% Complete</span>
                         </div>
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden border border-border/30">
+                          <div
+                            className="bg-primary h-full rounded-full transition-all duration-300"
+                            style={{ width: `${selectedTask?.progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Checklist Subtasks */}
+                      <div className="space-y-2.5">
+                        <ScrollArea className="max-h-[180px] pr-1">
+                          <div className="grid grid-cols-1 gap-1.5">
+                            {selectedTask?.subtasks.map((st) => (
+                              <div
+                                key={st.id}
+                                onClick={() => selectedTask && handleToggleSubtask(selectedTask.id, st.id)}
+                                className={cls(
+                                  "flex items-center gap-2.5 rounded-lg border p-2 text-xs cursor-pointer select-none transition-all",
+                                  st.completed
+                                    ? "bg-muted/30 border-border/40 text-muted-foreground line-through"
+                                    : "bg-background border-border hover:bg-muted/20 text-foreground"
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={st.completed}
+                                  readOnly
+                                  className="size-3.5 rounded border-border bg-muted accent-primary cursor-pointer"
+                                />
+                                <span className="flex-1 leading-snug">{st.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+
+                        {/* Inline new subtask generator */}
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <Input
+                            placeholder="Add subtask element..."
+                            value={inlineSubtaskText}
+                            onChange={(e) => setInlineSubtaskText(e.target.value)}
+                            className="text-xs h-8 bg-muted/40 border-border"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleAddInlineSubtask();
+                            }}
+                          />
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={handleAddInlineSubtask}
+                            disabled={!inlineSubtaskText.trim()}
+                            className="h-8 w-8 border-border bg-transparent hover:bg-muted shrink-0 text-foreground"
+                          >
+                            <PlusCircle className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <Separator className="bg-border/60" />
+
+                      {/* Audit History Logs */}
+                      <div className="space-y-2.5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Action Timeline</h4>
+                        <ScrollArea className="max-h-[120px]">
+                          <div className="space-y-2.5 pl-1.5 border-l border-border/80 ml-2 text-[11px]">
+                            {selectedTask?.history.map((h: TaskHistory, idx: number) => (
+                              <div key={idx} className="relative flex flex-col space-y-0.5">
+                                <span className="absolute -left-[14px] top-1 size-2 rounded-full bg-border border border-card" />
+                                <span className="text-[10px] font-mono text-muted-foreground">{h.timestamp}</span>
+                                <span className="text-foreground leading-tight">{h.action}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
                       </div>
                     </div>
+                  </ScrollArea>
 
-                    {/* Subtask checklist progress bar */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs font-semibold text-foreground">
-                        <span>Subtask Checklists</span>
-                        <span className="font-mono text-muted-foreground">{selectedTask.progress}% Complete</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden border border-border/30">
-                        <div
-                          className="bg-primary h-full rounded-full transition-all duration-300"
-                          style={{ width: `${selectedTask.progress}%` }}
-                        />
-                      </div>
+                  <DialogFooter className="p-4 border-t border-border bg-muted/10 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => selectedTask && convertTaskToNote(selectedTask)}
+                        className="h-8 text-xs border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/15 font-semibold gap-1"
+                        title="Save task details as a Note"
+                      >
+                        <FileText className="size-3.5" /> Convert to Note
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => selectedTask && convertTaskToEvent(selectedTask)}
+                        className="h-8 text-xs border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/15 font-semibold gap-1"
+                        title="Schedule task execution event in Calendar"
+                      >
+                        <CalendarIcon className="size-3.5" /> Schedule Event
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => selectedTask && handleDeleteTask(selectedTask.id)}
+                        className="h-8 gap-1.5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 bg-transparent text-zinc-600 dark:text-zinc-400"
+                      >
+                        <Trash2 className="size-3.5" />
+                        <span>Delete</span>
+                      </Button>
                     </div>
 
-                    {/* Checklist Subtasks */}
-                    <div className="space-y-2.5">
-                      <ScrollArea className="max-h-[180px] pr-1">
-                        <div className="grid grid-cols-1 gap-1.5">
-                          {selectedTask.subtasks.map((st) => (
-                            <div
-                              key={st.id}
-                              onClick={() => handleToggleSubtask(selectedTask.id, st.id)}
-                              className={cls(
-                                "flex items-center gap-2.5 rounded-lg border p-2 text-xs cursor-pointer select-none transition-all",
-                                st.completed
-                                  ? "bg-muted/30 border-border/40 text-muted-foreground line-through"
-                                  : "bg-background border-border hover:bg-muted/20 text-foreground"
-                              )}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={st.completed}
-                                readOnly
-                                className="size-3.5 rounded border-border bg-muted accent-primary cursor-pointer"
-                              />
-                              <span className="flex-1 leading-snug">{st.title}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-
-                      {/* Inline new subtask generator */}
-                      <div className="flex items-center gap-1.5 pt-1">
-                        <Input
-                          placeholder="Add subtask element..."
-                          value={inlineSubtaskText}
-                          onChange={(e) => setInlineSubtaskText(e.target.value)}
-                          className="text-xs h-8 bg-muted/40 border-border"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleAddInlineSubtask();
-                          }}
-                        />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedTask(null)}
+                        className="h-8 border-border bg-transparent hover:bg-muted text-foreground"
+                      >
+                        Close
+                      </Button>
+                      {selectedTask?.status !== "done" ? (
                         <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={handleAddInlineSubtask}
-                          disabled={!inlineSubtaskText.trim()}
-                          className="h-8 w-8 border-border bg-transparent hover:bg-muted shrink-0 text-foreground"
+                          size="sm"
+                          onClick={() => selectedTask && handleMoveStatus(selectedTask.id, "done")}
+                          className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
                         >
-                          <PlusCircle className="size-4" />
+                          Mark Complete
                         </Button>
-                      </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => selectedTask && handleMoveStatus(selectedTask.id, "todo")}
+                          className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
+                        >
+                          Reopen Task
+                        </Button>
+                      )}
                     </div>
-
-                    <Separator className="bg-border/60" />
-
-                    {/* Audit History Logs */}
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Action Timeline</h4>
-                      <ScrollArea className="max-h-[120px]">
-                        <div className="space-y-2.5 pl-1.5 border-l border-border/80 ml-2 text-[11px]">
-                          {selectedTask.history.map((h: TaskHistory, idx: number) => (
-                            <div key={idx} className="relative flex flex-col space-y-0.5">
-                              <span className="absolute -left-[14px] top-1 size-2 rounded-full bg-border border border-card" />
-                              <span className="text-[10px] font-mono text-muted-foreground">{h.timestamp}</span>
-                              <span className="text-foreground leading-tight">{h.action}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  </div>
-                </ScrollArea>
-
-                <DialogFooter className="p-4 border-t border-border bg-muted/10 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => convertTaskToNote(selectedTask)}
-                      className="h-8 text-xs border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/15 font-semibold gap-1"
-                      title="Save task details as a Note"
-                    >
-                      <FileText className="size-3.5" /> Convert to Note
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => convertTaskToEvent(selectedTask)}
-                      className="h-8 text-xs border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/15 font-semibold gap-1"
-                      title="Schedule task execution event in Calendar"
-                    >
-                      <CalendarIcon className="size-3.5" /> Schedule Event
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteTask(selectedTask.id)}
-                      className="h-8 gap-1.5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 bg-transparent text-zinc-600 dark:text-zinc-400"
-                    >
-                      <Trash2 className="size-3.5" />
-                      <span>Delete</span>
-                    </Button>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedTask(null)}
-                      className="h-8 border-border bg-transparent hover:bg-muted text-foreground"
-                    >
-                      Close
-                    </Button>
-                    {selectedTask.status !== "done" ? (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMoveStatus(selectedTask.id, "done")}
-                        className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
-                      >
-                        Mark Complete
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMoveStatus(selectedTask.id, "todo")}
-                        className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
-                      >
-                        Reopen Task
-                      </Button>
-                    )}
-                  </div>
-                </DialogFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+                  </DialogFooter>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Export & Integration Hub Modal */}
