@@ -3,15 +3,15 @@ src/agents/langgraph/graphs/technical_graph.py
 Technical workflow for code and technical documentation analysis.
 """
 from langgraph.graph import StateGraph, END
-from src.agents.langgraph.state import AgentState
-from src.agents.langgraph.nodes.planner_node import planner_node
-from src.agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
-from src.agents.langgraph.nodes.retriever_node import retriever_node
-from src.agents.langgraph.nodes.web_research_node import web_research_node
-from src.agents.langgraph.nodes.citation_node import citation_node
-from src.agents.langgraph.nodes.summarizer_node import summarizer_node
-from src.agents.langgraph.nodes.report_node import report_node
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.planner_node import planner_node
+from agents.langgraph.nodes.voice_preprocessing_node import voice_preprocessing_node
+from agents.langgraph.nodes.retriever_node import retriever_node
+from agents.langgraph.nodes.web_research_node import web_research_node
+from agents.langgraph.nodes.citation_node import citation_node
+from agents.langgraph.nodes.summarizer_node import summarizer_node
+from agents.langgraph.nodes.report_node import report_node
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

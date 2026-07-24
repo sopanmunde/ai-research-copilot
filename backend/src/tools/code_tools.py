@@ -20,8 +20,8 @@ import textwrap
 from datetime import datetime, timezone
 from typing import Optional
 from langchain_core.tools import tool
-from src.core.config import settings
-from src.core.logger import get_logger
+from core.config import settings
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -55,13 +55,11 @@ describe('Dashboard Components', () => {
           conversations={[]} 
           folders={[]} 
           templates={[]}
-          currentConversationId={null}
-          onSelectConversation={vi.fn()}
+          selectedId={null}
+          onSelect={vi.fn()}
           onDeleteConversation={vi.fn()}
           onRenameConversation={vi.fn()}
-          onCreateFolder={vi.fn()}
-          onCreateTemplate={vi.fn()}
-          onSelectTemplate={vi.fn()}
+          createFolder={vi.fn()}
         />
       )
 
@@ -77,9 +75,10 @@ describe('Dashboard Components', () => {
     it('should render the Header component', () => {
       render(
         <Header 
-          createNewChat={vi.fn()} 
           sidebarCollapsed={false}
-          setSidebarOpen={vi.fn()} 
+          setSidebarOpen={vi.fn()}
+          selectedBot="Fast"
+          setSelectedBot={vi.fn()}
         />
       )
       

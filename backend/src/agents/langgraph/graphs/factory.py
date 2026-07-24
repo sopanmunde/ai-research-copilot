@@ -3,7 +3,7 @@ src/agents/langgraph/graphs/factory.py
 Factory for loading the correct LangGraph workflow based on workflow_type.
 """
 from langgraph.graph import StateGraph
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 from .research_graph import build_research_graph
 from .summary_graph import build_summary_graph
@@ -26,7 +26,7 @@ BUILDERS = {
 }
 
 
-def get_workflow_for_mode(mode: str) -> StateGraph:
+def get_workflow_for_mode(mode: str):
     """
     Returns the appropriate compiled LangGraph workflow.
 
@@ -34,10 +34,14 @@ def get_workflow_for_mode(mode: str) -> StateGraph:
         mode: 'research' | 'summary' | 'technical' | 'competitive' | 'coding' | 'data_analysis'
 
     Returns:
-        A compiled StateGraph instance.
+        A compiled CompiledStateGraph instance.
     """
     if mode in _compiled_graphs:
-        return _compiled_graphs[mode]
+        graph = _compiled_graphs[mode]
+        if isinstance(graph, StateGraph):
+            graph = graph.compile()
+            _compiled_graphs[mode] = graph
+        return graph
 
     logger.info(f"[Factory] Compiling workflow: {mode}")
 
@@ -47,5 +51,9 @@ def get_workflow_for_mode(mode: str) -> StateGraph:
         builder = BUILDERS["research"]
 
     workflow = builder()
+    if isinstance(workflow, StateGraph):
+        workflow = workflow.compile()
+
     _compiled_graphs[mode] = workflow
     return workflow
+

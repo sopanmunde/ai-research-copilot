@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from src.api.routes.brain_routes import (
+from core.security import get_current_user
+from api.routes.brain_routes import (
     router,
     ProviderUpdateModel,
     ApiKeyCreateModel,
     ApiKeyUpdateModel,
     TelemetryLogModel,
-    PlaygroundMessageModel,
 )
 
 
@@ -22,9 +22,7 @@ def mock_get_current_user():
     return {"_id": "507f1f77bcf86cd799439011", "email": "test@example.com"}
 
 
-app.dependency_overrides[
-    "src.core.security.get_current_user"
-] = mock_get_current_user
+app.dependency_overrides[get_current_user] = mock_get_current_user
 
 
 def test_pydantic_provider_update_model():
@@ -63,12 +61,12 @@ def test_pydantic_telemetry_log_model():
 @pytest.mark.asyncio
 async def test_telemetry_repository_logging():
     with patch(
-        "src.database.mongodb.repositories.brain_repository._db"
+        "database.mongodb.repositories.brain_repository._db"
     ) as mock_db:
         mock_collection = AsyncMock()
         mock_db.return_value = {"telemetry_logs": mock_collection, "llm_providers": mock_collection}
 
-        from src.database.mongodb.repositories.brain_repository import log_telemetry_event_db
+        from database.mongodb.repositories.brain_repository import log_telemetry_event_db
 
         result = await log_telemetry_event_db(
             user_id="test_user_123",

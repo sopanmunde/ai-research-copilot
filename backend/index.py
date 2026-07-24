@@ -8,6 +8,9 @@ import os
 import sys
 import warnings
 
+# Ensure src directory is in sys.path for internal module imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
+
 try:
     from langchain_core.exceptions import LangChainPendingDeprecationWarning
     warnings.filterwarnings("ignore", category=LangChainPendingDeprecationWarning)
@@ -69,7 +72,7 @@ def _free_port(port: int) -> None:
             print(f"Warning: could not auto-free port {port}: {e}")
 
 print("Starting index.py...")
-from src.main import create_app
+from main import create_app
 print("Imported create_app, creating app...")
 app = create_app()
 print("App created successfully.")

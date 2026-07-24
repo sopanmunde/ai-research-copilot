@@ -4,11 +4,11 @@ Data Analysis workflow:
   planner → data_analysis → reporter
 """
 from langgraph.graph import StateGraph, END
-from src.agents.langgraph.state import AgentState
-from src.agents.langgraph.nodes.planner_node import planner_node
-from src.agents.langgraph.nodes.data_analysis_node import data_analysis_node
-from src.agents.langgraph.nodes.report_node import report_node
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from agents.langgraph.nodes.planner_node import planner_node
+from agents.langgraph.nodes.data_analysis_node import data_analysis_node
+from agents.langgraph.nodes.report_node import report_node
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

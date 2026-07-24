@@ -73,7 +73,7 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       initial={{ width: 260 }}
       animate={{ width: 52 }}
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
-      className="z-50 flex h-full shrink-0 flex-col border-r border-white/40 bg-white/60 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-[#0B0B0C]"
+      className="z-50 flex h-full shrink-0 flex-col border border-zinc-200 dark:border-zinc-800 bg-white/70 backdrop-blur-xl dark:bg-[#0B0B0C] md:rounded-2xl shadow-sm"
     >
       <div className="flex items-center justify-center border-b border-white/[0.06] px-1.5 py-3">
         <button
@@ -126,7 +126,7 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       </div>
       <div className="flex flex-col items-center gap-2 pb-3 px-1.5">
         <SettingsPopover onUserUpdate={onUserUpdate}>
-          <button title="Settings" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 cursor-pointer shadow-sm">
+          <button title="Settings" className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] border border-primary-foreground/20">
             {userInitials || "U"}
           </button>
         </SettingsPopover>
@@ -194,9 +194,9 @@ const AddBtn = forwardRef(({ title, ...props }, ref) => (
 AddBtn.displayName = "AddBtn";
 
 export default function Sidebar({
-  open, onClose, collapsed, setCollapsed, conversations, pinned, recent, folders, folderCounts,
-  selectedId, onSelect, togglePin, query, setQuery, searchRef, createFolder, deleteFolder,
-  renameFolder, createNewChat, templates = [], setTemplates = () => {}, onUseTemplate = () => {},
+  open = false, onClose = () => {}, collapsed = false, setCollapsed = () => {}, conversations = [], pinned = [], recent = [], folders = [], folderCounts = {},
+  selectedId = null, onSelect = () => {}, togglePin = () => {}, query = "", setQuery = () => {}, searchRef = null, createFolder = () => {}, deleteFolder = () => {},
+  renameFolder = () => {}, createNewChat = () => {}, templates = [], setTemplates = () => {}, onUseTemplate = () => {},
   sidebarCollapsed = false, setSidebarCollapsed = () => {}, onDeleteConversation = () => {},
   onRenameConversation = () => {}, user = null, onUserUpdate = () => {},
 }) {
@@ -317,28 +317,29 @@ export default function Sidebar({
             key="sidebar"
             className={cls(
               "z-50 flex h-full w-[260px] shrink-0 flex-col",
-              "border-r-[2px] border-zinc-200 bg-white/70 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-              "dark:border-zinc-800 dark:bg-[#0B0B0C] dark:backdrop-blur-xl",
+              "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
               "fixed inset-y-0 left-0 md:static",
               open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-              "shadow-[4px_0_24px_rgba(0,0,0,0.12),_inset_-1px_0_2px_rgba(0,0,0,0.05),_inset_1px_0_1px_rgba(255,255,255,0.8)] md:shadow-[4px_0_24px_rgba(0,0,0,0.08),_inset_-1px_0_2px_rgba(0,0,0,0.05),_inset_1px_0_1px_rgba(255,255,255,0.8)]",
-              "dark:shadow-[4px_0_24px_rgba(0,0,0,0.5),_inset_-2px_0_4px_rgba(0,0,0,0.4),_inset_1px_0_1px_rgba(255,255,255,0.05)] md:dark:shadow-[4px_0_24px_rgba(0,0,0,0.4),_inset_-2px_0_4px_rgba(0,0,0,0.4),_inset_1px_0_1px_rgba(255,255,255,0.05)]",
+              "border-r border-zinc-200 dark:border-zinc-800 bg-white/70 backdrop-blur-xl dark:bg-[#0B0B0C] md:rounded-2xl md:border md:shadow-md",
+              "shadow-[4px_0_24px_rgba(0,0,0,0.12)] md:shadow-sm"
             )}
           >
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-3.5 pt-4.5 pb-3 shrink-0">
-              <div className="flex items-center gap-3">
-                <TriVisionXLogo size="sm" showWordmark animate={false} />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button onClick={() => setSidebarCollapsed(true)} title="Collapse sidebar"
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors cursor-pointer">
-                  <Menu className="h-4.5 w-4.5" />
-                </button>
-                <button onClick={onClose} aria-label="Close sidebar"
-                  className="md:hidden inline-flex h-6 w-6 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 transition-colors">
-                  <PanelLeftClose className="h-4 w-4" />
-                </button>
+            {/* HEADER BRAND CONTAINER */}
+            <div className="px-2.5 pt-3 pb-2 shrink-0">
+              <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-muted/50 via-card/80 to-card p-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-between transition-all duration-200">
+                <div className="flex items-center gap-2.5">
+                  <TriVisionXLogo size="sm" showWordmark animate={false} />
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setSidebarCollapsed(true)} title="Collapse sidebar"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-zinc-500 hover:bg-muted hover:text-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer">
+                    <Menu className="h-4 w-4" />
+                  </button>
+                  <button onClick={onClose} aria-label="Close sidebar"
+                    className="md:hidden inline-flex h-7 w-7 items-center justify-center rounded-xl text-zinc-500 hover:bg-muted hover:text-foreground border border-transparent hover:border-border/60 transition-all">
+                    <PanelLeftClose className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -361,6 +362,7 @@ export default function Sidebar({
               <button
                 onClick={() => {
                   onSelect("email");
+                  onClose?.();
                 }}
                 className={cls(
                   "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
@@ -563,17 +565,23 @@ export default function Sidebar({
               )}
             </nav>
 
-            {/* PROFILE FOOTER */}
-            <div className="shrink-0 p-3 border-t border-border/50 bg-muted/20">
-              <div className="flex items-center justify-between">
+            {/* PROFILE FOOTER CONTAINER */}
+            <div className="shrink-0 p-2.5 border-t border-border/50 bg-gradient-to-b from-transparent to-muted/20">
+              <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-muted/40 via-card to-card p-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between transition-all duration-200 hover:border-foreground/20">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground select-none shrink-0 shadow-sm">
-                    {userInitials}
+                  <div className="relative shrink-0">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-primary-foreground/20">
+                      {userInitials || "U"}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 border-2 border-card shadow-xs" />
                   </div>
-                  <span className="truncate text-[11.5px] font-semibold text-foreground">{userName}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate text-[11.5px] font-bold text-foreground leading-tight">{userName || "User"}</span>
+                    <span className="text-[9.5px] text-muted-foreground font-medium font-mono">Workspace</span>
+                  </div>
                 </div>
                 <SettingsPopover onUserUpdate={onUserUpdate}>
-                  <button aria-label="Open settings" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all cursor-pointer">
+                  <button aria-label="Open settings" title="Account Settings" className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5">
                     <Settings className="h-4 w-4" />
                   </button>
                 </SettingsPopover>

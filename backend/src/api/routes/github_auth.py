@@ -9,14 +9,14 @@ import urllib.parse
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status, Request
-from src.core.http import get_http_client
+from core.http import get_http_client
 from jose import jwt, JWTError
 
-from src.core.config import settings
-from src.core.security import create_access_token
-from src.core.constants import COLLECTION_USERS
-from src.core.logger import get_logger
-from src.database.mongodb.connection import get_database
+from core.config import settings
+from core.security import create_access_token
+from core.constants import COLLECTION_USERS
+from core.logger import get_logger
+from database.mongodb.connection import get_database
 
 logger = get_logger(__name__)
 router = APIRouter()

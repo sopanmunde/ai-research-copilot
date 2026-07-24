@@ -10,8 +10,8 @@ Pipeline steps (matching image workflow):
 from typing import List, Dict, Any, Optional
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from src.rag.retrieval.citation_retriever import retrieve_with_citations
-from src.core.logger import get_logger
+from rag.retrieval.citation_retriever import retrieve_with_citations
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

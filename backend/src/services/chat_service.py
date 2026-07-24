@@ -17,18 +17,18 @@ from fastapi import Request
 from typing import AsyncGenerator, Optional
 from datetime import datetime, timezone
 from bson import ObjectId
-from bson.errors import InvalidId
-from src.agents.langgraph.graphs.factory import get_workflow_for_mode
-from src.core.llm_factory import get_llm
-from src.agents.langgraph.nodes.utils import extract_text
-from src.rag.memory.conversation_memory import get_conversation_history
-from src.database.mongodb.repositories.chat_repository import (
+from langgraph.graph import StateGraph
+from agents.langgraph.graph import get_graph
+from core.llm_factory import get_llm
+from agents.langgraph.nodes.utils import extract_text
+from rag.memory.conversation_memory import get_conversation_history
+from database.mongodb.repositories.chat_repository import (
     insert_message,
     touch_conversation,
 )
-from src.core.config import settings
-from src.core.logger import get_logger
-from src.streaming import (
+from core.config import settings
+from core.logger import get_logger
+from streaming import (
     sse_node_event,
     sse_token_event,
     sse_citations_event,
@@ -127,7 +127,7 @@ async def record_token_usage(user_id: str, provider_id: str, prompt: str, comple
         completion_cost = (completion_tokens / 1_000_000) * rates[1]
         total_cost = prompt_cost + completion_cost
         
-        from src.database.mongodb.repositories.brain_repository import log_telemetry_event_db
+        from database.mongodb.repositories.brain_repository import log_telemetry_event_db
         
         await log_telemetry_event_db(user_id, {
             "model": provider_id,
@@ -165,8 +165,8 @@ async def _stream_chat_response_impl(
         workflow_type: research | summary | technical | competitive | coding | data_analysis
         model_provider: anthropic | google | groq | mistral
     """
-    from src.core.llm_factory import current_user_keys
-    from src.database.mongodb.repositories.brain_repository import get_user_keys
+    from core.llm_factory import current_user_keys
+    from database.mongodb.repositories.brain_repository import get_user_keys
 
     try:
         user_keys_list = await get_user_keys(user_id)
@@ -198,9 +198,9 @@ async def _stream_chat_response_impl(
 
     if mode == "quick":
         try:
-            from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-            from src.core.llm_factory import get_fallback_providers, is_quota_error
-            from src.core.logger import get_logger as _get_logger
+            from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+            from core.llm_factory import get_fallback_providers, is_quota_error
+            from core.logger import get_logger as _get_logger
 
             qlog = _get_logger("chat_service.quick")
 
@@ -211,9 +211,10 @@ async def _stream_chat_response_impl(
                 "summary": "Provide a concise, well-structured summary.",
                 "technical": "Provide detailed technical analysis with depth.",
                 "competitive": "Provide comparative analysis of options.",
+                "system": "System prompt provided.",
             }
             system_msg = system_prompts.get(workflow_type, system_prompts["research"])
-            langchain_messages = [SystemMessage(content=system_msg)]
+            langchain_messages: list[BaseMessage] = [SystemMessage(content=system_msg)]
 
             for msg in history:
                 if msg.get("role") == "user":
@@ -314,7 +315,7 @@ async def _stream_chat_response_impl(
 
             # Write successful quick mode audit log
             try:
-                from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+                from database.mongodb.repositories.audit_log_repository import insert_audit_log
                 audit_data = {
                     "user_id": user_id,
                     "conversation_id": conversation_id,
@@ -341,7 +342,7 @@ async def _stream_chat_response_impl(
             yield sse_error_event(str(e))
             # Write failed quick mode audit log
             try:
-                from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+                from database.mongodb.repositories.audit_log_repository import insert_audit_log
                 if "direct_llm" in run_steps:
                     run_steps["direct_llm"]["status"] = "failed"
                     run_steps["direct_llm"]["completed_at"] = datetime.now(timezone.utc).isoformat()
@@ -368,7 +369,9 @@ async def _stream_chat_response_impl(
                 logger.error(f"Failed to write failed quick mode audit log: {audit_err}")
             return
 
-    graph = get_workflow_for_mode(workflow_type)
+    graph = get_graph(workflow_type)
+    if isinstance(graph, StateGraph):
+        graph = graph.compile()
 
     initial_state = {
         "query": query,
@@ -488,7 +491,9 @@ async def _stream_chat_response_impl(
             elif kind == "on_custom_event":
                 if name == "provider_switch":
                     yield sse_provider_switch_event(
-                        data.get("from", ""), data.get("to", ""), data.get("reason", "")
+                        str(data.get("from", "")),
+                        str(data.get("to", "")),
+                        str(data.get("reason", "")),
                     )
 
         # Compile source heatmap
@@ -529,7 +534,7 @@ async def _stream_chat_response_impl(
 
         # Write successful agent mode audit log
         try:
-            from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+            from database.mongodb.repositories.audit_log_repository import insert_audit_log
             audit_data = {
                 "user_id": user_id,
                 "conversation_id": conversation_id,
@@ -562,7 +567,7 @@ async def _stream_chat_response_impl(
         
         # Write failed agent mode audit log
         try:
-            from src.database.mongodb.repositories.audit_log_repository import insert_audit_log
+            from database.mongodb.repositories.audit_log_repository import insert_audit_log
             # compile source heatmap if empty
             source_counts = {}
             for cit in final_citations:
@@ -661,77 +666,7 @@ async def stream_chat_response(
                 pass
 
 
-async def stream_playground_completion(
-    provider: str,
-    model: str,
-    messages: list,
-    temperature: float,
-    max_tokens: int,
-    system_prompt: Optional[str],
-    user_id: str,
-) -> AsyncGenerator[str, None]:
-    # Streams LLM completion specifically for the playground sandbox.
-    try:
-        from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-        from src.core.llm_factory import get_llm, current_user_keys
-        from src.database.mongodb.repositories.brain_repository import get_user_keys
 
-        # Load user's custom API keys and set ContextVar
-        user_keys_list = await get_user_keys(user_id)
-        keys_dict = {k["providerId"]: k["key"] for k in user_keys_list if k.get("isActive")}
-        current_user_keys.set(keys_dict)
-
-        langchain_messages = []
-        if system_prompt:
-            langchain_messages.append(SystemMessage(content=system_prompt))
-
-        for msg in messages:
-            role = msg.get("role")
-            content = msg.get("content", "")
-            if role == "user":
-                langchain_messages.append(HumanMessage(content=content))
-            elif role == "assistant":
-                langchain_messages.append(AIMessage(content=content))
-            elif role == "system" and not system_prompt:
-                langchain_messages.append(SystemMessage(content=content))
-
-        # Build LLM using settings or user key override
-        llm = get_llm(
-            provider=provider,
-            model_name=model,
-            temperature=temperature,
-            streaming=True,
-        )
-
-        # Apply max tokens dynamically if possible
-        if hasattr(llm, "max_output_tokens"):
-            try:
-                llm.max_output_tokens = max_tokens
-            except Exception:
-                pass
-        elif hasattr(llm, "max_tokens"):
-            try:
-                llm.max_tokens = max_tokens
-            except Exception:
-                pass
-
-        accumulated_text = ""
-        async for chunk in llm.astream(langchain_messages):
-            if hasattr(chunk, "content") and chunk.content:
-                token = extract_text(chunk.content)
-                if token:
-                    accumulated_text += token
-                    yield sse_token_event(token)
-
-        yield sse_done_event([])
-
-        if accumulated_text:
-            prompt_str = "\n".join([m.get("content", "") for m in messages]) + (system_prompt or "")
-            await record_token_usage(user_id, provider, prompt_str, accumulated_text)
-
-    except Exception as e:
-        logger.error(f"Playground completion failed: {e}", exc_info=True)
-        yield sse_error_event(str(e))
 
 
 async def save_turn_to_long_term_memory(
@@ -747,7 +682,7 @@ async def save_turn_to_long_term_memory(
     """
     try:
         from langchain_core.documents import Document
-        from src.rag.vectorstores.pinecone_store import get_vector_store
+        from rag.vectorstores.pinecone_store import get_vector_store
         
         logger.info(f"[Long-term Memory] Archiving exchange for user={user_id}")
         
@@ -781,7 +716,7 @@ async def extract_and_save_user_facts(user_id: str, query: str, response: str) -
     """
     try:
         from langchain_core.messages import HumanMessage
-        from src.database.mongodb.repositories.user_memory_repository import save_user_fact
+        from database.mongodb.repositories.user_memory_repository import save_user_fact
         
         FACT_EXTRACTION_PROMPT = """You are a Memory Extractor Agent inside a research platform.
 Analyze the user's chat exchange below.

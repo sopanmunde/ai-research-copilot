@@ -5,8 +5,8 @@ Provides endpoints to manage scheduled cron pipelines and event triggers.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from typing import Dict, List, Any
-from src.core.security import get_current_user
-from src.database.mongodb.repositories.workflow_repository import (
+from core.security import get_current_user
+from database.mongodb.repositories.workflow_repository import (
     create_workflow,
     get_user_workflows,
     get_workflow_by_id,
@@ -14,13 +14,13 @@ from src.database.mongodb.repositories.workflow_repository import (
     delete_workflow_db,
     get_workflow_logs_db,
 )
-from src.services.workflow_scheduler import (
+from services.workflow_scheduler import (
     sync_schedule_workflow,
     execute_workflow_job,
 )
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.core.logger import get_logger
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

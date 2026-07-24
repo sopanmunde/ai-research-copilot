@@ -6,11 +6,11 @@ GET /api/models  — returns all configured LLM providers, models, embeddings,
                    settings panel for model/provider selection.
 """
 from fastapi import APIRouter
-from src.core.config import settings
-from src.core.llm_factory import get_available_providers
-from src.core.constants import WORKFLOW_TYPES, DEFAULT_MODEL_MAP
-from src.workflows.research_workflow import get_all_workflows
-from src.core.logger import get_logger
+from core.config import settings
+from core.llm_factory import get_available_providers
+from core.constants import WORKFLOW_TYPES, DEFAULT_MODEL_MAP
+from workflows.research_workflow import get_all_workflows
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

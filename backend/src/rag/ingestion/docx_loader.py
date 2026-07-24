@@ -4,7 +4,7 @@ import tempfile
 from typing import List
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_core.documents import Document
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

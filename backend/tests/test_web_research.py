@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.agents.langgraph.nodes.web_research_node import web_research_node
+from agents.langgraph.nodes.web_research_node import web_research_node
 
 
 @pytest.mark.asyncio
@@ -29,8 +29,8 @@ async def test_web_research_skips_when_no_keys_configured(sample_agent_state):
     state = sample_agent_state.copy()
     state["requires_context"] = True
     
-    with patch("src.agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
-         patch("src.agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
+    with patch("agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
+         patch("agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
         mock_settings.TAVILY_API_KEY = ""
         mock_settings.SERPAPI_API_KEY = ""
         mock_settings.BRAVE_API_KEY = ""
@@ -62,8 +62,8 @@ async def test_web_research_tavily_integration(mock_post, sample_agent_state):
     }
     mock_post.return_value = mock_response
     
-    with patch("src.agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
-         patch("src.agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
+    with patch("agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
+         patch("agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
         mock_settings.TAVILY_API_KEY = "tavily_mock_key"
         mock_settings.SERPAPI_API_KEY = ""
         mock_settings.BRAVE_API_KEY = ""
@@ -106,8 +106,8 @@ async def test_web_research_serpapi_integration(mock_get, sample_agent_state):
     }
     mock_get.return_value = mock_response
     
-    with patch("src.agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
-         patch("src.agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
+    with patch("agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
+         patch("agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
         mock_settings.TAVILY_API_KEY = ""
         mock_settings.SERPAPI_API_KEY = "serp_mock_key"
         mock_settings.BRAVE_API_KEY = ""
@@ -151,8 +151,8 @@ async def test_web_research_brave_integration(mock_get, sample_agent_state):
     }
     mock_get.return_value = mock_response
     
-    with patch("src.agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
-         patch("src.agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
+    with patch("agents.langgraph.nodes.web_research_node.settings") as mock_settings, \
+         patch("agents.langgraph.nodes.web_research_node.current_user_keys") as mock_user_keys:
         mock_settings.TAVILY_API_KEY = ""
         mock_settings.SERPAPI_API_KEY = ""
         mock_settings.BRAVE_API_KEY = "brave_mock_key"

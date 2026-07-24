@@ -10,13 +10,13 @@ Analyzes the user query and decides:
 Uses the dynamically selected LLM from the factory.
 """
 from typing import Dict, Any, Type
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
 from langchain_core.callbacks.manager import adispatch_custom_event
 from pydantic import BaseModel, Field
 from typing import List
-from src.agents.langgraph.state import AgentState
-from src.core.llm_factory import get_llm
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from core.llm_factory import get_llm
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -144,7 +144,7 @@ async def planner_node(state: AgentState) -> dict:
         }
 
     filename = state.get("filename")
-    messages = [SystemMessage(content=PLANNER_SYSTEM_V2)]
+    messages: list[BaseMessage] = [SystemMessage(content=PLANNER_SYSTEM_V2)]
     for turn in history[-6:]:
         role = turn.get("role", "")
         content = turn.get("content", "")
@@ -158,7 +158,7 @@ async def planner_node(state: AgentState) -> dict:
         user_content = f"{query}\n\n[Note: User has attached document '{filename}' to this query. It should be used to retrieve context.]"
     messages.append(HumanMessage(content=user_content))
 
-    from src.core.llm_factory import get_fallback_providers
+    from core.llm_factory import get_fallback_providers
     fallback_providers = get_fallback_providers(provider)
     logger.info(f"[Planner] fallback chain: {fallback_providers}")
 

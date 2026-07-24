@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export type ProviderType = "cloud" | "local";
 export type ProviderStatus = "connected" | "disconnected" | "testing" | "error";
-export type MainTabType = "overview" | "telemetry" | "configure" | "playground" | "matrix";
+export type MainTabType = "overview" | "telemetry" | "configure" | "matrix";
 
 export interface LLMProvider {
   id: string;

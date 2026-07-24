@@ -1,9 +1,9 @@
 """Integrations repository — user integration configurations and plugins."""
 from datetime import datetime
 from typing import Dict, Any
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_INTEGRATIONS
-from src.core.logger import get_logger
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_INTEGRATIONS
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

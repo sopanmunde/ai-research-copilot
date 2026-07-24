@@ -1,7 +1,16 @@
-"""
-backend/tests/conftest.py — pytest configuration and shared fixtures
-"""
+import os
+import sys
+from pathlib import Path
 import pytest
+
+# Ensure backend root and src directory are in sys.path
+backend_dir = str(Path(__file__).resolve().parent.parent)
+src_dir = os.path.join(backend_dir, "src")
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
 
 
 

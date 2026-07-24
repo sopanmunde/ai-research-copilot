@@ -1,16 +1,16 @@
 """Upload routes — PDF/DOCX/TXT ingestion with full pipeline."""
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_UPLOAD
-from src.utils.validators import validate_file
-from src.rag.ingestion.pdf_loader import load_pdf
-from src.rag.ingestion.docx_loader import load_docx
-from src.rag.ingestion.text_loader import load_text
-from src.rag.ingestion.embedding_pipeline import run_ingestion_pipeline
-from src.rag.vectorstores.pinecone_store import get_vector_store
-from src.database.mongodb.repositories.document_repository import save_document_metadata
-from src.core.logger import get_logger
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_UPLOAD
+from utils.validators import validate_file
+from rag.ingestion.pdf_loader import load_pdf
+from rag.ingestion.docx_loader import load_docx
+from rag.ingestion.text_loader import load_text
+from rag.ingestion.embedding_pipeline import run_ingestion_pipeline
+from rag.vectorstores.pinecone_store import get_vector_store
+from database.mongodb.repositories.document_repository import save_document_metadata
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -46,12 +46,12 @@ async def upload_document(
         total_text = "".join(d.page_content for d in docs).strip()
         if len(total_text) < 100:
             logger.info(f"PDF '{filename}' appears to be scanned (extracted text length: {len(total_text)}). Running vision extraction...")
-            from src.agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
+            from agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
             docs = await extract_scanned_pdf(content, filename)
     elif ext == "docx":
         docs = await load_docx(content, filename)
     elif ext in IMAGE_EXTS:
-        from src.agents.langgraph.nodes.vision_extraction_node import extract_vision_data
+        from agents.langgraph.nodes.vision_extraction_node import extract_vision_data
         from langchain_core.documents import Document
         import base64
         
@@ -115,7 +115,7 @@ async def upload_document(
     )
 
     try:
-        from src.services.workflow_scheduler import trigger_event_workflows
+        from services.workflow_scheduler import trigger_event_workflows
         asyncio.create_task(
             trigger_event_workflows(
                 event_type="document_uploaded",
@@ -164,12 +164,12 @@ async def upload_document_stream(
                 total_text = "".join(d.page_content for d in docs).strip()
                 if len(total_text) < 100:
                     logger.info(f"PDF '{filename}' appears to be scanned (extracted text length: {len(total_text)}). Running vision extraction...")
-                    from src.agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
+                    from agents.langgraph.nodes.vision_extraction_node import extract_scanned_pdf
                     docs = await extract_scanned_pdf(content, filename)
             elif ext == "docx":
                 docs = await load_docx(content, filename)
             elif ext in IMAGE_EXTS:
-                from src.agents.langgraph.nodes.vision_extraction_node import extract_vision_data
+                from agents.langgraph.nodes.vision_extraction_node import extract_vision_data
                 from langchain_core.documents import Document
                 
                 extracted_content = await extract_vision_data(
@@ -214,8 +214,8 @@ async def upload_document_stream(
                 docs = await load_text(content, filename)
             
             yield f"data: {json.dumps({'stage': 'chunking', 'progress': 30})}\n\n"
-            from src.rag.ingestion.embedding_pipeline import clean_documents, semantic_chunk, enrich_metadata
-            from src.rag.vectorstores.pinecone_store import get_vector_store
+            from rag.ingestion.embedding_pipeline import clean_documents, semantic_chunk, enrich_metadata
+            from rag.vectorstores.pinecone_store import get_vector_store
 
             vector_store = get_vector_store()
             
@@ -249,7 +249,7 @@ async def upload_document_stream(
 
 @router.get("")
 async def list_documents(current_user=Depends(get_current_user)):
-    from src.database.mongodb.repositories.document_repository import get_user_documents
+    from database.mongodb.repositories.document_repository import get_user_documents
     user_id = str(current_user["_id"])
     return await get_user_documents(user_id)
 
@@ -259,8 +259,8 @@ async def download_document(document_id: str, current_user=Depends(get_current_u
     from bson.objectid import ObjectId
     from fastapi.responses import Response
     from fastapi import HTTPException
-    from src.database.mongodb.connection import get_database
-    from src.core.constants import COLLECTION_DOCUMENTS
+    from database.mongodb.connection import get_database
+    from core.constants import COLLECTION_DOCUMENTS
 
     user_id = str(current_user["_id"])
     db = get_database()
@@ -306,10 +306,10 @@ async def download_document(document_id: str, current_user=Depends(get_current_u
 async def delete_document(document_id: str, current_user=Depends(get_current_user)):
     from bson.objectid import ObjectId
     from fastapi import HTTPException
-    from src.database.mongodb.connection import get_database
-    from src.core.constants import COLLECTION_DOCUMENTS
-    from src.database.mongodb.repositories.document_repository import delete_document_metadata
-    from src.rag.vectorstores.pinecone_store import delete_by_filename
+    from database.mongodb.connection import get_database
+    from core.constants import COLLECTION_DOCUMENTS
+    from database.mongodb.repositories.document_repository import delete_document_metadata
+    from rag.vectorstores.pinecone_store import delete_by_filename
     
     user_id = str(current_user["_id"])
     db = get_database()

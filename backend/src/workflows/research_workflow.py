@@ -5,8 +5,8 @@ Provides workflow metadata, node descriptions, and configuration
 for all supported workflow types for introspection and API docs.
 """
 from typing import Dict, Any, List
-from src.core.config import settings
-from src.core.constants import DEFAULT_MODEL_MAP
+from core.config import settings
+from core.constants import DEFAULT_MODEL_MAP
 
 
 

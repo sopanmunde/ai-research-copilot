@@ -27,17 +27,13 @@ export function BrainUsageSidebar({ providers = [] }: BrainUsageSidebarProps) {
     .sort((a, b) => b.percent - a.percent);
 
   if (allocationList.length === 0) {
-    allocationList = [
-      { name: "OpenAI", percent: 80 },
-      { name: "Mistral", percent: 15 },
-      { name: "Others", percent: 5 }
-    ];
+    allocationList = providers.slice(0, 3).map((p) => ({ name: p.name, percent: 0 }));
   }
 
   const barColors = ["bg-primary", "bg-primary/60", "bg-primary/30", "bg-primary/10"];
 
   return (
-    <div className="w-[260px] shrink-0 flex flex-col border-l border-border bg-card">
+    <div className="hidden xl:flex w-[260px] shrink-0 flex-col border-l border-border bg-card">
       <div className="px-4 py-4 border-b border-border">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-4 text-muted-foreground" />

@@ -1,8 +1,8 @@
 """MongoDB connection — Motor async client singleton."""
 from functools import lru_cache
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from src.core.config import settings
-from src.core.logger import get_logger
+from core.config import settings
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -12,9 +12,16 @@ import certifi
 try:
     import dns.resolver
     custom_resolver = dns.resolver.Resolver()
-    custom_resolver.nameservers = ["8.8.8.8", "1.1.1.1"]
+    existing_ns = list(custom_resolver.nameservers)
+    fallbacks = ["8.8.8.8", "1.1.1.1", "1.0.0.1", "8.8.4.4"]
+    for fb in fallbacks:
+        if fb not in existing_ns:
+            existing_ns.append(fb)
+    custom_resolver.nameservers = existing_ns
+    custom_resolver.timeout = 3.0
+    custom_resolver.lifetime = 5.0
     dns.resolver.default_resolver = custom_resolver
-    logger.info("Custom DNS resolver configured for MongoDB (Google/Cloudflare DNS)")
+    logger.info("DNS resolver configured for MongoDB (System + Fallback DNS)")
 except Exception as e:
     logger.warning(f"Could not configure custom DNS resolver: {e}")
 

@@ -8,8 +8,8 @@ settings.EMBEDDING_MODEL.
 from functools import lru_cache
 from typing import List, Optional
 from langchain_core.embeddings import Embeddings
-from src.core.logger import get_logger
-from src.core.config import settings
+from core.logger import get_logger
+from core.config import settings
 
 logger = get_logger(__name__)
 

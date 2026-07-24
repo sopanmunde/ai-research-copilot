@@ -9,8 +9,8 @@ chunks and surfaces a broader set of evidence for the LLM to reason over.
 """
 from typing import List, Optional, Dict
 from langchain_core.documents import Document
-from src.rag.vectorstores.pinecone_store import get_mmr_retriever
-from src.core.logger import get_logger
+from rag.vectorstores.pinecone_store import get_mmr_retriever
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

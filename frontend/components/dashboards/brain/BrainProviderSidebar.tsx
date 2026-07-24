@@ -22,7 +22,7 @@ export function BrainProviderSidebar({
   selectProvider,
 }: BrainProviderSidebarProps) {
   return (
-    <div className="w-[230px] shrink-0 flex flex-col border-r border-border bg-card">
+    <div className="w-full md:w-[230px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border bg-card max-h-[180px] md:max-h-none">
       <div className="px-3 pt-3 pb-2">
         <div className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5 border border-border">
           {(["cloud", "local"] as const).map((tab) => (

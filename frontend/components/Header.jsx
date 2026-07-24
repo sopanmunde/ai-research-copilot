@@ -49,13 +49,13 @@ const CHATBOTS = [
 ];
 
 export default function Header({
-  sidebarCollapsed,
-  setSidebarOpen,
-  selectedBot,
-  setSelectedBot,
-  onToggleIntegrations,
-  onOpenAuditLogs,
-  onOpenWorkflows,
+  sidebarCollapsed = false,
+  setSidebarOpen = () => {},
+  selectedBot = "Fast",
+  setSelectedBot = () => {},
+  onToggleIntegrations = () => {},
+  onOpenAuditLogs = () => {},
+  onOpenWorkflows = () => {},
 }) {
   const currentBot = CHATBOTS.find((b) => b.name === selectedBot) || CHATBOTS[0];
 

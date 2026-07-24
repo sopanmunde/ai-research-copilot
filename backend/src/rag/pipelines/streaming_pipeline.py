@@ -2,9 +2,9 @@
 from typing import AsyncGenerator, List, Dict, Optional
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from src.rag.retrieval.citation_retriever import retrieve_with_citations
-from src.rag.pipelines.rag_pipeline import build_context_string, RAG_SYSTEM_PROMPT
-from src.core.logger import get_logger
+from rag.retrieval.citation_retriever import retrieve_with_citations
+from rag.pipelines.rag_pipeline import build_context_string, RAG_SYSTEM_PROMPT
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

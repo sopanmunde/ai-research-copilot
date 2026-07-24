@@ -11,7 +11,7 @@ Tools:
 import asyncio
 from typing import Optional
 from langchain_core.tools import tool
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,7 @@ async def search_knowledge_base(query: str, user_id: str = "", top_k: int = 6) -
     logger.info(f"[search_knowledge_base] query='{query[:80]}', user_id={user_id or 'all'}, top_k={top_k}")
 
     try:
-        from src.rag.vectorstores.pinecone_store import get_mmr_retriever
+        from rag.vectorstores.pinecone_store import get_mmr_retriever
         import hashlib
 
         filter_dict = {"user_id": user_id} if user_id else None
@@ -118,7 +118,7 @@ async def query_user_workspace(
     logger.info(f"[query_user_workspace] user={user_id}, collection={collection}, limit={limit}")
 
     try:
-        from src.database.mongodb.connection import get_database
+        from database.mongodb.connection import get_database
         db = get_database()
 
         query_filter: dict = {"user_id": user_id}

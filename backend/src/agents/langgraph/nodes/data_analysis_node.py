@@ -4,11 +4,11 @@ src/agents/langgraph/nodes/data_analysis_node.py — Data Analysis Node
 Analyzes data, generates insights, and produces visualization-ready output.
 Uses the dynamically selected LLM.
 """
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from src.agents.langgraph.state import AgentState
-from src.core.llm_factory import get_llm
-from src.agents.langgraph.nodes.utils import extract_text
-from src.core.logger import get_logger
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from agents.langgraph.state import AgentState
+from core.llm_factory import get_llm
+from agents.langgraph.nodes.utils import extract_text
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -56,7 +56,7 @@ async def data_analysis_node(state: AgentState) -> dict:
         temperature=0.2,
     )
 
-    messages = [SystemMessage(content=DATA_ANALYSIS_SYSTEM)]
+    messages: list[BaseMessage] = [SystemMessage(content=DATA_ANALYSIS_SYSTEM)]
 
     for turn in history[-4:]:
         role = turn.get("role", "")

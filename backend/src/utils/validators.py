@@ -1,6 +1,6 @@
 """File and input validators."""
-from src.core.constants import ALLOWED_EXTENSIONS, MAX_FILE_SIZE_BYTES
-from src.core.exceptions import UploadException
+from core.constants import ALLOWED_EXTENSIONS, MAX_FILE_SIZE_BYTES
+from core.exceptions import UploadException
 
 
 def validate_file(filename: str, size_bytes: int) -> None:

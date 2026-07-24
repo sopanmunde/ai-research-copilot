@@ -6,13 +6,13 @@ citations confidence scores, and source heatmaps.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
-from src.core.security import get_current_user
-from src.database.mongodb.repositories.audit_log_repository import (
+from core.security import get_current_user
+from database.mongodb.repositories.audit_log_repository import (
     get_user_audit_logs,
     get_audit_log_by_id,
     get_conversation_audit_logs,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

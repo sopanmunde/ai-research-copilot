@@ -1,16 +1,16 @@
 """Notes routes — REST API endpoints for user notes dashboard."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Dict, List
-from src.core.security import get_current_user
-from src.core.limiter import limiter
-from src.core.constants import RATE_LIMIT_DEFAULT
-from src.database.mongodb.repositories.notes_repository import (
+from core.security import get_current_user
+from core.limiter import limiter
+from core.constants import RATE_LIMIT_DEFAULT
+from database.mongodb.repositories.notes_repository import (
     get_user_notes,
     create_note_db,
     update_note_db,
     delete_note_db,
 )
-from src.core.logger import get_logger
+from core.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

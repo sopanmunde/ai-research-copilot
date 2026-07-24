@@ -2,9 +2,9 @@
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Optional
 from bson.objectid import ObjectId
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_EVENTS
-from src.core.logger import get_logger
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_EVENTS
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -76,6 +76,7 @@ async def get_user_events(user_id: str) -> List[Dict]:
 
 async def create_event(user_id: str, event_data: Dict) -> Dict:
     """Creates a new calendar event in MongoDB."""
+    default_notifs = ["2d", "1d", "5h", "1h", "30m", "5m", "start"]
     payload = {
         "user_id": user_id,
         "title": event_data.get("title", "New Event"),
@@ -85,6 +86,9 @@ async def create_event(user_id: str, event_data: Dict) -> Dict:
         "description": event_data.get("description", ""),
         "location": event_data.get("location", ""),
         "allDay": event_data.get("allDay", False),
+        "emailNotifications": event_data.get("emailNotifications", default_notifs),
+        "notificationEmail": event_data.get("notificationEmail", ""),
+        "sentNotifications": [],
         "created_at": datetime.now(timezone.utc)
     }
     result = await _db()[COLLECTION_EVENTS].insert_one(payload)

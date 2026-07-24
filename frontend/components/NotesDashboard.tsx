@@ -19,12 +19,14 @@ import {
   Edit3,
   X,
   Check,
+  Cpu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipTrigger,
@@ -65,6 +67,7 @@ export function NotesDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [showVisuals, setShowVisuals] = useState(true);
 
   // Selection & Editing
   const [selectedNoteId, setSelectedNoteId] = useState<string>("");
@@ -158,10 +161,72 @@ export function NotesDashboard() {
         const updated = await res.json();
         setNotes(notes.map((n) => (n.id === id ? updated : n)));
         setIsEditing(false);
+        toast.success("Note updated successfully");
       }
     } catch (err) {
       console.error(err);
       toast.error("Failed to update note");
+    }
+  };
+
+  const convertNoteToTask = async (note: Note) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: `[From Note] ${note.title}`,
+          description: note.content || "Created from note: " + note.title,
+          type: "Feature",
+          status: "todo",
+          priority: "medium",
+          tags: ["note-import", note.category],
+          subtasks: [],
+          history: [{ timestamp: new Date().toLocaleTimeString(), action: "Task created from Note" }],
+        }),
+      });
+      if (res.ok) {
+        toast.success("Task created from Note! View it in Task Dashboard.");
+      } else {
+        toast.error("Failed to create task from Note.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Network error creating task.");
+    }
+  };
+
+  const convertNoteToEvent = async (note: Note) => {
+    try {
+      const token = localStorage.getItem("token");
+      const now = new Date();
+      const end = new Date(now.getTime() + 60 * 60 * 1000);
+      const res = await fetch(`${API_BASE_URL}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: `[Note Session] ${note.title}`,
+          description: note.content || "Session created for note: " + note.title,
+          from: now.toISOString(),
+          to: end.toISOString(),
+          type: "purple",
+        }),
+      });
+      if (res.ok) {
+        toast.success("Calendar Event created! View it in Calendar Dashboard.");
+      } else {
+        toast.error("Failed to create Calendar Event.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Network error creating Calendar Event.");
     }
   };
 
@@ -233,240 +298,292 @@ export function NotesDashboard() {
     );
   }
 
+  const favoriteCount = notes.filter((n) => n.favorite).length;
+
   return (
     <TooltipProvider>
-      <div className="flex h-screen w-full bg-background text-foreground overflow-hidden border border-border rounded-xl">
-        
-        {/* LEFT COLUMN: NOTES LIST */}
-        <div className="w-[380px] shrink-0 border-r border-border bg-card/30 flex flex-col h-full">
-          
-          {/* Header search & create buttons */}
-          <div className="p-4 border-b border-border space-y-3 shrink-0">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-sm tracking-tight flex items-center gap-2 uppercase opacity-85 select-none">
-                <FileText className="size-4 text-muted-foreground" />
-                Notes Library
-              </span>
+      <div className="flex h-full flex-col overflow-y-auto bg-background p-4 md:p-6 space-y-5 lg:space-y-6">
+
+        {/* ─── Brain Dashboard Style Top Visual Telemetry Banner ─── */}
+        <div className="flex flex-col gap-3 p-4.5 rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative transition-all duration-300">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-2xl bg-foreground/5 border border-border flex items-center justify-center text-foreground shadow-xs shrink-0">
+                <FileText className="size-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold tracking-tight text-foreground">
+                    Notes &amp; Knowledge Vault
+                  </h1>
+                  <Badge variant="outline" className="text-[9px] px-2 py-0.5 font-bold uppercase tracking-wider bg-muted/60 border-border text-muted-foreground shadow-xs">
+                    v2.0 Vault
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                  Organize ideas, capture research snippets, and sync execution roadmaps with calendar events
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowVisuals(!showVisuals)}
+                className="h-8.5 text-xs font-semibold border-border hover:bg-muted gap-1.5 px-3 rounded-xl transition-all shadow-xs"
+              >
+                <Cpu className="size-3.5" />
+                <span>{showVisuals ? "Hide Analytics" : "Show Analytics"}</span>
+              </Button>
+
               <Button
                 size="sm"
                 onClick={() => setIsNewNoteOpen(true)}
-                className="h-7 px-2.5 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold gap-1"
+                className="h-8.5 text-xs font-semibold bg-foreground hover:bg-foreground/90 text-background gap-1.5 px-3 rounded-xl shadow-md border border-foreground/10 cursor-pointer transition-all hover:scale-102"
               >
-                <Plus className="size-3" /> New Note
+                <Plus className="size-3.5" />
+                <span>New Note</span>
               </Button>
             </div>
-            
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search notes content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 text-xs h-8 border-border bg-background/50"
-              />
-            </div>
           </div>
 
-          {/* Categories Tab selectors */}
-          <div className="px-3 py-2 border-b border-border bg-muted/20 flex items-center justify-between shrink-0 gap-1 overflow-x-auto scrollbar-none">
-            {[
-              { id: "all", label: "All" },
-              { id: "work", label: "Work" },
-              { id: "ideas", label: "Ideas" },
-              { id: "personal", label: "Personal" },
-              { id: "favorites", label: "Stars" },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={cn(
-                  "px-2 py-1 text-[10px] font-bold rounded-md transition-all shrink-0 uppercase",
-                  activeCategory === cat.id
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Notes items loop */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin">
-            {filteredNotes.map((note) => (
-              <div
-                key={note.id}
-                onClick={() => {
-                  setSelectedNoteId(note.id);
-                  setIsEditing(false);
-                }}
-                className={cn(
-                  "group flex flex-col p-3 rounded-lg border text-left cursor-pointer transition-all hover:bg-muted/30 select-none relative",
-                  selectedNoteId === note.id
-                    ? "border-primary/40 bg-muted/40 shadow-xs"
-                    : "border-border/60 bg-card/40"
-                )}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="font-semibold text-xs text-foreground truncate flex-1">
-                    {note.title || "Untitled Note"}
-                  </span>
-                  <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUpdateNote(note.id, { favorite: !note.favorite });
-                      }}
-                      className="p-0.5 rounded text-muted-foreground hover:text-foreground"
-                    >
-                      <Star
-                        className={cn(
-                          "size-3",
-                          note.favorite && "fill-foreground text-foreground"
-                        )}
-                      />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteNote(note.id);
-                      }}
-                      className="p-0.5 rounded text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="size-3" />
-                    </button>
+          {/* Visual Analytics Telemetry Bar */}
+          {showVisuals && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-border/40 select-none">
+              {/* Metric 1: Total Notes */}
+              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <BookOpen className="size-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Total Vault Notes</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-bold text-foreground">{notes.length} entries</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-2 font-light">
-                  {note.content || "Empty content..."}
-                </p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className={cn("text-[9px] px-1.5 font-bold uppercase", getCategoryColor(note.category))}>
-                    {note.category}
-                  </Badge>
-                  <span className="text-[9px] font-mono text-muted-foreground">
-                    {new Date(note.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
-                  </span>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-muted border-border text-muted-foreground">
+                  Stored
+                </Badge>
+              </div>
+
+              {/* Metric 2: Starred Notes */}
+              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <Star className="size-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Starred Favorites</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-bold text-foreground">{favoriteCount} starred</span>
+                    </div>
+                  </div>
                 </div>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                  Priority
+                </Badge>
               </div>
-            ))}
-            {filteredNotes.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                <BookOpen className="size-8 text-muted-foreground/30 mb-2" />
-                <span className="text-xs">No notes found matching category</span>
+
+              {/* Metric 3: Active Category */}
+              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Folder className="size-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Filtered View</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-bold text-foreground capitalize">{activeCategory}</span>
+                      <span className="text-[10px] text-muted-foreground">({filteredNotes.length})</span>
+                    </div>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                  Filter
+                </Badge>
               </div>
-            )}
-          </div>
+
+              {/* Metric 4: Knowledge Engine Latency */}
+              <div className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between shadow-xs hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                    <Sparkles className="size-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Vault Engine</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-sm font-bold text-foreground">Sync Active</span>
+                      <span className="text-[10px] text-emerald-500 font-mono">~90ms</span>
+                    </div>
+                  </div>
+                </div>
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" title="Engine Active" />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT COLUMN: DETAIL NOTE DISPLAY & MODE CONTROLS */}
-        <div className="flex-1 flex flex-col bg-background h-full">
-          
-          {/* Main workspace view */}
-          {isNewNoteOpen ? (
-            /* CREATE NOTE FORM VIEW */
-            <div className="flex-grow flex flex-col p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="size-4 text-muted-foreground" />
-                  <span className="text-xs font-bold uppercase">Compose New Note Entry</span>
-                </div>
-                <button
-                  onClick={() => setIsNewNoteOpen(false)}
-                  className="p-1 rounded text-muted-foreground hover:text-foreground"
-                >
-                  <X className="size-4" />
-                </button>
+        {/* ─── MAIN WORKSPACE CONTENT GRID ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 flex-1 min-h-0">
+
+          {/* CONTAINER 1: LEFT NOTES LIBRARY SIDEBAR (Width 4/12) */}
+          <div className="lg:col-span-4 bg-card border border-border/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col min-h-[500px] overflow-hidden">
+            {/* Header search & create buttons */}
+            <div className="p-4 border-b border-border/60 space-y-3 shrink-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs tracking-wider flex items-center gap-2 uppercase text-foreground select-none">
+                  <FileText className="size-4 text-foreground" />
+                  Notes Library
+                </span>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 border-border bg-muted/40 font-mono">
+                  {filteredNotes.length} notes
+                </Badge>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Note Title</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Enter a descriptive title..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="text-xs border-border bg-card h-9"
+                  placeholder="Search notes content..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 text-xs h-8.5 border-border bg-muted/20 rounded-xl"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Note Folder Category</label>
-                  <Select value={newCategory} onValueChange={setNewCategory}>
-                    <SelectTrigger className="h-9 text-xs bg-card border-border">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="work" className="text-xs">Work</SelectItem>
-                      <SelectItem value="ideas" className="text-xs">Ideas</SelectItem>
-                      <SelectItem value="personal" className="text-xs">Personal</SelectItem>
-                      <SelectItem value="general" className="text-xs">General</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex-1 flex flex-col space-y-1.5 min-h-0">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase">Body Content</label>
-                <Textarea
-                  placeholder="Draft your markdown text notes here..."
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  className="flex-1 text-xs border-border bg-card resize-none p-3 leading-relaxed"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-border pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsNewNoteOpen(false)}
-                  className="h-8 text-xs border-border"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateNote}
-                  className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold"
-                >
-                  <Check className="size-3 mr-1" /> Create Note
-                </Button>
               </div>
             </div>
-          ) : selectedNote ? (
-            isEditing ? (
-              /* EDIT NOTE FORM VIEW */
-              <div className="flex-grow flex flex-col p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
+
+            {/* Categories Tab selectors */}
+            <div className="px-3 py-2 border-b border-border/60 bg-muted/10 flex items-center justify-between shrink-0 gap-1 overflow-x-auto scrollbar-none">
+              {[
+                { id: "all", label: "All" },
+                { id: "work", label: "Work" },
+                { id: "ideas", label: "Ideas" },
+                { id: "personal", label: "Personal" },
+                { id: "favorites", label: "Stars" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "px-2.5 py-1 text-[10px] font-bold rounded-xl transition-all shrink-0 uppercase cursor-pointer",
+                    activeCategory === cat.id
+                      ? "bg-foreground text-background shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Notes items loop inside 3D elevated cards */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5 scrollbar-thin">
+              {filteredNotes.map((note) => (
+                <div
+                  key={note.id}
+                  onClick={() => {
+                    setSelectedNoteId(note.id);
+                    setIsEditing(false);
+                  }}
+                  className={cn(
+                    "group flex flex-col p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-200 select-none relative",
+                    selectedNoteId === note.id
+                      ? "border-foreground/40 bg-muted/30 shadow-md ring-1 ring-foreground/15"
+                      : "border-border/80 bg-card hover:border-foreground/30 hover:shadow-sm"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <span className="font-bold text-xs text-foreground truncate flex-1">
+                      {note.title || "Untitled Note"}
+                    </span>
+                    <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpdateNote(note.id, { favorite: !note.favorite });
+                        }}
+                        className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                      >
+                        <Star
+                          className={cn(
+                            "size-3.5",
+                            note.favorite && "fill-amber-400 text-amber-400"
+                          )}
+                        />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNote(note.id);
+                        }}
+                        className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-2.5 font-medium">
+                    {note.content || "Empty content..."}
+                  </p>
+                  <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0.5 font-bold uppercase rounded-md", getCategoryColor(note.category))}>
+                      {note.category}
+                    </Badge>
+                    <span className="text-[9.5px] font-mono text-muted-foreground">
+                      {new Date(note.updatedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {filteredNotes.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                  <BookOpen className="size-8 text-muted-foreground/30 mb-2" />
+                  <span className="text-xs font-semibold">No notes found matching category</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* CONTAINER 2: RIGHT WORKSPACE CONTAINER CARD (Width 8/12) */}
+          <div className="lg:col-span-8 bg-card border border-border/80 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_35px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col min-h-[500px] overflow-hidden p-6">
+
+            {/* Main workspace view */}
+            {isNewNoteOpen ? (
+              /* CREATE NOTE FORM VIEW */
+              <div className="flex-1 flex flex-col min-h-0 space-y-4 overflow-hidden">
+                <div className="flex items-center justify-between border-b border-border/60 pb-3 shrink-0">
                   <div className="flex items-center gap-2">
-                    <Edit3 className="size-4 text-muted-foreground" />
-                    <span className="text-xs font-bold uppercase">Modify Note Metadata</span>
+                    <FileText className="size-4 text-foreground" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-foreground">Compose New Note Entry</span>
                   </div>
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="p-1 rounded text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsNewNoteOpen(false)}
+                    className="p-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                   >
                     <X className="size-4" />
                   </button>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Note Title</label>
-                  <Input
-                    placeholder="Enter title..."
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="text-xs border-border bg-card h-9"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-1.5 min-h-0 scrollbar-thin">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Category</label>
-                    <Select value={editCategory} onValueChange={setEditCategory}>
-                      <SelectTrigger className="h-9 text-xs bg-card border-border">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Note Title</label>
+                    <Input
+                      placeholder="Enter a descriptive title..."
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      className="text-xs border-border bg-muted/20 h-9 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">Note Category:</label>
+                    <Select value={newCategory} onValueChange={setNewCategory}>
+                      <SelectTrigger className="w-[160px] h-8.5 text-xs bg-muted/20 border-border rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         <SelectItem value="work" className="text-xs">Work</SelectItem>
                         <SelectItem value="ideas" className="text-xs">Ideas</SelectItem>
                         <SelectItem value="personal" className="text-xs">Personal</SelectItem>
@@ -474,115 +591,280 @@ export function NotesDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="flex-1 flex flex-col space-y-1.5 min-h-[260px]">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Body Content</label>
+                    <Textarea
+                      placeholder="Draft your markdown text notes here..."
+                      value={newContent}
+                      onChange={(e) => setNewContent(e.target.value)}
+                      className="flex-1 text-sm border-border bg-muted/20 resize-none p-4 leading-relaxed rounded-xl focus:border-border min-h-[250px] overflow-y-auto"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex-1 flex flex-col space-y-1.5 min-h-0">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Body Content</label>
-                  <Textarea
-                    placeholder="Body content..."
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="flex-1 text-xs border-border bg-card resize-none p-3 leading-relaxed"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 border-t border-border pt-4">
+                <div className="flex justify-end gap-2 border-t border-border/60 pt-4 shrink-0">
                   <Button
                     variant="outline"
-                    onClick={() => setIsEditing(false)}
-                    className="h-8 text-xs border-border"
+                    onClick={() => setIsNewNoteOpen(false)}
+                    className="h-8.5 text-xs border-border rounded-xl font-semibold"
                   >
                     Cancel
                   </Button>
                   <Button
-                    onClick={() =>
-                      handleUpdateNote(selectedNote.id, {
-                        title: editTitle,
-                        content: editContent,
-                        category: editCategory,
-                      })
-                    }
-                    className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold"
+                    onClick={handleCreateNote}
+                    className="h-8.5 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl px-4 shadow-sm"
                   >
-                    <Check className="size-3 mr-1" /> Save Changes
+                    <Check className="size-3 mr-1" /> Create Note
                   </Button>
                 </div>
               </div>
-            ) : (
-              /* DETAIL PREVIEW VIEW */
-              <div className="flex-grow flex flex-col p-6 space-y-6">
-                
-                {/* Note title and quick actions */}
-                <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
-                  <div className="space-y-1">
+            ) : selectedNote ? (
+              isEditing ? (
+                /* EDIT NOTE FORM VIEW */
+                <div className="flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5 overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-border/60 pb-3.5 shrink-0">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-foreground">
-                        {selectedNote.title || "Untitled Note"}
-                      </h2>
+                      <Edit3 className="size-4 text-foreground" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-foreground">Modify Note Metadata</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => convertNoteToTask(selectedNote)}
+                            className="size-8 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/15 rounded-xl shadow-xs"
+                          >
+                            <BookOpen className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Convert to Task</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => convertNoteToEvent(selectedNote)}
+                            className="size-8 border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/15 rounded-xl shadow-xs"
+                          >
+                            <Calendar className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Schedule Event</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => handleDeleteNote(selectedNote.id)}
+                            className="size-8 text-rose-500 hover:bg-rose-500/10 border-rose-500/30 bg-rose-500/5 rounded-xl shadow-xs"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Delete Note</TooltipContent>
+                      </Tooltip>
+
                       <button
-                        onClick={() =>
-                          handleUpdateNote(selectedNote.id, {
-                            favorite: !selectedNote.favorite,
-                          })
-                        }
-                        className="p-1 rounded text-muted-foreground hover:text-foreground"
+                        onClick={() => setIsEditing(false)}
+                        className="p-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer ml-1"
+                        title="Close editor"
                       >
-                        <Star
-                          className={cn(
-                            "size-4",
-                            selectedNote.favorite &&
-                              "fill-foreground text-foreground"
-                          )}
-                        />
+                        <X className="size-4" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={cn("text-[9px] font-bold uppercase", getCategoryColor(selectedNote.category))}>
-                        {selectedNote.category}
-                      </Badge>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        Modified {new Date(selectedNote.updatedAt).toLocaleString()}
-                      </span>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-1.5 min-h-0 scrollbar-thin">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Note Title</label>
+                      <Input
+                        placeholder="Enter title..."
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="text-xs border-border bg-muted/20 h-9 rounded-xl"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">Category:</label>
+                      <Select value={editCategory} onValueChange={setEditCategory}>
+                        <SelectTrigger className="w-[160px] h-8.5 text-xs bg-muted/20 border-border rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="work" className="text-xs">Work</SelectItem>
+                          <SelectItem value="ideas" className="text-xs">Ideas</SelectItem>
+                          <SelectItem value="personal" className="text-xs">Personal</SelectItem>
+                          <SelectItem value="general" className="text-xs">General</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex-1 flex flex-col space-y-1.5 min-h-[260px]">
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Body Content</label>
+                      <Textarea
+                        placeholder="Body content..."
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="flex-1 text-sm border-border bg-muted/20 resize-none p-4 leading-relaxed rounded-xl focus:border-border min-h-[250px] overflow-y-auto"
+                      />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex justify-end gap-2 border-t border-border/60 pt-4 shrink-0">
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={startEditing}
-                      className="h-8 text-xs border-border font-semibold gap-1"
+                      onClick={() => setIsEditing(false)}
+                      className="h-8.5 text-xs border-border rounded-xl font-semibold"
                     >
-                      <Edit3 className="size-3.5" /> Edit Note
+                      Cancel
                     </Button>
                     <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteNote(selectedNote.id)}
-                      className="h-8 text-xs text-destructive hover:bg-destructive/10 border-border font-semibold gap-1"
+                      onClick={() =>
+                        handleUpdateNote(selectedNote.id, {
+                          title: editTitle,
+                          content: editContent,
+                          category: editCategory,
+                        })
+                      }
+                      className="h-8.5 text-xs bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-xl px-4 shadow-sm"
                     >
-                      <Trash2 className="size-3.5" /> Delete
+                      <Check className="size-3 mr-1" /> Save Changes
                     </Button>
                   </div>
                 </div>
+              ) : (
+                /* DETAIL PREVIEW VIEW */
+                <div className="flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5">
+                  {/* Note title and quick actions */}
+                  <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4 flex-wrap shrink-0">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground tracking-tight">
+                          {selectedNote.title || "Untitled Note"}
+                        </h2>
+                        <button
+                          onClick={() =>
+                            handleUpdateNote(selectedNote.id, {
+                              favorite: !selectedNote.favorite,
+                            })
+                          }
+                          className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                        >
+                          <Star
+                            className={cn(
+                              "size-4",
+                              selectedNote.favorite &&
+                              "fill-amber-400 text-amber-400"
+                            )}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn("text-[9px] font-bold uppercase rounded-md", getCategoryColor(selectedNote.category))}>
+                          {selectedNote.category}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-mono">
+                          <Calendar className="size-3" />
+                          Modified {new Date(selectedNote.updatedAt).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Note body preview scroll space */}
-                <div className="flex-grow overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-foreground/90 font-light pr-2 scrollbar-thin">
-                  {selectedNote.content || (
-                    <span className="text-muted-foreground italic">No content inside this note yet. Click Edit to add some.</span>
-                  )}
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => convertNoteToTask(selectedNote)}
+                            className="size-8.5 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/15 rounded-xl shadow-xs"
+                          >
+                            <BookOpen className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Convert to Task</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => convertNoteToEvent(selectedNote)}
+                            className="size-8.5 border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5 hover:bg-purple-500/15 rounded-xl shadow-xs"
+                          >
+                            <Calendar className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Schedule Event</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={startEditing}
+                            className="size-8.5 border-border hover:bg-muted text-foreground rounded-xl shadow-xs"
+                          >
+                            <Edit3 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Edit Note</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => handleDeleteNote(selectedNote.id)}
+                            className="size-8.5 text-rose-500 hover:bg-rose-500/10 border-rose-500/30 bg-rose-500/5 rounded-xl shadow-xs"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Delete Note</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Note Body Container with Enhanced Readability */}
+                  <ScrollArea className="flex-1 min-h-[380px] w-full rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground font-normal tracking-normal select-text space-y-3 pr-3">
+                      {selectedNote.content ? (
+                        selectedNote.content.split("\n\n").map((paragraph, idx) => (
+                          <p key={idx} className="leading-relaxed">
+                            {paragraph}
+                          </p>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground italic font-normal text-xs">No content inside this note yet. Click Edit Note to write details.</span>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
+              )
+            ) : (
+              /* EMPTY PLACEHOLDER VIEW */
+              <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground gap-3 bg-card rounded-xl border border-dashed border-border p-8">
+                <FileText className="size-12 text-muted-foreground/30" />
+                <span className="text-xs font-semibold">Select a note from the library list to view or edit details</span>
               </div>
-            )
-          ) : (
-            /* EMPTY PLACEHOLDER VIEW */
-            <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground gap-3 bg-background">
-              <FileText className="size-16 text-muted-foreground/20" />
-              <span className="text-sm font-semibold">Select a note from the library list to view or edit details</span>
-            </div>
-          )}
+            )}
+          </div>
+
         </div>
+
       </div>
     </TooltipProvider>
   );

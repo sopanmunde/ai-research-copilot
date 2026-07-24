@@ -15,9 +15,9 @@ Includes:
 import re
 from typing import List
 from langchain_core.documents import Document
-from src.rag.ingestion.chunking import semantic_chunk, recursive_chunk
-from src.rag.ingestion.metadata_extractor import enrich_metadata
-from src.core.logger import get_logger
+from rag.ingestion.chunking import semantic_chunk, recursive_chunk
+from rag.ingestion.metadata_extractor import enrich_metadata
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

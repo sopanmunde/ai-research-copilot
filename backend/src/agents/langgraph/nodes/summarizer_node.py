@@ -5,12 +5,12 @@ Synthesizes retrieved document chunks (or LLM knowledge) into a clear,
 well-cited markdown answer using the dynamically selected LLM.
 Supports automatic provider failover on quota errors.
 """
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
 from langchain_core.callbacks.manager import adispatch_custom_event
-from src.agents.langgraph.state import AgentState
-from src.core.llm_factory import get_llm, get_fallback_providers
-from src.agents.langgraph.nodes.utils import extract_text
-from src.core.logger import get_logger
+from agents.langgraph.state import AgentState
+from core.llm_factory import get_llm, get_fallback_providers
+from agents.langgraph.nodes.utils import extract_text
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -129,7 +129,7 @@ async def summarizer_node(state: AgentState) -> dict:
     if long_term_memory:
         system_prompt += f"\n\n{long_term_memory}"
 
-    messages = [SystemMessage(content=system_prompt)]
+    messages: list[BaseMessage] = [SystemMessage(content=system_prompt)]
 
     for turn in history[-history_turns:]:
         role = turn.get("role", "")

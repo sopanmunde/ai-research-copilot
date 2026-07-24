@@ -71,7 +71,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
     try {
       const token = localStorage.getItem("token");
       const url = `${API_BASE_URL}/audio/tts?text=${encodeURIComponent(content)}`;
-      
+
       const testRes = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -84,7 +84,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       setAudioInstance(audio);
-      
+
       audio.onended = () => {
         setIsSpeaking(false);
         setAudioInstance(null);
@@ -100,12 +100,12 @@ export default function Message({ role, content, sources, quality_score, agent_s
     } catch (err) {
       console.log("ElevenLabs TTS not available, falling back to Browser speechSynthesis: ", err.message);
       window.speechSynthesis.cancel();
-      
+
       const cleanText = content
         .replace(/\[\d+\]/g, "")
         .replace(/[*_`#]/g, "")
         .trim();
-        
+
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.onend = () => {
         setIsSpeaking(false);
@@ -113,7 +113,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
       utterance.onerror = () => {
         setIsSpeaking(false);
       };
-      
+
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -202,11 +202,11 @@ export default function Message({ role, content, sources, quality_score, agent_s
                   </h4>
                   <ul className="space-y-1.5 list-none pl-0">
                     {sources.map((src, i) => {
-                      const confPercent = src.confidence ? Math.round(src.confidence * 100) : null;
-                      const confColorClass = confPercent >= 80 
-                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20" 
-                        : confPercent >= 55 
-                          ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" 
+                      const confPercent = confidence ? Math.round(confidence * 100) : null;
+                      const confColorClass = confPercent >= 80
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : confPercent >= 55
+                          ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"
                           : "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20";
                       return (
                         <li
@@ -217,19 +217,19 @@ export default function Message({ role, content, sources, quality_score, agent_s
                             {i + 1}
                           </span>
                           <span className="break-all flex-1 min-w-0">
-                            {src.url ? (
+                            {url ? (
                               <a
-                                href={src.url}
+                                href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
                               >
-                                {src.source || src.filename || "Unknown Source"}
+                                {source || filename || "Unknown Source"}
                               </a>
                             ) : (
-                              src.source || src.filename || "Unknown Source"
+                              source || filename || "Unknown Source"
                             )}{" "}
-                            {src.page && src.page !== "N/A" ? `(Page ${src.page})` : ""}
+                            {page && page !== "N/A" ? `(Page ${page})` : ""}
                           </span>
                           {confPercent !== null && (
                             <span className={cls("shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border leading-none ml-2", confColorClass)}>
@@ -264,9 +264,9 @@ export default function Message({ role, content, sources, quality_score, agent_s
                             </span>
                           </div>
                           <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" 
-                              style={{ width: `${pct}%` }} 
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%` }}
                             />
                           </div>
                         </div>
@@ -341,7 +341,7 @@ export default function Message({ role, content, sources, quality_score, agent_s
                     <span className="text-[10px] text-zinc-400 font-normal">({agent_steps.length} step{agent_steps.length !== 1 ? 's' : ''})</span>
                     <ChevronDown className={cls("h-3.5 w-3.5 transition-transform duration-250 text-zinc-400", showSteps && "rotate-180")} />
                   </button>
-                  
+
                   {showSteps && (
                     <div className="mt-3.5 pl-2.5 border-l border-zinc-200 dark:border-zinc-850 space-y-4">
                       {agent_steps.map((step, idx) => {
@@ -364,13 +364,13 @@ export default function Message({ role, content, sources, quality_score, agent_s
                         const isCompleted = step.status === "completed";
                         const isRunning = step.status === "running";
                         const isFailed = step.status === "failed";
-                        
+
                         return (
                           <div key={idx} className="relative flex items-start gap-3">
-                            <div className={cls("mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold", 
+                            <div className={cls("mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold",
                               isCompleted ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" :
-                              isRunning ? "border-blue-500/25 bg-blue-500/5 text-blue-600 dark:text-blue-400 animate-pulse" :
-                              "border-rose-500/25 bg-rose-500/5 text-rose-600 dark:text-rose-400"
+                                isRunning ? "border-blue-500/25 bg-blue-500/5 text-blue-600 dark:text-blue-400 animate-pulse" :
+                                  "border-rose-500/25 bg-rose-500/5 text-rose-600 dark:text-rose-400"
                             )}>
                               {isCompleted ? "✓" : isRunning ? "●" : "✗"}
                             </div>

@@ -9,9 +9,9 @@ Uses the 5-section report structure:
 """
 from typing import List, Dict, Optional
 from langchain_core.messages import SystemMessage, HumanMessage
-from src.rag.retrieval.citation_retriever import retrieve_with_citations
-from src.rag.pipelines.rag_pipeline import build_context_string
-from src.core.logger import get_logger
+from rag.retrieval.citation_retriever import retrieve_with_citations
+from rag.pipelines.rag_pipeline import build_context_string
+from core.logger import get_logger
 
 logger = get_logger(__name__)
 

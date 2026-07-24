@@ -2,7 +2,7 @@ Starting index.py...
 Importing main.py... Fastapi
 Importing config...
 Importing mongo indexes...
-2026-07-02 01:13:08 | INFO     | src.database.mongodb.connection | Custom DNS resolver configured for MongoDB (Google/Cloudflare DNS)
+2026-07-02 01:13:08 | INFO     | database.mongodb.connection | Custom DNS resolver configured for MongoDB (Google/Cloudflare DNS)
 Importing routers...
 main.py imports complete.
 Imported create_app, creating app...
@@ -14,26 +14,26 @@ INFO:     Waiting for application startup.
 Starting index.py...
 Imported create_app, creating app...
 App created successfully.
-2026-07-02 01:16:22 | INFO     | src.main | Starting TriVisionX v3.0.0
-2026-07-02 01:16:22 | INFO     | src.main.signals | Cooperative signal handler registered for signal 15
-2026-07-02 01:16:22 | INFO     | src.main.signals | Cooperative signal handler registered for signal 2
-2026-07-02 01:16:22 | INFO     | src.database.mongodb.connection | Connecting to MongoDB: mongodb+srv://sopan_db:sopan8767@cluster...
-2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: users.email (unique)
-2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: conversations.user_id, updated_at
-2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: messages.conversation_id, created_at (compound)
-2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: documents.user_id, uploaded_at
-2026-07-02 01:16:25 | INFO     | src.database.mongodb.indexes | Index: reports.user_id, conversation_id, created_at
-2026-07-02 01:16:25 | INFO     | src.main | [OK] MongoDB indexes ready
-2026-07-02 01:16:25 | INFO     | src.rag.vectorstores.pinecone_store | Connecting to Pinecone index: trivisionx (embedding_provider=google)
-2026-07-02 01:16:25 | INFO     | src.rag.embeddings.google_embeddings | Initializing embeddings: provider=google, model=models/gemini-embedding-001, dim=384
+2026-07-02 01:16:22 | INFO     | main | Starting TriVisionX v3.0.0
+2026-07-02 01:16:22 | INFO     | main.signals | Cooperative signal handler registered for signal 15
+2026-07-02 01:16:22 | INFO     | main.signals | Cooperative signal handler registered for signal 2
+2026-07-02 01:16:22 | INFO     | database.mongodb.connection | Connecting to MongoDB: mongodb+srv://sopan_db:sopan8767@cluster...
+2026-07-02 01:16:25 | INFO     | database.mongodb.indexes | Index: users.email (unique)
+2026-07-02 01:16:25 | INFO     | database.mongodb.indexes | Index: conversations.user_id, updated_at
+2026-07-02 01:16:25 | INFO     | database.mongodb.indexes | Index: messages.conversation_id, created_at (compound)
+2026-07-02 01:16:25 | INFO     | database.mongodb.indexes | Index: documents.user_id, uploaded_at
+2026-07-02 01:16:25 | INFO     | database.mongodb.indexes | Index: reports.user_id, conversation_id, created_at
+2026-07-02 01:16:25 | INFO     | main | [OK] MongoDB indexes ready
+2026-07-02 01:16:25 | INFO     | rag.vectorstores.pinecone_store | Connecting to Pinecone index: trivisionx (embedding_provider=google)
+2026-07-02 01:16:25 | INFO     | rag.embeddings.google_embeddings | Initializing embeddings: provider=google, model=models/gemini-embedding-001, dim=384
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
 E0000 00:00:1782935191.555813   27324 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
 E0000 00:00:1782935191.584356   27324 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
-2026-07-02 01:16:35 | INFO     | src.main | [OK] Pinecone vector store connected
-2026-07-02 01:16:35 | INFO     | src.agents.langgraph.graph | [Graph] Research workflow compiled successfully
-2026-07-02 01:16:35 | INFO     | src.main | [OK] LangGraph 5-agent workflow compiled
-2026-07-02 01:16:35 | INFO     | src.main | Redis cache disabled (REDIS_URL not set)
-2026-07-02 01:16:35 | INFO     | src.main | Application ready [OK]
+2026-07-02 01:16:35 | INFO     | main | [OK] Pinecone vector store connected
+2026-07-02 01:16:35 | INFO     | agents.langgraph.graph | [Graph] Research workflow compiled successfully
+2026-07-02 01:16:35 | INFO     | main | [OK] LangGraph 5-agent workflow compiled
+2026-07-02 01:16:35 | INFO     | main | Redis cache disabled (REDIS_URL not set)
+2026-07-02 01:16:35 | INFO     | main | Application ready [OK]
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 2026-07-02 01:16:41 | INFO     | http | GET /v1/models -> 404 (1.9ms)

@@ -10,10 +10,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime, timezone
-from src.core.security import get_current_user
-from src.database.mongodb.connection import get_database
-from src.core.constants import COLLECTION_CONVERSATIONS, COLLECTION_MESSAGES
-from src.schemas.conversation import ConversationCreate, ConversationUpdate
+from core.security import get_current_user
+from database.mongodb.connection import get_database
+from core.constants import COLLECTION_CONVERSATIONS, COLLECTION_MESSAGES
+from schemas.conversation import ConversationCreate, ConversationUpdate
 
 router = APIRouter()
 
