@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import {
@@ -24,21 +24,21 @@ export default function ModernConfirmDialog({
 }) {
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AlertDialogContent className="max-w-[380px] rounded-[24px] border border-zinc-200/80 bg-white/95 backdrop-blur-xl p-6 shadow-2xl dark:border-zinc-800/80 dark:bg-zinc-950/95 gap-5 flex flex-col items-center overflow-hidden">
-        {/* Top glowing fuchsia-fuchsia-blue gradient strip */}
-        <div className="absolute top-0 inset-x-0 h-[4px] bg-gradient-to-r from-fuchsia-500 via-fuchsia-500 to-blue-500 rounded-t-[24px] pointer-events-none" />
+      <AlertDialogContent className="max-w-[380px] rounded-[24px] border border-border bg-popover text-popover-foreground backdrop-blur-xl p-6 shadow-2xl gap-5 flex flex-col items-center overflow-hidden">
+        {/* Top glowing strip */}
+        <div className="absolute top-0 inset-x-0 h-[4px] bg-primary rounded-t-[24px] pointer-events-none" />
 
         <AlertDialogHeader className="flex flex-col items-center gap-3.5 text-center sm:text-center">
           {/* Circular Glowing Icon Shell */}
           <div className={`flex h-12 w-12 items-center justify-center rounded-full shrink-0 border relative ${
             variant === "destructive" 
-              ? "bg-red-50 border-red-200/60 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400" 
+              ? "bg-destructive/10 border-destructive/20 text-destructive" 
               : variant === "warning"
-              ? "bg-amber-50 border-amber-200/60 text-amber-500 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400"
-              : "bg-blue-50 border-blue-200/60 text-blue-500 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
+              ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
+              : "bg-primary/10 border-primary/20 text-primary"
           }`}>
             <div className={`absolute inset-0 rounded-full blur-[8px] opacity-20 pointer-events-none ${
-              variant === "destructive" ? "bg-red-500" : variant === "warning" ? "bg-amber-500" : "bg-blue-500"
+              variant === "destructive" ? "bg-destructive" : variant === "warning" ? "bg-amber-500" : "bg-primary"
             }`} />
             {variant === "destructive" ? (
               <Trash2 className="h-5 w-5 relative z-10 animate-pulse" />
@@ -49,10 +49,10 @@ export default function ModernConfirmDialog({
             )}
           </div>
           <div className="space-y-1.5">
-            <AlertDialogTitle className="text-[16px] font-bold text-zinc-900 dark:text-white tracking-tight">
+            <AlertDialogTitle className="text-[16px] font-bold text-foreground tracking-tight">
               {title}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-[280px] mx-auto">
+            <AlertDialogDescription className="text-[13px] text-muted-foreground leading-relaxed max-w-[280px] mx-auto">
               {description}
             </AlertDialogDescription>
           </div>
@@ -61,7 +61,7 @@ export default function ModernConfirmDialog({
           <AlertDialogPrimitive.Cancel asChild>
             <button
               onClick={onClose}
-              className="flex items-center justify-center flex-1 rounded-xl h-10 text-[13px] font-bold border border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80 text-zinc-500 dark:text-zinc-400 cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] outline-none"
+              className="flex items-center justify-center flex-1 rounded-xl h-10 text-[13px] font-bold border border-border bg-background hover:bg-accent text-muted-foreground hover:text-foreground cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] outline-none"
             >
               {cancelText}
             </button>

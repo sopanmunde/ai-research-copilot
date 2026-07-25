@@ -14,26 +14,26 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white shadow-sm hover:bg-destructive/90 hover:shadow-destructive/20 border border-destructive/20 dark:bg-rose-600 dark:hover:bg-rose-500",
         outline:
-          "border border-border/80 bg-background text-foreground shadow-2xs hover:bg-accent hover:text-accent-foreground dark:border-zinc-800 dark:bg-zinc-900/60 dark:hover:bg-zinc-800",
+          "border border-border/80 bg-background text-foreground shadow-2xs hover:bg-accent hover:text-accent-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-secondary/50 shadow-2xs",
         ghost:
-          "hover:bg-accent/80 hover:text-accent-foreground text-muted-foreground dark:hover:bg-zinc-800/80",
+          "hover:bg-accent/80 hover:text-accent-foreground text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline p-0 h-auto font-normal",
         transparent:
           "bg-transparent border border-transparent text-foreground hover:bg-accent/50 hover:border-border/50 shadow-none active:scale-[0.98]",
 
         // Custom Premium Variants
         purple:
-          "bg-purple-600 text-white shadow-sm hover:bg-purple-500 hover:shadow-purple-500/25 dark:bg-purple-600 dark:hover:bg-purple-500 border border-purple-500/30",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 border border-primary/20",
         emerald:
-          "bg-emerald-600 text-white shadow-sm hover:bg-emerald-500 hover:shadow-emerald-500/25 dark:bg-emerald-600 dark:hover:bg-emerald-500 border border-emerald-500/30",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 border border-primary/20",
         gradient:
-          "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white shadow-md hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 hover:shadow-purple-500/20 border border-white/10",
+          "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 border border-border",
         glass:
           "bg-background/60 backdrop-blur-md border border-border/80 text-foreground hover:bg-accent hover:text-accent-foreground shadow-2xs hover:border-border",
         amber:
-          "bg-amber-600 text-white shadow-sm hover:bg-amber-500 hover:shadow-amber-500/25 border border-amber-500/30",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 border border-border",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3 text-sm",

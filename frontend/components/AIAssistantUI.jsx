@@ -20,6 +20,7 @@ import { BrainDashboard } from "./BrainDashboard";
 import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
+import { IntegrationsDashboard } from "./IntegrationsDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
 import WorkflowsModal from "./WorkflowsModal";
@@ -737,7 +738,7 @@ export default function AIAssistantUI() {
     <div
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative flex h-screen w-full overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+      className="relative flex h-screen w-full overflow-hidden bg-background text-foreground"
     >
       {/* Background radial glows to match landing page */}
       <div
@@ -791,7 +792,7 @@ export default function AIAssistantUI() {
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border/80 md:rounded-2xl md:bg-card/20 md:backdrop-blur-md">
-          {!["docs", "calendar", "email", "brain", "tasks", "notes"].includes(selectedId) && (
+          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins"].includes(selectedId) && (
             <Header
               createNewChat={createNewChat}
               sidebarCollapsed={sidebarCollapsed}
@@ -800,12 +801,12 @@ export default function AIAssistantUI() {
               onUserUpdate={fetchUser}
               selectedBot={selectedBot}
               setSelectedBot={setSelectedBot}
-              onToggleIntegrations={() => setIsIntegrationsOpen(!isIntegrationsOpen)}
+              onToggleIntegrations={() => setSelectedId(selectedId === "integrations" || selectedId === "plugins" ? null : "integrations")}
               onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
               onOpenWorkflows={() => setIsWorkflowsOpen(true)}
             />
           )}
-          {["docs", "calendar", "email", "brain", "tasks", "notes"].includes(selectedId) && (
+          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins"].includes(selectedId) && (
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
@@ -847,6 +848,8 @@ export default function AIAssistantUI() {
             <TaskDashboard />
           ) : selectedId === "notes" ? (
             <NotesDashboard />
+          ) : selectedId === "integrations" || selectedId === "plugins" ? (
+            <IntegrationsDashboard onNavigateToChat={() => setSelectedId(null)} />
           ) : (
             <ChatPane
               ref={composerRef}
@@ -869,7 +872,7 @@ export default function AIAssistantUI() {
               onDismissProviderSwitch={() => setProviderSwitchEvent(null)}
               selectedBot={selectedBot}
               onNavigateTo={(id) => setSelectedId(id)}
-              onAddNewSkill={() => setIsIntegrationsOpen(true)}
+              onAddNewSkill={() => setSelectedId("integrations")}
             />
           )}
           <IntegrationsPanel

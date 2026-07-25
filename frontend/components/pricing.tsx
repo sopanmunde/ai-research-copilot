@@ -78,7 +78,7 @@ export function Pricing() {
   );
 
   return (
-    <section id="pricing" className="py-24 px-4 bg-zinc-950/40 relative border-t border-zinc-900/50">
+    <section id="pricing" className="py-24 px-4 bg-background relative border-t border-border">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -86,25 +86,25 @@ export function Pricing() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
             Predictable pricing built for agent execution
           </h2>
-          <p className="text-zinc-400 max-w-2xl mx-auto mb-8 text-sm sm:text-base">
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-sm sm:text-base">
             Choose a plan that fits your computational throughput. Scale concurrency and agent steps dynamically as you grow.
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center p-1 rounded-full bg-zinc-900 border border-zinc-800/80">
+          <div className="inline-flex items-center p-1 rounded-full bg-muted border border-border">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
-                billingCycle === "monthly" ? "text-white" : "text-zinc-400"
+                billingCycle === "monthly" ? "text-foreground font-semibold" : "text-muted-foreground"
               }`}
             >
               {billingCycle === "monthly" && (
                 <motion.div
                   layoutId="billing-toggle"
-                  className="absolute inset-0 bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-background rounded-full shadow-2xs border border-border"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -113,13 +113,13 @@ export function Pricing() {
             <button
               onClick={() => setBillingCycle("yearly")}
               className={`relative px-4 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer ${
-                billingCycle === "yearly" ? "text-white" : "text-zinc-400"
+                billingCycle === "yearly" ? "text-foreground font-semibold" : "text-muted-foreground"
               }`}
             >
               {billingCycle === "yearly" && (
                 <motion.div
                   layoutId="billing-toggle"
-                  className="absolute inset-0 bg-zinc-800 rounded-full"
+                  className="absolute inset-0 bg-background rounded-full shadow-2xs border border-border"
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               )}
@@ -148,14 +148,14 @@ export function Pricing() {
                 transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
                 className={`relative p-6 md:p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between ${
                   plan.highlighted
-                    ? "bg-zinc-900/60 border-purple-500/30 shadow-[0_0_30px_rgba(139,92,246,0.05)]"
-                    : "bg-zinc-900/20 border-zinc-800 hover:border-zinc-700"
+                    ? "bg-card border-primary/40 shadow-lg"
+                    : "bg-card/60 border-border hover:border-border/80"
                 }`}
               >
                 {plan.highlighted && <BorderBeam />}
 
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-500 text-white text-[10px] font-mono font-bold uppercase tracking-wider rounded-full shadow-lg">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-[10px] font-mono font-bold uppercase tracking-wider rounded-full shadow-lg">
                     Recommended
                   </div>
                 )}
@@ -163,25 +163,25 @@ export function Pricing() {
                 <div>
                   <div className="mb-6 flex justify-between items-start">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                        <Icon className="w-5 h-5 text-purple-400" />
+                      <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
+                        <Icon className="w-5 h-5 text-primary" />
                         {plan.name}
                       </h3>
-                      <p className="text-zinc-400 text-xs leading-relaxed">{plan.description}</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">{plan.description}</p>
                     </div>
                   </div>
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-white">
+                      <span className="text-4xl font-extrabold text-foreground">
                         ${plan.price[billingCycle]}
                       </span>
                       {plan.price.monthly > 0 && (
-                        <span className="text-zinc-500 text-xs font-mono">/month</span>
+                        <span className="text-muted-foreground text-xs font-mono">/month</span>
                       )}
                     </div>
                     {billingCycle === "yearly" && plan.price.yearly > 0 && (
-                      <p className="text-[10px] text-zinc-500 mt-1 font-mono">
+                      <p className="text-[10px] text-muted-foreground mt-1 font-mono">
                         Billed annually (${plan.price.yearly * 12}/yr)
                       </p>
                     )}
@@ -191,10 +191,10 @@ export function Pricing() {
                     {plan.features.map((feature) => (
                       <li
                         key={feature}
-                        className="flex items-start gap-3 text-xs text-zinc-300 leading-relaxed"
+                        className="flex items-start gap-3 text-xs text-foreground/90 leading-relaxed"
                       >
                         <Check
-                          className="w-4 h-4 text-purple-400 shrink-0 mt-0.5"
+                          className="w-4 h-4 text-primary shrink-0 mt-0.5"
                           strokeWidth={2}
                         />
                         <span>{feature}</span>
@@ -206,8 +206,8 @@ export function Pricing() {
                 <Button
                   className={`w-full rounded-xl h-11 text-xs font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer ${
                     plan.highlighted
-                      ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-950 shadow-lg"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700/80"
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
                   }`}
                 >
                   {plan.cta}

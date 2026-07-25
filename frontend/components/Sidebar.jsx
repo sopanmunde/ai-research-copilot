@@ -21,6 +21,7 @@ import {
   Globe,
   ImageIcon,
   CheckSquare,
+  Plug,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import ConversationRow from "./ConversationRow";
@@ -30,6 +31,7 @@ import FolderPopover from "./CreateFolderModal";
 import TemplatePopover from "./CreateTemplateModal";
 import SearchPopover from "./SearchModal";
 import SettingsPopover from "./SettingsPopover";
+import { AnimatedThemeToggler } from "./ui/animated-theme-toggler";
 import { cls } from "./utils";
 import { useState, useEffect, forwardRef } from "react";
 
@@ -42,7 +44,7 @@ function loadLS(key, fallback) {
 }
 function saveLS(key, value) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { }
 }
 
 function groupByDate(conversations) {
@@ -73,30 +75,32 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
       initial={{ width: 260 }}
       animate={{ width: 52 }}
       transition={{ type: "spring", stiffness: 300, damping: 32 }}
-      className="z-50 flex h-full shrink-0 flex-col border border-zinc-200 dark:border-zinc-800 bg-white/70 backdrop-blur-xl dark:bg-[#0B0B0C] md:rounded-2xl shadow-sm"
+      data-slot="sidebar"
+      data-sidebar="sidebar"
+      className="z-50 flex h-full shrink-0 flex-col border border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-xl md:rounded-2xl shadow-sm"
     >
-      <div className="flex items-center justify-center border-b border-white/[0.06] px-1.5 py-3">
+      <div className="flex items-center justify-center border-b border-sidebar-border/60 px-1.5 py-3">
         <button
           onClick={() => setSidebarCollapsed(false)}
           title="Open sidebar"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-zinc-500 transition-all hover:bg-zinc-100 hover:text-zinc-700 active:scale-95 dark:bg-white/[0.05] dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-200"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sidebar-foreground/70 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95"
         >
           <PanelLeftOpen className="h-4 w-4" />
         </button>
       </div>
       <div className="flex flex-1 flex-col items-center gap-2 pt-3 px-1.5">
-        <button onClick={createNewChat} title="New Chat" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
+        <button onClick={createNewChat} title="New Chat" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95">
           <PenSquare className="h-4 w-4" />
         </button>
         <SearchPopover conversations={conversations} onSelect={onSelect} createNewChat={createNewChat}>
-          <button title="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
+          <button title="Search" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95">
             <SearchIcon className="h-4 w-4" />
           </button>
         </SearchPopover>
-        <button title="Templates" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
+        <button title="Templates" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95">
           <FileText className="h-4 w-4" />
         </button>
-        <button title="Folders" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-400 transition-all hover:bg-white/10 hover:text-zinc-200 active:scale-95">
+        <button title="Folders" className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95">
           <FolderIcon className="h-4 w-4" />
         </button>
         <button
@@ -105,8 +109,8 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           className={cls(
             "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
             selectedId === "notes"
-              ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
-              : "border-white/10 bg-white/[0.05] text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           )}
         >
           <FileText className="h-4 w-4" />
@@ -117,16 +121,32 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           className={cls(
             "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
             selectedId === "email"
-              ? "border-indigo-500 bg-indigo-500/10 text-indigo-400"
-              : "border-white/10 bg-white/[0.05] text-zinc-400 hover:bg-white/10 hover:text-zinc-200"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           )}
         >
           <Mail className="h-4 w-4" />
         </button>
+        <button
+          onClick={() => onSelect("integrations")}
+          title="Plugins & Integrations"
+          className={cls(
+            "inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all active:scale-95",
+            selectedId === "integrations" || selectedId === "plugins"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          )}
+        >
+          <Plug className="h-4 w-4" />
+        </button>
       </div>
       <div className="flex flex-col items-center gap-2 pb-3 px-1.5">
+        <AnimatedThemeToggler
+          title="Toggle Theme"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95 [&_svg]:size-4 cursor-pointer"
+        />
         <SettingsPopover onUserUpdate={onUserUpdate}>
-          <button title="Settings" className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] border border-primary-foreground/20">
+          <button title="Settings" className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-sm border border-primary-foreground/20">
             {userInitials || "U"}
           </button>
         </SettingsPopover>
@@ -144,14 +164,14 @@ function AccordionSection({ id, icon, title, badge, isOpen, onToggle, addAction,
           aria-expanded={isOpen}
           aria-controls={`acc-panel-${id}`}
           onClick={onToggle}
-          className="group relative flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-150 select-none hover:bg-zinc-100 dark:hover:bg-zinc-900/60 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-fuchsia-500/50"
+          className="group relative flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-150 select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          <span className="shrink-0 text-zinc-500 group-hover:text-zinc-300 transition-colors">{icon}</span>
-          <span className="flex-1 text-[11px] font-semibold text-zinc-600 group-hover:text-zinc-800 dark:text-zinc-400 dark:group-hover:text-zinc-200 transition-colors">{title}</span>
+          <span className="shrink-0 text-muted-foreground group-hover:text-sidebar-foreground transition-colors">{icon}</span>
+          <span className="flex-1 text-[11px] font-semibold text-sidebar-foreground/80 group-hover:text-sidebar-foreground transition-colors">{title}</span>
           {badge > 0 && (
-            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-200/50 dark:bg-zinc-900/40 px-1 text-[9px] font-bold tabular-nums text-zinc-500 group-hover:bg-zinc-200 group-hover:text-zinc-600 dark:group-hover:bg-zinc-800/60 dark:group-hover:text-zinc-400 transition-colors">{badge}</span>
+            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground px-1 text-[9px] font-bold tabular-nums transition-colors">{badge}</span>
           )}
-          <ChevronDown className={cls("h-3 w-3 text-zinc-600 group-hover:text-zinc-400 transition-all duration-200", isOpen ? "rotate-0" : "-rotate-90")} />
+          <ChevronDown className={cls("h-3 w-3 text-muted-foreground group-hover:text-sidebar-foreground transition-all duration-200", isOpen ? "rotate-0" : "-rotate-90")} />
         </button>
         {addAction && (
           <div className="shrink-0" onClick={e => e.stopPropagation()}>{addAction}</div>
@@ -172,8 +192,8 @@ function DateSection({ label, isOpen, onToggle, children }) {
   return (
     <section aria-label={label} className="mt-1">
       <button aria-expanded={isOpen} onClick={onToggle} className="group flex w-full items-center justify-between px-2 py-1 select-none focus-visible:outline-none">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 group-hover:text-zinc-400 transition-colors">{label}</span>
-        <ChevronDown className={cls("h-2.5 w-2.5 text-zinc-700 group-hover:text-zinc-500 transition-all duration-200", isOpen ? "rotate-0" : "-rotate-90")} />
+        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground group-hover:text-sidebar-foreground transition-colors">{label}</span>
+        <ChevronDown className={cls("h-2.5 w-2.5 text-muted-foreground group-hover:text-sidebar-foreground transition-all duration-200", isOpen ? "rotate-0" : "-rotate-90")} />
       </button>
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -187,18 +207,18 @@ function DateSection({ label, isOpen, onToggle, children }) {
 }
 
 const AddBtn = forwardRef(({ title, ...props }, ref) => (
-  <button ref={ref} {...props} aria-label={title} title={title} className="group inline-flex h-6 w-6 items-center justify-center rounded-lg text-zinc-600 transition-all hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-300 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-fuchsia-500/50">
+  <button ref={ref} {...props} aria-label={title} title={title} className="group inline-flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
     <Plus className="h-3 w-3 transition-transform duration-300 ease-in-out group-data-[state=open]:rotate-90" />
   </button>
 ));
 AddBtn.displayName = "AddBtn";
 
 export default function Sidebar({
-  open = false, onClose = () => {}, collapsed = false, setCollapsed = () => {}, conversations = [], pinned = [], recent = [], folders = [], folderCounts = {},
-  selectedId = null, onSelect = () => {}, togglePin = () => {}, query = "", setQuery = () => {}, searchRef = null, createFolder = () => {}, deleteFolder = () => {},
-  renameFolder = () => {}, createNewChat = () => {}, templates = [], setTemplates = () => {}, onUseTemplate = () => {},
-  sidebarCollapsed = false, setSidebarCollapsed = () => {}, onDeleteConversation = () => {},
-  onRenameConversation = () => {}, user = null, onUserUpdate = () => {},
+  open = false, onClose = () => { }, collapsed = false, setCollapsed = () => { }, conversations = [], pinned = [], recent = [], folders = [], folderCounts = {},
+  selectedId = null, onSelect = () => { }, togglePin = () => { }, query = "", setQuery = () => { }, searchRef = null, createFolder = () => { }, deleteFolder = () => { },
+  renameFolder = () => { }, createNewChat = () => { }, templates = [], setTemplates = () => { }, onUseTemplate = () => { },
+  sidebarCollapsed = false, setSidebarCollapsed = () => { }, onDeleteConversation = () => { },
+  onRenameConversation = () => { }, user = null, onUserUpdate = () => { },
 }) {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -315,28 +335,30 @@ export default function Sidebar({
         {mounted && (
           <aside
             key="sidebar"
+            data-slot="sidebar"
+            data-sidebar="sidebar"
             className={cls(
               "z-50 flex h-full w-[260px] shrink-0 flex-col",
               "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
               "fixed inset-y-0 left-0 md:static",
               open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-              "border-r border-zinc-200 dark:border-zinc-800 bg-white/70 backdrop-blur-xl dark:bg-[#0B0B0C] md:rounded-2xl md:border md:shadow-md",
+              "border-r border-sidebar-border bg-sidebar text-sidebar-foreground backdrop-blur-xl md:rounded-2xl md:border md:shadow-md",
               "shadow-[4px_0_24px_rgba(0,0,0,0.12)] md:shadow-sm"
             )}
           >
             {/* HEADER BRAND CONTAINER */}
-            <div className="px-2.5 pt-3 pb-2 shrink-0">
-              <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-muted/50 via-card/80 to-card p-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-between transition-all duration-200">
+            <div data-slot="sidebar-header" className="px-2.5 pt-3 pb-2 shrink-0">
+              <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2.5 shadow-xs flex items-center justify-between transition-all duration-200">
                 <div className="flex items-center gap-2.5">
                   <TriVisionXLogo size="sm" showWordmark animate={false} />
                 </div>
                 <div className="flex items-center gap-1">
                   <button onClick={() => setSidebarCollapsed(true)} title="Collapse sidebar"
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-zinc-500 hover:bg-muted hover:text-foreground border border-transparent hover:border-border/60 transition-all cursor-pointer">
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent hover:border-sidebar-border transition-all cursor-pointer">
                     <Menu className="h-4 w-4" />
                   </button>
                   <button onClick={onClose} aria-label="Close sidebar"
-                    className="md:hidden inline-flex h-7 w-7 items-center justify-center rounded-xl text-zinc-500 hover:bg-muted hover:text-foreground border border-transparent hover:border-border/60 transition-all">
+                    className="md:hidden inline-flex h-7 w-7 items-center justify-center rounded-xl text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent hover:border-sidebar-border transition-all">
                     <PanelLeftClose className="h-4 w-4" />
                   </button>
                 </div>
@@ -344,18 +366,18 @@ export default function Sidebar({
             </div>
 
             {/* STATIC NAVIGATION RAIL */}
-            <div className="px-2.5 pb-2 shrink-0 space-y-0.5 border-b border-zinc-100 dark:border-zinc-900/50 max-h-[460px] overflow-y-auto scrollbar-none">
+            <div data-slot="sidebar-content" className="px-2.5 pb-2 shrink-0 space-y-0.5 border-b border-sidebar-border max-h-[460px] overflow-y-auto scrollbar-none">
               <button
                 onClick={() => {
                   setRotatedNewChat(prev => !prev);
                   createNewChat?.();
                 }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer"
               >
                 <Plus className={cls("h-4 w-4 text-muted-foreground transition-transform duration-300 ease-in-out", rotatedNewChat ? "rotate-90" : "rotate-0")} /><span>New Chat</span>
               </button>
               <SearchPopover conversations={conversations} onSelect={onSelect} createNewChat={createNewChat}>
-                <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
                   <SearchIcon className="h-4 w-4 text-muted-foreground" /><span>Search</span>
                 </button>
               </SearchPopover>
@@ -367,13 +389,27 @@ export default function Sidebar({
                 className={cls(
                   "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
                   selectedId === "email"
-                    ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-muted-foreground" /><span>Email</span></span>
               </button>
-              <button onClick={toggleTools} className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+              <button
+                onClick={() => {
+                  onSelect("integrations");
+                  onClose?.();
+                }}
+                className={cls(
+                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                  selectedId === "integrations" || selectedId === "plugins"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <span className="flex items-center gap-2.5"><Plug className="h-4 w-4 text-muted-foreground" /><span>Plugins & Integrations</span></span>
+              </button>
+              <button onClick={toggleTools} className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
                 <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-muted-foreground" /><span>Tools</span></span>
                 <ChevronDown className={cls("h-3 w-3 opacity-60 transition-transform duration-200", toolsOpen ? "rotate-0" : "-rotate-90")} />
               </button>
@@ -388,20 +424,34 @@ export default function Sidebar({
                     transition={{ duration: 0.2, ease: "easeInOut" }}
                     className="flex flex-col space-y-0.5 overflow-hidden pl-2"
                   >
-                     <button
-                        onClick={() => {
-                          onSelect("brain");
-                          onClose?.();
-                        }}
-                        className={cls(
-                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
-                          selectedId === "brain"
-                            ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                            : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
-                        )}
-                      >
-                        <Brain className="h-4 w-4" /><span>Brain</span>
-                      </button>
+                    <button
+                      onClick={() => {
+                        onSelect("brain");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "brain"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Brain className="h-4 w-4" /><span>Brain</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onSelect("integrations");
+                        onClose?.();
+                      }}
+                      className={cls(
+                        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
+                        selectedId === "integrations" || selectedId === "plugins"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Plug className="h-4 w-4" /><span>Plugins & Integrations</span>
+                    </button>
                     <button
                       onClick={() => {
                         onSelect("calendar");
@@ -410,8 +460,8 @@ export default function Sidebar({
                       className={cls(
                         "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
                         selectedId === "calendar"
-                          ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
                       <Calendar className="h-4 w-4" /><span>Calendar</span>
@@ -424,24 +474,24 @@ export default function Sidebar({
                       className={cls(
                         "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
                         selectedId === "tasks"
-                          ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
                       <CheckSquare className="h-4 w-4" /><span>Tasks</span>
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
                       <BookOpen className="h-4 w-4" /><span>Cookbook</span>
                     </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer">
+                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
                       <SearchIcon className="h-4 w-4" /><span>Deep Research</span>
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         setLibraryOpen(prev => !prev);
                       }}
-                      className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 transition-all cursor-pointer"
+                      className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer"
                     >
                       <span className="flex items-center gap-2.5"><FolderIcon className="h-4 w-4" /><span>Library</span></span>
                       <ChevronDown className={cls("h-3.5 w-3.5 opacity-60 transition-transform duration-200", libraryOpen ? "rotate-0" : "-rotate-90")} />
@@ -455,7 +505,7 @@ export default function Sidebar({
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2, ease: "easeInOut" }}
-                          className="flex flex-col space-y-0.5 overflow-hidden pl-4 border-l border-zinc-100 dark:border-zinc-900/50 ml-4.5"
+                          className="flex flex-col space-y-0.5 overflow-hidden pl-4 border-l border-sidebar-border ml-4.5"
                         >
                           <button
                             onClick={() => {
@@ -465,8 +515,8 @@ export default function Sidebar({
                             className={cls(
                               "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
                               selectedId === "docs"
-                                ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                           >
                             <ImageIcon className="h-4 w-4" /><span>Gallery</span>
@@ -479,8 +529,8 @@ export default function Sidebar({
                             className={cls(
                               "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
                               selectedId === "notes"
-                                ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-50 font-semibold"
-                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                           >
                             <FileText className="h-4 w-4" /><span>Notes</span>
@@ -511,7 +561,7 @@ export default function Sidebar({
                     onEditTemplate={handleEditTemplate} onRenameTemplate={handleRenameTemplate}
                     onDeleteTemplate={handleDeleteTemplate} />
                 ))}
-                {templateCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-zinc-600">No templates yet</p>}
+                {templateCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No templates yet</p>}
               </AccordionSection>
 
               <AccordionSection
@@ -532,13 +582,13 @@ export default function Sidebar({
                     isExpanded={expandedFolder === f.id}
                     onToggle={() => setExpandedFolder(prev => prev === f.id ? null : f.id)} />
                 ))}
-                {folderCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-zinc-600">No folders yet</p>}
+                {folderCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No folders yet</p>}
               </AccordionSection>
 
-              <div role="separator" className="mx-1 my-2 h-px bg-white/[0.05]" />
+              <div role="separator" className="mx-1 my-2 h-px bg-sidebar-border" />
 
               <div className="px-2 pb-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">Recent</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Recent</span>
               </div>
 
               {pinned && pinned.length > 0 && pinned.map(c => (
@@ -554,7 +604,7 @@ export default function Sidebar({
               ))}
 
               {(!recent || recent.length === 0) && (!pinned || pinned.length === 0) && (
-                <div className="mt-6 select-none rounded-2xl border border-dashed border-white/[0.06] px-4 py-8 text-center text-[11px] text-zinc-600">
+                <div className="mt-6 select-none rounded-2xl border border-dashed border-sidebar-border px-4 py-8 text-center text-[11px] text-muted-foreground">
                   <div className="mb-3 flex justify-center opacity-20">
                     <TriVisionXLogo size="lg" glow animate={false} />
                   </div>
@@ -565,26 +615,32 @@ export default function Sidebar({
               )}
             </nav>
 
-            {/* PROFILE FOOTER CONTAINER */}
-            <div className="shrink-0 p-2.5 border-t border-border/50 bg-gradient-to-b from-transparent to-muted/20">
-              <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-muted/40 via-card to-card p-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between transition-all duration-200 hover:border-foreground/20">
+            {/* PROFILE & THEME FOOTER CONTAINER */}
+            <div data-slot="sidebar-footer" className="shrink-0 p-2.5 border-t border-sidebar-border bg-gradient-to-b from-transparent to-sidebar-accent/20">
+              <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2.5 shadow-xs flex items-center justify-between transition-all duration-200 hover:border-sidebar-border/80">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative shrink-0">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-[0_2px_8px_rgba(0,0,0,0.15)] border border-primary-foreground/20">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground select-none shadow-xs border border-primary-foreground/20">
                       {userInitials || "U"}
                     </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 border-2 border-card shadow-xs" />
+                    <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 border-2 border-sidebar shadow-xs" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="truncate text-[11.5px] font-bold text-foreground leading-tight">{userName || "User"}</span>
+                    <span className="truncate text-[11.5px] font-bold text-sidebar-foreground leading-tight">{userName || "User"}</span>
                     <span className="text-[9.5px] text-muted-foreground font-medium font-mono">Workspace</span>
                   </div>
                 </div>
-                <SettingsPopover onUserUpdate={onUserUpdate}>
-                  <button aria-label="Open settings" title="Account Settings" className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 border border-transparent hover:border-border/60 transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5">
-                    <Settings className="h-4 w-4" />
-                  </button>
-                </SettingsPopover>
+                <div className="flex items-center gap-1">
+                  <AnimatedThemeToggler
+                    title="Toggle Theme"
+                    className="p-1.5 rounded-xl text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5 [&_svg]:size-4 flex items-center justify-center"
+                  />
+                  <SettingsPopover onUserUpdate={onUserUpdate}>
+                    <button aria-label="Open settings" title="Account Settings" className="p-1.5 rounded-xl text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5">
+                      <Settings className="h-4 w-4" />
+                    </button>
+                  </SettingsPopover>
+                </div>
               </div>
             </div>
           </aside>

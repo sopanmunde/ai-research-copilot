@@ -200,7 +200,7 @@ export function BrainOverviewTab({
                   const percent = (d.tokens / maxVal) * 100;
                   return (
                     <div key={d.day} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative">
-                      <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none whitespace-nowrap z-20">
+                      <div className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground border border-border text-[9px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none whitespace-nowrap z-20">
                         {d.tokens.toLocaleString()}
                       </div>
                       <div

@@ -22,9 +22,9 @@ export function BrainProviderSidebar({
   selectProvider,
 }: BrainProviderSidebarProps) {
   return (
-    <div className="w-full md:w-[230px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border bg-card max-h-[180px] md:max-h-none">
-      <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5 border border-border">
+    <div data-slot="sidebar" data-sidebar="sidebar" className="w-full md:w-[230px] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-sidebar-border bg-sidebar text-sidebar-foreground max-h-[180px] md:max-h-none">
+      <div data-slot="sidebar-header" className="px-3 pt-3 pb-2">
+        <div className="flex items-center gap-0.5 rounded-lg bg-sidebar-accent/50 p-0.5 border border-sidebar-border">
           {(["cloud", "local"] as const).map((tab) => (
             <button
               key={tab}
@@ -32,8 +32,8 @@ export function BrainProviderSidebar({
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[11px] font-semibold transition-all cursor-pointer",
                 activeTab === tab
-                  ? "bg-background text-foreground shadow-sm border border-border"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-2xs border border-sidebar-border"
+                  : "text-muted-foreground hover:text-sidebar-foreground"
               )}
             >
               {tab === "cloud" ? <Globe className="size-3" /> : <Server className="size-3" />}
@@ -43,7 +43,7 @@ export function BrainProviderSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin min-h-0 px-2 pb-3">
+      <div data-slot="sidebar-content" className="flex-1 overflow-y-auto scrollbar-thin min-h-0 px-2 pb-3">
         <div className="space-y-1">
           {listProviders.map((p) => (
             <button
@@ -52,8 +52,8 @@ export function BrainProviderSidebar({
               className={cn(
                 "group w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-left border transition-all cursor-pointer",
                 selectedProviderId === p.id
-                  ? "bg-accent border-border/80 text-foreground shadow-2xs"
-                  : "border-transparent hover:bg-accent/40 text-muted-foreground hover:text-foreground"
+                  ? "bg-sidebar-accent border-sidebar-border text-sidebar-accent-foreground shadow-2xs font-semibold"
+                  : "border-transparent hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground"
               )}
             >
               <ProviderLogo logo={p.logo} active={p.isActive} size="sm" />

@@ -434,7 +434,7 @@ export function BrainTelemetryTab({
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
                     {/* Hover Tooltip */}
-                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white text-xs font-bold font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-20 border border-zinc-700">
+                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-xs font-bold font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none whitespace-nowrap z-20 border border-border">
                       {val} tok/s
                     </div>
                     <div
@@ -550,23 +550,23 @@ export function BrainTelemetryTab({
           </div>
 
           {/* Terminal Console Logs Container (Strict bounded inner container) */}
-          <div className="flex-1 min-h-0 bg-zinc-950/90 dark:bg-black/90 rounded-lg border border-zinc-800 p-2 flex flex-col overflow-hidden shadow-inner">
+          <div className="flex-1 min-h-0 bg-card rounded-lg border border-border p-2 flex flex-col overflow-hidden shadow-inner">
             {/* Console Container Header Bar */}
-            <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-zinc-800/80 text-[10px] font-mono text-zinc-400 shrink-0 px-1">
-              <span className="flex items-center gap-1.5 font-bold text-zinc-300">
+            <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-border text-[10px] font-mono text-muted-foreground shrink-0 px-1">
+              <span className="flex items-center gap-1.5 font-bold text-foreground">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 $ tail -f /var/log/telemetry.stream
               </span>
-              <span className="text-zinc-500">LIVE FEED</span>
+              <span className="text-muted-foreground">LIVE FEED</span>
             </div>
 
             {/* Log Stream Scroll Area */}
             <ScrollArea className="flex-1 pr-1.5">
               {filteredLogs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center text-zinc-500 space-y-2">
-                  <Terminal className="size-8 text-zinc-600" />
-                  <p className="text-xs font-semibold text-zinc-400">No telemetry event logs found</p>
-                  <p className="text-[11px] text-zinc-500">Try clearing your search query or status filter criteria.</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground space-y-2">
+                  <Terminal className="size-8 text-muted-foreground" />
+                  <p className="text-xs font-semibold text-foreground font-sans">No telemetry event logs found</p>
+                  <p className="text-[11px] text-muted-foreground font-sans">Try clearing your search query or status filter criteria.</p>
                 </div>
               ) : (
                 <div className="space-y-2 font-mono text-xs">
@@ -574,30 +574,30 @@ export function BrainTelemetryTab({
                     <div
                       key={`${log.id}-${idx}`}
                       onClick={() => setSelectedInspectorLog(log)}
-                      className="group p-2.5 rounded-md bg-zinc-900/80 border border-zinc-800/80 hover:border-emerald-500/50 hover:bg-zinc-850 flex items-center justify-between gap-2.5 transition-all cursor-pointer shadow-xs"
+                      className="group p-2.5 rounded-md bg-muted/40 border border-border hover:border-primary/40 hover:bg-accent flex items-center justify-between gap-2.5 transition-all cursor-pointer shadow-xs"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-semibold text-zinc-400">{log.timestamp}</span>
-                          <span className="font-bold text-zinc-100 truncate max-w-[130px] text-xs group-hover:text-emerald-400 transition-colors">
+                          <span className="text-[10px] font-semibold text-muted-foreground">{log.timestamp}</span>
+                          <span className="font-bold text-foreground truncate max-w-[130px] text-xs group-hover:text-primary transition-colors">
                             {log.model}
                           </span>
                           {log.traceId && (
-                            <span className="text-[9px] px-1 py-0.2 rounded bg-zinc-800 text-cyan-400 font-mono border border-cyan-500/30">
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-muted text-foreground font-mono border border-border">
                               {log.traceId}
                             </span>
                           )}
                         </div>
 
-                        <div className="text-[10.5px] text-zinc-400 font-medium mt-1 flex items-center gap-2 flex-wrap">
+                        <div className="text-[10.5px] text-muted-foreground font-medium mt-1 flex items-center gap-2 flex-wrap">
                           <span>In: {log.tokensIn}t · Out: {log.tokensOut}t</span>
                           {log.cost !== undefined && (
-                            <span className="text-zinc-500">· ${(log.cost).toFixed(4)}</span>
+                            <span className="text-muted-foreground">· ${(log.cost).toFixed(4)}</span>
                           )}
                         </div>
 
                         {log.error && (
-                          <div className="text-[10px] text-rose-400 font-semibold truncate mt-1 flex items-center gap-1">
+                          <div className="text-[10px] text-destructive font-semibold truncate mt-1 flex items-center gap-1">
                             <AlertTriangle className="size-3 shrink-0" /> {log.error}
                           </div>
                         )}
@@ -605,12 +605,12 @@ export function BrainTelemetryTab({
 
                       <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center rounded text-[9.5px] px-1.5 py-0.5 border border-emerald-500/40 text-emerald-400 font-mono font-bold bg-emerald-500/10">
+                          <span className="inline-flex items-center rounded text-[9.5px] px-1.5 py-0.5 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-mono font-bold bg-emerald-500/10">
                             {log.latency}ms
                           </span>
                           {renderStatusBadge(log.status, log.cacheHit)}
                         </div>
-                        <span className="text-[10px] text-zinc-500 group-hover:text-emerald-400 flex items-center gap-0.5 font-sans font-medium transition-colors">
+                        <span className="text-[10px] text-muted-foreground group-hover:text-foreground flex items-center gap-0.5 font-sans font-medium transition-colors">
                           Inspect <ChevronRight className="size-3" />
                         </span>
                       </div>
@@ -729,7 +729,7 @@ export function BrainTelemetryTab({
                   </Button>
                 </div>
 
-                <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800 font-mono text-xs overflow-x-auto max-h-48 scrollbar-thin text-emerald-400">
+                <div className="p-3.5 rounded-lg bg-muted border border-border font-mono text-xs overflow-x-auto max-h-48 scrollbar-thin text-foreground">
                   <pre>{JSON.stringify(selectedInspectorLog, null, 2)}</pre>
                 </div>
               </div>

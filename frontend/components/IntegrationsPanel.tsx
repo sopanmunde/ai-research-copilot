@@ -250,35 +250,35 @@ export default function IntegrationsPanel({ isOpen, onClose }: IntegrationsPanel
   if (!isOpen) return null;
 
   return (
-    <div className="absolute inset-y-0 right-0 z-50 w-full sm:w-[450px] border-l border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
+    <div className="absolute inset-y-0 right-0 z-50 w-full sm:w-[450px] border-l border-border bg-card/95 text-card-foreground backdrop-blur-md shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/5 text-primary">
             <Sliders className="h-4.5 w-4.5" />
           </div>
           <div>
-            <h3 className="text-[14px] font-bold text-zinc-900 dark:text-white leading-tight">Integrations &amp; Agents</h3>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">Configure app contexts, skills &amp; protocols</p>
+            <h3 className="text-[14px] font-bold text-foreground leading-tight">Integrations &amp; Agents</h3>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Configure app contexts, skills &amp; protocols</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {/* Tabs bar */}
-      <div className="flex bg-zinc-50/50 dark:bg-zinc-900/30 p-1 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex bg-muted/40 p-1 border-b border-border">
         <button
           onClick={() => setActiveTab("apps")}
           className={cn(
             "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1",
             activeTab === "apps"
-              ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700/60"
-              : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+              ? "bg-card text-foreground shadow-2xs border border-border"
+              : "text-muted-foreground hover:text-foreground"
           )}
         >
           <Layers className="h-3.5 w-3.5" />

@@ -34,7 +34,7 @@ export function Footer() {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <footer ref={ref} className="border-t border-zinc-900 bg-zinc-950 relative overflow-hidden">
+    <footer ref={ref} className="border-t border-border bg-background relative overflow-hidden">
       {/* Background radial glow */}
       <div
         className="pointer-events-none absolute left-1/4 bottom-0 w-[400px] h-[300px] rounded-full blur-[120px] opacity-[0.02]"
@@ -55,11 +55,11 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2">
               <TriVisionXLogo size="sm" shimmer={true} glow={true} showWordmark={true} animate={false} />
             </Link>
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Enterprise-grade multi-agent orchestration and context retrieval engines.
             </p>
             {/* System Status */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/50 border border-zinc-800/80 text-[9px] font-mono tracking-wider text-zinc-400">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-[9px] font-mono tracking-wider text-muted-foreground">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -71,13 +71,13 @@ export function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title} className="space-y-4">
-              <h4 className="text-xs font-mono font-bold tracking-wider text-zinc-300 uppercase">{title}</h4>
+              <h4 className="text-xs font-mono font-bold tracking-wider text-foreground uppercase">{title}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-xs text-zinc-500 hover:text-purple-400 dark:text-zinc-400 dark:hover:text-purple-400 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -93,9 +93,9 @@ export function Footer() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16 pt-8 border-t border-zinc-900/60 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4"
         >
-          <p className="text-xs text-zinc-500 font-mono">
+          <p className="text-xs text-muted-foreground font-mono">
             &copy; {new Date().getFullYear()} TriVisionX, Inc. All rights
             reserved.
           </p>
@@ -104,7 +104,7 @@ export function Footer() {
               href="https://github.com/sopanmunde/trivisionx-ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-zinc-500 hover:text-purple-400 dark:text-zinc-400 dark:hover:text-purple-400 transition-colors font-mono"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors font-mono"
             >
               GitHub
             </a>
