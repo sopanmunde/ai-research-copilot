@@ -1428,7 +1428,7 @@ export function TaskDashboard() {
                               size="icon"
                               disabled={currentPage === 1}
                               onClick={() => setCurrentPage(1)}
-                              className="size-7 border border-border rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                              className="size-7 border border-border rounded-md hover:bg-accent"
                             >
                               <ChevronsLeft className="size-3.5" />
                             </Button>
@@ -1437,7 +1437,7 @@ export function TaskDashboard() {
                               size="icon"
                               disabled={currentPage === 1}
                               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                              className="size-7 border border-border rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                              className="size-7 border border-border rounded-md hover:bg-accent"
                             >
                               <ChevronLeft className="size-3.5" />
                             </Button>
@@ -1446,7 +1446,7 @@ export function TaskDashboard() {
                               size="icon"
                               disabled={currentPage === totalPages}
                               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                              className="size-7 border border-border rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                              className="size-7 border border-border rounded-md hover:bg-accent"
                             >
                               <ChevronRight className="size-3.5" />
                             </Button>
@@ -1455,7 +1455,7 @@ export function TaskDashboard() {
                               size="icon"
                               disabled={currentPage === totalPages}
                               onClick={() => setCurrentPage(totalPages)}
-                              className="size-7 border border-border rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+                              className="size-7 border border-border rounded-md hover:bg-accent"
                             >
                               <ChevronsRight className="size-3.5" />
                             </Button>
@@ -2108,8 +2108,8 @@ export function TaskDashboard() {
                     <div className="p-6 space-y-5 text-xs">
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] font-mono text-zinc-500 font-semibold">{selectedTask?.code}</span>
-                          <span className="text-[9px] font-semibold bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-850 rounded px-1.5 py-0.2 text-zinc-500 dark:text-zinc-400">
+                          <span className="text-[10px] font-mono text-muted-foreground font-semibold">{selectedTask?.code}</span>
+                          <span className="text-[9px] font-semibold bg-muted border border-border rounded px-1.5 py-0.2 text-muted-foreground">
                             {selectedTask?.type}
                           </span>
                         </div>
@@ -2144,10 +2144,10 @@ export function TaskDashboard() {
                           <span className="text-[10px] text-muted-foreground font-medium block">Priority Rank</span>
                           <div className="flex items-center h-7">
                             <Badge variant="outline" className={cls(
-                              "text-[9px] font-bold border px-2 py-0.5 uppercase border-zinc-200 dark:border-zinc-800 rounded",
-                              selectedTask?.priority === "high" ? "bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-extrabold" :
-                                selectedTask?.priority === "medium" ? "bg-zinc-50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400" :
-                                  "bg-transparent text-zinc-400"
+                              "text-[9px] font-bold border px-2 py-0.5 uppercase border-border rounded",
+                              selectedTask?.priority === "high" ? "bg-muted text-foreground font-extrabold" :
+                                selectedTask?.priority === "medium" ? "bg-muted/50 text-muted-foreground" :
+                                  "bg-transparent text-muted-foreground"
                             )}>
                               {selectedTask?.priority} Priority
                             </Badge>
@@ -2157,7 +2157,7 @@ export function TaskDashboard() {
                         <div className="space-y-1">
                           <span className="text-[10px] text-muted-foreground font-medium block">Responsible Node</span>
                           <div className="flex items-center gap-1.5 h-7">
-                            <span className="size-4.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[8px] font-bold font-mono flex items-center justify-center border border-border text-foreground">
+                            <span className="size-4.5 rounded-full bg-muted text-[8px] font-bold font-mono flex items-center justify-center border border-border text-foreground">
                               {selectedTask?.assignee.avatarInitials}
                             </span>
                             <span className="text-[11px] text-foreground font-medium">{selectedTask?.assignee.name}</span>
@@ -2281,7 +2281,7 @@ export function TaskDashboard() {
                         variant="outline"
                         size="sm"
                         onClick={() => selectedTask && handleDeleteTask(selectedTask.id)}
-                        className="h-8 gap-1.5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900/50 bg-transparent text-zinc-600 dark:text-zinc-400"
+                        className="h-8 gap-1.5 border-border hover:bg-accent bg-transparent text-muted-foreground hover:text-foreground"
                       >
                         <Trash2 className="size-3.5" />
                         <span>Delete</span>
@@ -2301,7 +2301,7 @@ export function TaskDashboard() {
                         <Button
                           size="sm"
                           onClick={() => selectedTask && handleMoveStatus(selectedTask.id, "done")}
-                          className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
+                          className="h-8 bg-transparent hover:bg-accent text-foreground border border-border"
                         >
                           Mark Complete
                         </Button>
@@ -2309,7 +2309,7 @@ export function TaskDashboard() {
                         <Button
                           size="sm"
                           onClick={() => selectedTask && handleMoveStatus(selectedTask.id, "todo")}
-                          className="h-8 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-900/50 text-foreground border border-border"
+                          className="h-8 bg-transparent hover:bg-accent text-foreground border border-border"
                         >
                           Reopen Task
                         </Button>

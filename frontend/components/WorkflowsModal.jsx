@@ -212,13 +212,13 @@ export default function WorkflowsModal({ isOpen, onClose }) {
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-muted/40">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground border border-border">
               <GitMerge className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                 Workflow Automation (Proactive AI)
-                <Badge variant="secondary" className="text-[10px] uppercase font-mono tracking-wider bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                <Badge variant="secondary" className="text-[10px] uppercase font-mono tracking-wider bg-muted text-foreground border border-border">
                   APScheduler Engine
                 </Badge>
               </h2>
@@ -272,7 +272,7 @@ export default function WorkflowsModal({ isOpen, onClose }) {
               <div className="divide-y divide-border/50">
                 {workflows.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-10 text-center text-muted-foreground">
-                    <GitMerge className="h-8 w-8 mb-2 opacity-50 text-purple-500" />
+                    <GitMerge className="h-8 w-8 mb-2 opacity-50 text-foreground" />
                     <p className="text-xs font-bold text-foreground">No Automation Workflows Yet</p>
                     <p className="text-[11px] mt-1 text-muted-foreground">Create your first scheduled agent pipeline or event trigger.</p>
                     <Button
@@ -295,13 +295,13 @@ export default function WorkflowsModal({ isOpen, onClose }) {
                         onClick={() => setSelectedWf(wf)}
                         className={`p-4 cursor-pointer transition-colors ${
                           isSelected
-                            ? "bg-purple-500/10 border-l-4 border-purple-500"
+                            ? "bg-accent border-l-4 border-primary"
                             : "hover:bg-accent/50"
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2 mb-1.5">
                           <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-                            {isCron ? <Clock className="h-3 w-3 text-purple-500" /> : <Zap className="h-3 w-3 text-amber-500" />}
+                            {isCron ? <Clock className="h-3 w-3 text-muted-foreground" /> : <Zap className="h-3 w-3 text-muted-foreground" />}
                             {isCron ? `CRON: ${wf.cron_expression}` : `EVENT: ${wf.event_type}`}
                           </Badge>
 
@@ -348,7 +348,7 @@ export default function WorkflowsModal({ isOpen, onClose }) {
                 <div className="flex items-start justify-between border-b border-border pb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold font-mono text-purple-500 uppercase">
+                      <span className="text-xs font-bold font-mono text-muted-foreground uppercase">
                         {selectedWf.trigger_type === "cron" ? `SCHEDULED: ${selectedWf.cron_expression}` : `EVENT TRIGGER: ${selectedWf.event_type}`}
                       </span>
                     </div>
@@ -387,7 +387,7 @@ export default function WorkflowsModal({ isOpen, onClose }) {
                 <Card className="border-border bg-card text-card-foreground shadow-xs">
                   <CardContent className="p-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-                      <Bot className="h-4 w-4 text-purple-500" />
+                      <Bot className="h-4 w-4 text-foreground" />
                       Configured Agent Prompt Pipeline
                     </h4>
                     <p className="text-xs font-mono bg-muted p-3 rounded-lg border border-border text-foreground leading-relaxed">
@@ -397,13 +397,13 @@ export default function WorkflowsModal({ isOpen, onClose }) {
                 </Card>
 
                 {/* Embedded Automation Visual Topology */}
-                <Card className="border-border bg-zinc-950 text-white overflow-hidden shadow-xs">
-                  <div className="p-3 border-b border-zinc-900 flex items-center justify-between bg-zinc-900/50">
-                    <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
+                <Card className="border-border bg-card text-card-foreground overflow-hidden shadow-xs">
+                  <div className="p-3 border-b border-border flex items-center justify-between bg-muted/50">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-2">
                       <Activity className="h-4 w-4 text-emerald-400" />
                       Visual Execution Topology Canvas
                     </span>
-                    <span className="text-[10px] font-mono text-zinc-400">
+                    <span className="text-[10px] font-mono text-muted-foreground">
                       Pipeline Mode: {selectedWf.workflow_type || "research"}
                     </span>
                   </div>
@@ -463,7 +463,7 @@ export default function WorkflowsModal({ isOpen, onClose }) {
           <div className="w-full max-w-lg rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-500" /> Create Proactive AI Automation
+                <Sparkles className="h-4 w-4 text-foreground" /> Create Proactive AI Automation
               </h3>
               <Button
                 variant="ghost"
@@ -497,7 +497,7 @@ export default function WorkflowsModal({ isOpen, onClose }) {
                     onClick={() => setNewTriggerType("cron")}
                     className="h-9 font-semibold flex items-center justify-center gap-2"
                   >
-                    <Clock className="h-4 w-4 text-purple-500" /> Cron Schedule
+                    <Clock className="h-4 w-4 text-muted-foreground" /> Cron Schedule
                   </Button>
                   <Button
                     type="button"

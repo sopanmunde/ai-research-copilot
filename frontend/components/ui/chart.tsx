@@ -132,8 +132,29 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
+  isAnimationActive,
+  coordinate,
+  accessibilityLayer,
+  viewBox,
+  offset,
+  allowEscapeViewBox,
+  animationDuration,
+  animationEasing,
+  axisId,
+  reverseDirection,
+  useTranslate3d,
   ...props
-}: ChartTooltipContentProps) {
+}: ChartTooltipContentProps & {
+  isAnimationActive?: boolean
+  coordinate?: any
+  accessibilityLayer?: any
+  viewBox?: any
+  offset?: any
+  allowEscapeViewBox?: any
+  axisId?: any
+  reverseDirection?: any
+  useTranslate3d?: any
+}) {
   const { config } = useChart()
 
   const tooltipLabel = React.useMemo(() => {

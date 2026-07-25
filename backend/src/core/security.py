@@ -81,7 +81,11 @@ async def get_user(email: str):
     except PyMongoError as e:
         if type(e).__name__ == "_OperationCancelled":
             raise asyncio.CancelledError() from e
-        raise
+        logger.error(f"[Security] Database connectivity error fetching user '{email}': {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database cluster unreachable (network/DNS issue). Please check your internet connection or MongoDB Atlas cluster whitelist.",
+        )
 
 
 async def authenticate_user(email: str, password: str):
@@ -145,7 +149,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-    user = await get_user(email=token_data.email)
+    try:
+        user = await get_user(email=token_data.email)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[Security] get_current_user error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service unavailable",
+        )
+
     if user is None:
         raise credentials_exception
     return user

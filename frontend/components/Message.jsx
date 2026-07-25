@@ -202,18 +202,23 @@ export default function Message({ role, content, sources, quality_score, agent_s
                   </h4>
                   <ul className="space-y-1.5 list-none pl-0">
                     {sources.map((src, i) => {
-                      const confPercent = confidence ? Math.round(confidence * 100) : null;
-                      const confColorClass = confPercent >= 80
+                      const isObj = typeof src === "object" && src !== null;
+                      const url = isObj ? src.url : null;
+                      const sourceText = typeof src === "string" ? src : (src.source || src.filename || src.title || "Unknown Source");
+                      const page = isObj ? src.page : null;
+                      const confidence = isObj ? (src.confidence ?? src.score) : null;
+                      const confPercent = confidence != null ? Math.round(confidence > 1 ? confidence : confidence * 100) : null;
+                      const confColorClass = (confPercent ?? 0) >= 80
                         ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                        : confPercent >= 55
+                        : (confPercent ?? 0) >= 55
                           ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"
                           : "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20";
                       return (
                         <li
                           key={i}
-                          className="text-[12px] text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/40 px-2.5 py-1.5 rounded-md border border-zinc-100 dark:border-zinc-900/80 flex items-center gap-2"
+                          className="text-[12px] text-muted-foreground bg-muted/40 px-2.5 py-1.5 rounded-md border border-border flex items-center gap-2"
                         >
-                          <span className="shrink-0 w-4 h-4 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
+                          <span className="shrink-0 w-4 h-4 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-foreground">
                             {i + 1}
                           </span>
                           <span className="break-all flex-1 min-w-0">
@@ -222,12 +227,12 @@ export default function Message({ role, content, sources, quality_score, agent_s
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
+                                className="text-primary hover:underline transition-colors font-medium"
                               >
-                                {source || filename || "Unknown Source"}
+                                {sourceText}
                               </a>
                             ) : (
-                              source || filename || "Unknown Source"
+                              sourceText
                             )}{" "}
                             {page && page !== "N/A" ? `(Page ${page})` : ""}
                           </span>
