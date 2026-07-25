@@ -2,10 +2,11 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { TriVisionXLogo } from "@/components/TriVisionXLogo";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import Link from "next/link";
 
 function GithubIcon({ className }: { className?: string }) {
@@ -77,6 +78,21 @@ export function Navbar() {
 
         {/* CTA Buttons */}
         <div className="hidden md:flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-command-palette"))}
+            className="hidden lg:flex items-center gap-2 font-mono text-xs text-muted-foreground hover:text-foreground h-9 px-3"
+            title="Open Command Palette (Cmd+K / Ctrl+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-primary" />
+            <span>Search Commands</span>
+            <KbdGroup className="ml-1">
+              <Kbd>⌘</Kbd>
+              <Kbd>K</Kbd>
+            </KbdGroup>
+          </Button>
+
           <RainbowButton asChild variant="black" size="sm">
             <a href="https://github.com/sopanmunde/trivisionx-ai" target="_blank" rel="noopener noreferrer">
               <GithubIcon className="size-4" />

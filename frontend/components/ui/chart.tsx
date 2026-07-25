@@ -132,6 +132,12 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
+  contentStyle,
+  itemStyle,
+  labelStyle,
+  wrapperStyle,
+  cursorStyle,
+  filterNull,
   isAnimationActive,
   coordinate,
   accessibilityLayer,
@@ -145,6 +151,12 @@ function ChartTooltipContent({
   useTranslate3d,
   ...props
 }: ChartTooltipContentProps & {
+  contentStyle?: any
+  itemStyle?: any
+  labelStyle?: any
+  wrapperStyle?: any
+  cursorStyle?: any
+  filterNull?: any
   isAnimationActive?: boolean
   coordinate?: any
   accessibilityLayer?: any
