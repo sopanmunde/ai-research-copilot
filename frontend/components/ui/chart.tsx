@@ -151,6 +151,8 @@ function ChartTooltipContent({
   viewBox?: any
   offset?: any
   allowEscapeViewBox?: any
+  animationDuration?: any
+  animationEasing?: any
   axisId?: any
   reverseDirection?: any
   useTranslate3d?: any
