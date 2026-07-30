@@ -1,17 +1,14 @@
 'use client'
 
-import { useState } from "react"
-import { UserProfileModal } from "@/components/UserProfileModal"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
-export default function Setting() {
-    const [isOpen, setIsOpen] = useState(true)
+export default function SettingPage() {
+  const router = useRouter()
 
-    return (
-        <div>
-            <UserProfileModal
-                isOpen={isOpen}
-                onClose={() => setIsOpen(false)}
-            />
-        </div>
-    )
+  useEffect(() => {
+    router.replace("/dashboard?tab=setting")
+  }, [router])
+
+  return null
 }

@@ -1,11 +1,16 @@
-﻿"use client";
+"use client";
 
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import {
-  Bot, Search, Brain, FileText, Code, Sparkles, Cpu, Database,
-  GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2
+  Bot, Search, FileText, Code, Cpu, Database,
+  GitMerge, Terminal, FileCheck, Activity, Play, CheckCircle2,
+  Layers, ArrowRight
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 function AgentWorkflowVisual() {
   const [step, setStep] = useState(0);
@@ -17,31 +22,30 @@ function AgentWorkflowVisual() {
     return () => clearInterval(interval);
   }, []);
 
-
   const nodes = [
-    { id: "planner", label: "Router", x: 40, y: 50, color: "text-purple-400" },
-    { id: "retriever", label: "Retriever", x: 120, y: 20, color: "text-blue-400" },
-    { id: "coder", label: "Code Dev", x: 120, y: 80, color: "text-rose-400" },
-    { id: "summarizer", label: "Summarizer", x: 200, y: 50, color: "text-amber-400" },
-    { id: "reporter", label: "Reporter", x: 280, y: 50, color: "text-emerald-400" },
+    { id: "planner", label: "Router", x: 40, y: 50, color: "text-primary" },
+    { id: "retriever", label: "Retriever", x: 120, y: 20, color: "text-primary" },
+    { id: "coder", label: "Code Dev", x: 120, y: 80, color: "text-primary" },
+    { id: "summarizer", label: "Summarizer", x: 200, y: 50, color: "text-primary" },
+    { id: "reporter", label: "Reporter", x: 280, y: 50, color: "text-emerald-500" },
   ];
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-background/90 rounded-2xl border border-border/80 w-full max-w-lg mx-auto shadow-2xl">
+    <div className="flex flex-col items-center gap-3 p-3 bg-card border border-border rounded-xl w-full max-w-lg mx-auto shadow-sm">
       <div className="relative w-full aspect-[320/120]">
         <svg viewBox="0 0 320 120" className="w-full h-full">
           {/* Base Connection Lines */}
-          <path d="M 40 60 L 120 30" stroke="#27272a" strokeWidth="2" fill="none" />
-          <path d="M 40 60 L 120 90" stroke="#27272a" strokeWidth="2" fill="none" />
-          <path d="M 120 30 L 200 60" stroke="#27272a" strokeWidth="2" fill="none" />
-          <path d="M 120 90 L 200 60" stroke="#27272a" strokeWidth="2" fill="none" />
-          <path d="M 200 60 L 280 60" stroke="#27272a" strokeWidth="2" fill="none" />
+          <path d="M 40 60 L 120 30" className="stroke-border" strokeWidth="2" fill="none" />
+          <path d="M 40 60 L 120 90" className="stroke-border" strokeWidth="2" fill="none" />
+          <path d="M 120 30 L 200 60" className="stroke-border" strokeWidth="2" fill="none" />
+          <path d="M 120 90 L 200 60" className="stroke-border" strokeWidth="2" fill="none" />
+          <path d="M 200 60 L 280 60" className="stroke-border" strokeWidth="2" fill="none" />
 
           {/* Glowing Animated Flows */}
           {step === 2 && (
             <motion.path
               d="M 40 60 L 120 30"
-              stroke="url(#purpleGlow)"
+              className="stroke-primary"
               strokeWidth="2.5"
               fill="none"
               strokeDasharray="10 5"
@@ -52,7 +56,7 @@ function AgentWorkflowVisual() {
           {step === 3 && (
             <motion.path
               d="M 40 60 L 120 90"
-              stroke="url(#purpleGlow)"
+              className="stroke-primary"
               strokeWidth="2.5"
               fill="none"
               strokeDasharray="10 5"
@@ -64,7 +68,7 @@ function AgentWorkflowVisual() {
             <>
               <motion.path
                 d="M 120 30 L 200 60"
-                stroke="url(#purpleGlow)"
+                className="stroke-primary"
                 strokeWidth="2.5"
                 fill="none"
                 strokeDasharray="10 5"
@@ -73,7 +77,7 @@ function AgentWorkflowVisual() {
               />
               <motion.path
                 d="M 120 90 L 200 60"
-                stroke="url(#purpleGlow)"
+                className="stroke-primary"
                 strokeWidth="2.5"
                 fill="none"
                 strokeDasharray="10 5"
@@ -85,7 +89,7 @@ function AgentWorkflowVisual() {
           {step === 5 && (
             <motion.path
               d="M 200 60 L 280 60"
-              stroke="url(#purpleGlow)"
+              className="stroke-emerald-500"
               strokeWidth="2.5"
               fill="none"
               strokeDasharray="10 5"
@@ -93,14 +97,6 @@ function AgentWorkflowVisual() {
               transition={{ repeat: Infinity, ease: "linear", duration: 1 }}
             />
           )}
-
-          {/* Definitions for gradients */}
-          <defs>
-            <linearGradient id="purpleGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#818cf8" />
-            </linearGradient>
-          </defs>
 
           {/* Node Circles and Labels */}
           {nodes.map((node) => {
@@ -120,7 +116,7 @@ function AgentWorkflowVisual() {
                     cy={node.y}
                     r="14"
                     fill="none"
-                    stroke="rgba(167, 139, 250, 0.4)"
+                    className="stroke-primary/40"
                     strokeWidth="1.5"
                     animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
@@ -131,19 +127,17 @@ function AgentWorkflowVisual() {
                   cx={node.x}
                   cy={node.y}
                   r="8"
-                  fill={isActive ? "#a78bfa" : "#18181b"}
-                  stroke={isActive ? "#c084fc" : "#27272a"}
+                  className={isActive ? "fill-primary stroke-primary" : "fill-muted stroke-border"}
                   strokeWidth="2"
-                  className="transition-colors duration-300"
                 />
                 {/* Text Label */}
                 <text
                   x={node.x}
                   y={node.y + 20}
                   textAnchor="middle"
-                  className={`text-[9px] font-mono select-none font-medium transition-colors duration-300 ${isActive ? node.color + " font-bold" : "fill-zinc-500"
-                    }`}
-                  fill={isActive ? "currentColor" : "#71717a"}
+                  className={`text-[9px] font-mono select-none font-medium transition-colors duration-300 ${
+                    isActive ? "fill-primary font-bold" : "fill-muted-foreground"
+                  }`}
                 >
                   {node.label}
                 </text>
@@ -158,18 +152,18 @@ function AgentWorkflowVisual() {
         <AnimatePresence mode="wait">
           <motion.span
             key={step}
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2 }}
-            className="text-[10px] font-mono text-muted-foreground bg-card/60 px-3 py-1 rounded-full border border-border/80"
+            className="text-[10px] font-mono text-muted-foreground bg-muted px-3 py-0.5 rounded-full border border-border"
           >
-            {step === 0 && "System Idle â€” Awaiting research prompt..."}
-            {step === 1 && "Smart Router: Analyzing query & selecting optimal workflow..."}
-            {step === 2 && "Retrieval Agent: Querying vector chunks via Pinecone MMR..."}
+            {step === 0 && "System Idle — Awaiting research prompt..."}
+            {step === 1 && "Smart Router: Analyzing query & selecting workflow..."}
+            {step === 2 && "Retrieval Agent: Querying vector chunks via Pinecone..."}
             {step === 3 && "Code Dev Agent: Generating clean technical algorithms..."}
             {step === 4 && "Summary Agent: Synthesizing data into markdown answer..."}
-            {step === 5 && "Report Agent: Constructing finalized citations & report..."}
+            {step === 5 && "Report Agent: Constructing finalized citations..."}
           </motion.span>
         </AnimatePresence>
       </div>
@@ -208,12 +202,12 @@ function RetrievalVisual() {
   ];
 
   return (
-    <div className="space-y-3 font-mono text-xs w-full">
+    <div className="space-y-2 font-mono text-xs w-full">
       {/* Mock Search Bar */}
-      <div className="flex items-center gap-2 p-2 bg-background rounded-lg border border-border/80 text-[10px] text-muted-foreground">
-        <Search className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-        <span className="text-muted-foreground font-bold whitespace-nowrap">{queryText}</span>
-        <span className="w-1 h-3.5 bg-purple-400 animate-pulse-glow" />
+      <div className="flex items-center gap-2 p-2 bg-muted/60 rounded-lg border border-border text-[10px]">
+        <Search className="w-3.5 h-3.5 text-primary animate-pulse" />
+        <span className="text-foreground font-bold whitespace-nowrap">{queryText}</span>
+        <span className="w-1 h-3.5 bg-primary animate-pulse" />
       </div>
 
       {/* Retrieved results */}
@@ -221,20 +215,23 @@ function RetrievalVisual() {
         {chunks.map((chunk, i) => (
           <motion.div
             key={chunk.id}
-            animate={active === i ? { opacity: 1, x: 4 } : { opacity: 0.4, x: 0 }}
-            className={`p-2 rounded border transition-all ${active === i
-                ? "border-purple-500/30 bg-purple-500/5 text-purple-400"
-                : "border-border bg-transparent text-muted-foreground"
-              }`}
+            animate={active === i ? { opacity: 1, x: 3 } : { opacity: 0.5, x: 0 }}
+            className={`p-2 rounded-lg border transition-all ${
+              active === i
+                ? "border-primary/50 bg-primary/10 text-foreground"
+                : "border-border bg-card/60 text-muted-foreground"
+            }`}
           >
             <div className="flex justify-between items-center text-[10px]">
               <span className="font-bold flex items-center gap-1">
-                <Database className="w-3 h-3 text-purple-500/70" />
+                <Database className="w-3 h-3 text-primary" />
                 {chunk.id}
               </span>
-              <span className="text-emerald-400 font-bold">{chunk.score * 100}% sim</span>
+              <Badge variant="outline" className="text-[8px] font-bold text-emerald-500 border-emerald-500/30 px-1 py-0">
+                {chunk.score * 100}% sim
+              </Badge>
             </div>
-            <div className="text-[10px] mt-1 truncate">{chunk.text}</div>
+            <div className="text-[9.5px] mt-1 truncate text-muted-foreground">{chunk.text}</div>
           </motion.div>
         ))}
       </div>
@@ -246,10 +243,10 @@ function MultiLlmVisual() {
   const [queryIndex, setQueryIndex] = useState(0);
 
   const queries = [
-    { text: "Synthesize 100k docs", model: "Gemini", color: "text-purple-400 border-purple-500/20 bg-purple-500/5" },
-    { text: "Optimize AST parser", model: "DeepSeek", color: "text-pink-400 border-pink-500/20 bg-pink-500/5" },
-    { text: "Entity extraction", model: "GPT-4o", color: "text-indigo-400 border-indigo-500/20 bg-indigo-500/5" },
-    { text: "Complex reasoning step", model: "Claude", color: "text-fuchsia-400 border-fuchsia-500/20 bg-fuchsia-500/5" },
+    { text: "Synthesize 100k docs", model: "Gemini 1.5" },
+    { text: "Optimize AST parser", model: "DeepSeek R1" },
+    { text: "Entity extraction", model: "GPT-4o" },
+    { text: "Complex reasoning", model: "Claude 3.5" },
   ];
 
   useEffect(() => {
@@ -262,23 +259,23 @@ function MultiLlmVisual() {
   const activeQuery = queries[queryIndex];
 
   return (
-    <div className="bg-background/80 p-3 rounded-xl border border-zinc-900/60 space-y-2.5 font-mono text-[9px] w-full shadow-lg">
-      <div className="flex justify-between items-center text-muted-foreground text-[8px] pb-1.5 border-b border-zinc-900">
+    <div className="bg-card p-3 rounded-xl border border-border space-y-2 font-mono text-[9px] w-full shadow-sm">
+      <div className="flex justify-between items-center text-muted-foreground text-[8px] pb-1.5 border-b border-border">
         <span>ACTIVE LLM GATEWAY ROUTER</span>
-        <span className="flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0">
+          <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
           LIVE
-        </span>
+        </Badge>
       </div>
 
-      <div className="flex items-center justify-between gap-2 py-1.5">
-        <div className="flex-1 bg-card/40 border border-zinc-900 p-2.5 rounded truncate text-muted-foreground font-bold">
+      <div className="flex items-center justify-between gap-2 py-1">
+        <div className="flex-1 bg-muted p-2 rounded border border-border truncate text-foreground font-bold text-[10px]">
           "{activeQuery.text}"
         </div>
-        <div className="text-muted-foreground font-bold animate-pulse text-[11px]">âžœ</div>
-        <div className={`px-3 py-2 rounded-xl border font-bold text-center w-20 transition-all duration-300 text-[10px] ${activeQuery.color} shadow-sm`}>
+        <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
+        <Badge variant="secondary" className="px-2.5 py-1 text-[10px] font-bold shrink-0">
           {activeQuery.model}
-        </div>
+        </Badge>
       </div>
     </div>
   );
@@ -286,40 +283,40 @@ function MultiLlmVisual() {
 
 function ReportVisual() {
   return (
-    <div className="p-3 bg-background/80 rounded-xl border border-border/80 space-y-2.5 font-mono text-[10px] text-muted-foreground shadow-lg">
+    <div className="p-3 bg-card rounded-xl border border-border space-y-2.5 font-mono text-[10px] shadow-sm">
       <div className="flex justify-between items-center border-b border-border pb-1.5">
-        <span className="flex items-center gap-1.5 text-muted-foreground">
-          <FileText className="w-3.5 h-3.5 text-purple-400" />
+        <span className="flex items-center gap-1.5 text-foreground font-bold">
+          <FileText className="w-3.5 h-3.5 text-primary" />
           report_generator.md
         </span>
-        <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-          <CheckCircle2 className="w-2.5 h-2.5" />
+        <Badge variant="outline" className="text-[8px] text-emerald-500 border-emerald-500/30 gap-1 px-1.5 py-0 font-bold">
+          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
           SUCCESS
-        </span>
+        </Badge>
       </div>
       <div className="space-y-1.5 text-[9px]">
         <div className="flex items-center justify-between text-muted-foreground">
           <span>Sections compiled</span>
-          <span>100% (4/4)</span>
+          <span className="text-foreground font-bold">100% (4/4)</span>
         </div>
-        <div className="h-1 bg-card rounded-full overflow-hidden">
+        <div className="h-1 bg-muted rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
             transition={{ duration: 1.5 }}
-            className="h-full bg-purple-500"
+            className="h-full bg-primary"
           />
         </div>
-        <div className="flex flex-wrap gap-1 mt-2 pt-1 border-t border-zinc-900">
-          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
-            <FileCheck className="w-2.5 h-2.5 text-purple-400" /> Citations
-          </span>
-          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
-            <GitMerge className="w-2.5 h-2.5 text-purple-400" /> Markdown
-          </span>
-          <span className="px-1.5 py-0.5 bg-accent/60 rounded border border-border/50 text-muted-foreground flex items-center gap-1">
-            <Activity className="w-2.5 h-2.5 text-purple-400" /> Metrics
-          </span>
+        <div className="flex flex-wrap gap-1 mt-2 pt-1 border-t border-border">
+          <Badge variant="secondary" className="text-[8px] gap-1 px-1.5 py-0.5">
+            <FileCheck className="w-2.5 h-2.5 text-primary" /> Citations
+          </Badge>
+          <Badge variant="secondary" className="text-[8px] gap-1 px-1.5 py-0.5">
+            <GitMerge className="w-2.5 h-2.5 text-primary" /> Markdown
+          </Badge>
+          <Badge variant="secondary" className="text-[8px] gap-1 px-1.5 py-0.5">
+            <Activity className="w-2.5 h-2.5 text-primary" /> Metrics
+          </Badge>
         </div>
       </div>
     </div>
@@ -329,7 +326,7 @@ function ReportVisual() {
 function CodingLoopVisual() {
   const [step, setStep] = useState(0);
   const [codeSnippet, setCodeSnippet] = useState("");
-  const fullCode = "def test_agent_graph():\n  # build graph\n  graph = get_graph()\n  assert graph.nodes > 0";
+  const fullCode = "def test_agent_graph():\n  graph = get_graph()\n  assert graph.nodes > 0";
 
   useEffect(() => {
     let index = 0;
@@ -351,25 +348,24 @@ function CodingLoopVisual() {
   }, []);
 
   return (
-    <div className="space-y-2.5 font-mono text-[9px] w-full bg-background/90 p-3 rounded-xl border border-border/80 shadow-lg">
+    <div className="space-y-2 font-mono text-[9px] w-full bg-card p-3 rounded-xl border border-border shadow-sm">
       {/* Code Editor Mockup */}
-      <div className="border border-zinc-900 bg-background p-2 rounded text-muted-foreground select-none">
-        <div className="flex gap-1 mb-1.5 border-b border-zinc-900 pb-1 text-[8px] text-muted-foreground">
-          <Terminal className="w-2.5 h-2.5 text-purple-400" />
+      <div className="border border-border bg-muted/60 p-2 rounded text-muted-foreground select-none">
+        <div className="flex items-center gap-1 mb-1 border-b border-border/60 pb-1 text-[8px] text-foreground font-bold">
+          <Terminal className="w-2.5 h-2.5 text-primary" />
           agent_test.py
         </div>
-        <pre className="text-purple-400/90 whitespace-pre leading-relaxed h-[56px]">{codeSnippet}</pre>
-        <span className="w-1 h-3 bg-purple-400 inline-block animate-pulse" />
+        <pre className="text-primary font-mono whitespace-pre leading-relaxed h-[42px]">{codeSnippet}</pre>
       </div>
 
       {/* Compiler Terminal logs */}
-      <div className="space-y-1.5 border-t border-zinc-900 pt-2 text-[8px]">
+      <div className="space-y-1 border-t border-border pt-1.5 text-[8.5px]">
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground flex items-center gap-1">
-            <Play className="w-2.5 h-2.5 text-purple-500" />
+            <Play className="w-2.5 h-2.5 text-primary" />
             pytest test_agents.py
           </span>
-          <span className={step === 3 ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
+          <span className={step === 3 ? "text-emerald-500 font-bold" : "text-primary font-bold"}>
             {step === 0 && "initializing"}
             {step === 1 && "running planner"}
             {step === 2 && "executing tests"}
@@ -418,9 +414,15 @@ export function BentoGrid() {
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 tracking-tight">
             Enterprise-Grade Agentic Automation
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base mb-6">
             Streamline complex workflows with self-correcting agent systems, semantic memory retrieval, and autonomous code execution loops.
           </p>
+          <Button asChild variant="outline" size="sm" className="gap-2 font-mono text-xs">
+            <a href="#automation-graph">
+              <span>Explore Interactive Agent Canvas</span>
+              <span className="text-sm">→</span>
+            </a>
+          </Button>
         </motion.div>
 
         <motion.div
@@ -430,144 +432,104 @@ export function BentoGrid() {
           animate={isInView ? "visible" : "hidden"}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
-          {/* 1. Large Card: Multi-Agent Orchestration */}
-          <motion.div
-            variants={itemVariants}
-            className="md:col-span-2 group relative p-5 md:p-6 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167,139,250,0.06), transparent 40%)",
-              }}
-            />
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-              <div className="flex-1">
-                <div className="p-2 rounded-lg bg-accent/50 w-fit mb-4">
-                  <Bot className="w-5 h-5 text-purple-400" strokeWidth={1.5} />
+          {/* 1. Large Card: Agentic Workflow Orchestration */}
+          <motion.div variants={itemVariants} className="md:col-span-2">
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-6 flex flex-col justify-between">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                <div className="flex-1">
+                  <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-4">
+                    <Bot className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-2">
+                    Agentic Workflow Orchestration
+                  </h3>
+                  <p className="text-muted-foreground text-xs max-w-md mb-4 leading-relaxed">
+                    Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>State-Machine loops (LangGraph backend)</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Dynamic task routing with parallel execution</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Self-healing cyclic planning loops</span>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-2">
-                  Agentic Workflow Orchestration
-                </h3>
-                <p className="text-muted-foreground text-xs max-w-md mb-4 leading-relaxed">
-                  Autonomous orchestration of specialized AI agents built with LangGraph. Intelligently routes and schedules tasks across planning, semantic querying, logic synthesis, and reporter agents.
+                <div className="flex-1 w-full flex items-center justify-center md:justify-end">
+                  <AgentWorkflowVisual />
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* 2. Autonomous Context Retrieval */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+              <div className="mb-4">
+                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                  <Search className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-base font-bold text-foreground mb-1.5">Autonomous Context Retrieval</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Automated semantic memory extraction using MMR over Pinecone vector stores, providing agents with contextually dense and noise-filtered local knowledge.
                 </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                    <span>State-Machine loops (LangGraph backend)</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                    <span>Dynamic task routing with parallel execution</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                    <span>Self-healing cyclic planning loops</span>
-                  </div>
+              </div>
+              <RetrievalVisual />
+            </Card>
+          </motion.div>
+
+          {/* 3. Dynamic Model Routing */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+              <div className="mb-4">
+                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                  <Cpu className="w-4 h-4 text-primary" strokeWidth={1.5} />
                 </div>
+                <h3 className="text-base font-bold text-foreground mb-1.5">Dynamic Model Routing</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Automated routing of model calls across Gemini, Claude, OpenAI, and DeepSeek, dynamically matching individual agent tasks to the most efficient LLM runtime.
+                </p>
               </div>
-              <div className="flex-1 w-full flex items-center justify-center md:justify-end">
-                <AgentWorkflowVisual />
-              </div>
-            </div>
+              <MultiLlmVisual />
+            </Card>
           </motion.div>
 
-          {/* 2. Semantic MMR Retrieval */}
-          <motion.div
-            variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167,139,250,0.06), transparent 40%)",
-              }}
-            />
-            <div>
-              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
-                <Search className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
+          {/* 4. Automated Report Synthesis */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+              <div className="mb-4">
+                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                  <FileText className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-base font-bold text-foreground mb-1.5">Automated Report Synthesis</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Hands-free compilation of verified research reports, complete with auto-generated tables, references, and inline citation mapping.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-foreground mb-1.5">Autonomous Context Retrieval</h3>
-              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
-                Automated semantic memory extraction using MMR over Pinecone vector stores, providing agents with contextually dense and noise-filtered local knowledge.
-              </p>
-            </div>
-            <RetrievalVisual />
+              <ReportVisual />
+            </Card>
           </motion.div>
 
-          {/* 3. Multi-LLM Gateway */}
-          <motion.div
-            variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167,139,250,0.06), transparent 40%)",
-              }}
-            />
-            <div>
-              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
-                <Cpu className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
+          {/* 5. Self-Correcting Coding Loop */}
+          <motion.div variants={itemVariants}>
+            <Card className="h-full border-border bg-card/60 hover:bg-card hover:border-primary/40 backdrop-blur-sm transition-all duration-300 p-5 flex flex-col justify-between">
+              <div className="mb-4">
+                <div className="p-2 rounded-lg bg-accent text-accent-foreground w-fit mb-3">
+                  <Code className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-base font-bold text-foreground mb-1.5">Self-Correcting Coding Loop</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  An autonomous loop that generates, executes, audits, and debugs code scripts until all unit tests pass successfully without human intervention.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-foreground mb-1.5">Dynamic Model Routing</h3>
-              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
-                Automated routing of model calls across Gemini, Claude, OpenAI, and DeepSeek, dynamically matching individual agent tasks to the most efficient LLM runtime.
-              </p>
-            </div>
-            <MultiLlmVisual />
-          </motion.div>
-
-          {/* 4. Structured Reports */}
-          <motion.div
-            variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167,139,250,0.06), transparent 40%)",
-              }}
-            />
-            <div>
-              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
-                <FileText className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-base font-bold text-foreground mb-1.5">Automated Report Synthesis</h3>
-              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
-                Hands-free compilation of verified research reports, complete with auto-generated tables, references, and inline citation mapping.
-              </p>
-            </div>
-            <ReportVisual />
-          </motion.div>
-
-          {/* 5. Autonomous Coding Loop */}
-          <motion.div
-            variants={itemVariants}
-            className="group relative p-5 rounded-2xl bg-card/40 border border-border/80 hover:border-border backdrop-blur-sm hover:scale-[1.01] transition-all duration-300 overflow-hidden flex flex-col justify-between"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(167,139,250,0.06), transparent 40%)",
-              }}
-            />
-            <div>
-              <div className="p-2 rounded-lg bg-accent/50 w-fit mb-3">
-                <Code className="w-4 h-4 text-purple-400" strokeWidth={1.5} />
-              </div>
-              <h3 className="text-base font-bold text-foreground mb-1.5">Self-Correcting Coding Loop</h3>
-              <p className="text-muted-foreground text-xs mb-4 leading-relaxed">
-                An autonomous loop that generates, executes, audits, and debugs code scripts until all unit tests pass successfully without human intervention.
-              </p>
-            </div>
-            <CodingLoopVisual />
+              <CodingLoopVisual />
+            </Card>
           </motion.div>
         </motion.div>
       </div>

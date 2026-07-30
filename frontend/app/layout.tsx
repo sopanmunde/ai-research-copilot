@@ -57,6 +57,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GlobalCommandPalette } from "@/components/global-command-palette";
 
 export default async function RootLayout({
   children,
@@ -78,6 +79,7 @@ export default async function RootLayout({
         >
           <TooltipProvider>
             {children}
+            <GlobalCommandPalette />
           </TooltipProvider>
           <Toaster position="top-center" />
           {/* @ts-expect-error - Analytics component supports nonce at runtime but lacks it in some type definitions */}

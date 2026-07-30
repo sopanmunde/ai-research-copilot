@@ -145,7 +145,7 @@ function CollapsedSidebar({ setSidebarCollapsed, createNewChat, conversations, s
           title="Toggle Theme"
           className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground/80 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-95 [&_svg]:size-4 cursor-pointer"
         />
-        <SettingsPopover onUserUpdate={onUserUpdate}>
+        <SettingsPopover onUserUpdate={onUserUpdate} onSelect={onSelect}>
           <button title="Settings" className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-[11px] font-extrabold text-primary-foreground hover:opacity-90 transition-all active:scale-95 cursor-pointer shadow-sm border border-primary-foreground/20">
             {userInitials || "U"}
           </button>
@@ -635,7 +635,7 @@ export default function Sidebar({
                     title="Toggle Theme"
                     className="p-1.5 rounded-xl text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5 [&_svg]:size-4 flex items-center justify-center"
                   />
-                  <SettingsPopover onUserUpdate={onUserUpdate}>
+                  <SettingsPopover onUserUpdate={onUserUpdate} onSelect={onSelect}>
                     <button aria-label="Open settings" title="Account Settings" className="p-1.5 rounded-xl text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border transition-all cursor-pointer shadow-none hover:shadow-xs active:translate-y-0.5">
                       <Settings className="h-4 w-4" />
                     </button>

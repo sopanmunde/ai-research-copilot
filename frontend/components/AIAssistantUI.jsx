@@ -21,6 +21,7 @@ import { CalendarDashboard } from "./CalendarDashboard";
 import { TaskDashboard } from "./TaskDashboard";
 import { NotesDashboard } from "./NotesDashboard";
 import { IntegrationsDashboard } from "./IntegrationsDashboard";
+import { SettingsDashboard } from "./SettingsDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
 import WorkflowsModal from "./WorkflowsModal";
@@ -122,6 +123,18 @@ export default function AIAssistantUI() {
   useEffect(() => {
     setIsMounted(true);
     try {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab") || params.get("view");
+        if (tab === "plugins" || tab === "integrations" || tab === "skills") {
+          setSelectedId("integrations");
+          return;
+        }
+        if (tab === "setting" || tab === "settings") {
+          setSelectedId("setting");
+          return;
+        }
+      }
       const saved = localStorage.getItem("dashboard-selected-id");
       if (saved) {
         setSelectedId(saved);
@@ -231,7 +244,7 @@ export default function AIAssistantUI() {
 
   useEffect(() => {
     if (isConversationsLoaded) {
-      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks", "notes"];
+      const specialIds = ["new", "email", "docs", "brain", "calendar", "tasks", "notes", "integrations", "plugins", "setting", "settings"];
       if (!selectedId) {
         setSelectedId("new");
       } else if (!specialIds.includes(selectedId)) {
@@ -792,7 +805,7 @@ export default function AIAssistantUI() {
         />
 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-background md:border md:border-border/80 md:rounded-2xl md:bg-card/20 md:backdrop-blur-md">
-          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins"].includes(selectedId) && (
+          {!["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
             <Header
               createNewChat={createNewChat}
               sidebarCollapsed={sidebarCollapsed}
@@ -806,7 +819,7 @@ export default function AIAssistantUI() {
               onOpenWorkflows={() => setIsWorkflowsOpen(true)}
             />
           )}
-          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins"].includes(selectedId) && (
+          {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden absolute top-4 left-4 z-40 p-2 bg-background/80 hover:bg-muted border border-border/80 rounded-xl text-muted-foreground hover:text-foreground shadow-md transition-colors cursor-pointer"
@@ -850,6 +863,8 @@ export default function AIAssistantUI() {
             <NotesDashboard />
           ) : selectedId === "integrations" || selectedId === "plugins" ? (
             <IntegrationsDashboard onNavigateToChat={() => setSelectedId(null)} />
+          ) : selectedId === "setting" || selectedId === "settings" ? (
+            <SettingsDashboard onNavigateToChat={() => setSelectedId(null)} />
           ) : (
             <ChatPane
               ref={composerRef}

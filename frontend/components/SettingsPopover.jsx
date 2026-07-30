@@ -15,6 +15,7 @@ import {
   Moon,
   Monitor,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { UserProfileModal } from "./UserProfileModal";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,7 +83,8 @@ function MenuItem({
   );
 }
 
-export default function SettingsPopover({ children, onUserUpdate = () => { } }) {
+export default function SettingsPopover({ children, onUserUpdate = () => { }, onSelect }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -193,10 +195,15 @@ export default function SettingsPopover({ children, onUserUpdate = () => { } }) 
                 <div className="p-1.5 space-y-0.5">
                   <MenuItem
                     icon={Settings}
-                    label="Settings"
+                    label="All Settings"
+                    suffix={<ChevronRight className="h-3 w-3 text-muted-foreground" />}
                     onClick={() => {
                       setOpen(false);
-                      setIsProfileOpen(true);
+                      if (onSelect) {
+                        onSelect("setting");
+                      } else if (typeof window !== "undefined") {
+                        window.dispatchEvent(new CustomEvent("open-dashboard-settings"));
+                      }
                     }}
                   />
                   {/* Appearance Theme Selector Panel */}
