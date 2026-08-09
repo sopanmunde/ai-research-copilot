@@ -29,6 +29,12 @@ import {
   Presentation,
   Bot,
   ChevronDown,
+  FlaskConical,
+  Code2,
+  BarChart3,
+  Globe,
+  FileSearch,
+  Sparkles,
 } from "lucide-react";
 import { TriVisionXLogo } from "./TriVisionXLogo";
 import { motion, AnimatePresence } from "framer-motion";
@@ -168,9 +174,21 @@ function ThinkingMessage({ onPause, agentState }) {
 }
 
 const SUGGESTIONS = [
-  { label: "Explain a diagnosis", icon: Stethoscope },
-  { label: "Summarize research", icon: BookOpen },
-  { label: "Write a report", icon: FileText },
+  {
+    label: "Deep Research & Citations",
+    prompt: "Execute a deep cited research overview on my uploaded documents.",
+    icon: FlaskConical,
+  },
+  {
+    label: "Run Code Sandbox",
+    prompt: "Write and execute Python code in sandbox to analyze data.",
+    icon: Code2,
+  },
+  {
+    label: "Competitive Matrix",
+    prompt: "Generate a competitive comparison matrix between market solutions.",
+    icon: BarChart3,
+  },
 ];
 
 function EmptyState({ onSuggestion }) {
@@ -333,8 +351,11 @@ const ChatPane = forwardRef(function ChatPane(
                           </motion.span>
                         ) : ''}
                       </h2>
-                      <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-1">
-                        How can I help you today?
+                      <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-1 flex flex-col items-center gap-1">
+                        <span>How can I help you today?</span>
+                        <span className="text-[12px] font-medium text-zinc-400 dark:text-zinc-500">
+                          If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[11px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code>
+                        </span>
                       </p>
                     </div>
                   </motion.div>
@@ -361,36 +382,37 @@ const ChatPane = forwardRef(function ChatPane(
                 />
               </div>
 
-              {/* Suggestion pills — directly below Composer */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4 relative z-10">
-                {SUGGESTIONS.map((s, i) => (
-                  <motion.div
-                    key={s.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.28 + i * 0.06, duration: 0.35 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
-                      variant="outline"
-                      onClick={() => handleSuggestion(s.label)}
-                      className="group rounded-full h-8 px-4 border border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-xs text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer"
+              {/* Compact Centered Suggestion Pills — directly below Composer */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 relative z-10">
+                {SUGGESTIONS.map((s, i) => {
+                  const Icon = s.icon;
+                  return (
+                    <motion.div
+                      key={s.label}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 + i * 0.04, duration: 0.25 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleSuggestion(s.prompt || s.label)}
+                      className="group relative flex items-center gap-2 rounded-full border border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-zinc-900/70 px-3 py-1.5 shadow-2xs hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900 transition-all duration-200 cursor-pointer backdrop-blur-md"
                     >
-                      {s.icon && (
-                        <s.icon className="mr-1.5 h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
-                      )}
-                      <span>{s.label}</span>
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
+                      <Icon className="h-3.5 w-3.5 text-primary group-hover:text-primary transition-colors shrink-0" />
+                      <span className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors whitespace-nowrap">
+                        {s.label}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+                f               </div>
             </div>
           </div>
 
           {/* Footer Hint stays down of the chat panel */}
-          <p className="mx-auto mt-7 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600">
-            AI can make mistakes. Verify important information.
+          <p className="mx-auto mt-7 text-center text-[11px] text-zinc-500/80 dark:text-zinc-400/80 flex items-center justify-center gap-2 flex-wrap">
+            <span>AI can make mistakes. Verify important information.</span>
+            <span className="opacity-40">•</span>
+            <span className="font-medium text-zinc-600 dark:text-zinc-300">If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10.5px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code></span>
           </p>
         </div>
       ) : (
@@ -645,8 +667,10 @@ const ChatPane = forwardRef(function ChatPane(
           </div>
 
           {/* Footer Hint below Composer */}
-          <p className="mx-auto pb-4 text-center text-[11px] text-zinc-400/70 dark:text-zinc-600 relative z-10">
-            AI can make mistakes. Verify important information.
+          <p className="mx-auto pb-4 text-center text-[11px] text-zinc-500/80 dark:text-zinc-400/80 relative z-10 flex items-center justify-center gap-2 flex-wrap">
+            <span>AI can make mistakes. Verify important information.</span>
+            <span className="opacity-40">•</span>
+            <span className="font-medium text-zinc-600 dark:text-zinc-300">If you want to setup, write <code className="px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-[10.5px] border border-zinc-300/60 dark:border-zinc-700/60 font-bold">/</code></span>
           </p>
 
         </>

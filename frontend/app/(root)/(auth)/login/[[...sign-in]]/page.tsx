@@ -40,7 +40,7 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 const inputCls =
-  "flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm text-foreground shadow-sm placeholder:text-muted-foreground outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+  "flex h-10 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50";
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -451,15 +451,15 @@ function AuthPageContent() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-xl border border-border bg-card text-foreground shadow-2xl shadow-black/60"
+          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-2xl"
         >
           {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
-            <h1 className="text-xl font-semibold leading-none tracking-tight text-foreground">
+            <h1 className="text-xl font-extrabold leading-none tracking-tight text-foreground">
               Welcome back
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Enter your credentials to sign in.
+            <p className="text-xs text-muted-foreground mt-1.5 font-medium">
+              Enter your account credentials to sign in.
             </p>
           </div>
 
@@ -499,13 +499,18 @@ function AuthPageContent() {
             </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-
               {/* Email */}
               <FormItem>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email address</Label>
                 <input
-                  id="email" name="email" type="email" value={form.email}
-                  onChange={handleChange} placeholder="m@example.com" required className={inputCls}
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email address (e.g. name@company.com)"
+                  required
+                  className={inputCls}
                 />
               </FormItem>
 
@@ -513,36 +518,40 @@ function AuthPageContent() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-xs text-muted-foreground hover:text-zinc-200 transition-colors underline underline-offset-4">
+                  <Link href="#" className="text-xs font-bold text-primary hover:underline underline-offset-4 transition-colors">
                     Forgot password?
                   </Link>
                 </div>
                 <div className="relative">
                   <input
-                    id="password" name="password"
+                    id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
-                    value={form.password} onChange={handleChange} required
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    required
                     className={inputCls + " pr-9"}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     tabIndex={-1}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </FormItem>
 
-              {/* Submit — Shadcn primary button */}
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground shadow hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 transition-colors"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50 transition-all cursor-pointer select-none"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Sign in
+                Sign in to TriVisionX
               </button>
             </form>
           </div>
@@ -564,7 +573,7 @@ function AuthPageContent() {
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isGoogleLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none"
               >
                 {isGoogleLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -584,7 +593,7 @@ function AuthPageContent() {
                 type="button"
                 onClick={handleGitHubLogin}
                 disabled={isGitHubLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none"
               >
                 {isGitHubLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

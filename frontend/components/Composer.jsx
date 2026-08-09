@@ -179,7 +179,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     }
     
     // Check for prefixes with trailing slash
-    const prefixes = ["/copilot/", "/skills/", "/tasks/", "/gallery/", "/docs/", "/email/", "/notes/", "/mcp/", "/lsp/", "/acp/"];
+    const prefixes = ["/copilot/", "/skills/", "/templates/", "/tasks/", "/gallery/", "/docs/", "/email/", "/notes/", "/mcp/", "/lsp/", "/acp/"];
     for (const prefix of prefixes) {
       if (commandWord.toLowerCase().startsWith(prefix)) {
         const query = commandWord.slice(prefix.length);
@@ -202,7 +202,8 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
     tasks: [],
     gallery: [],
     email: [],
-    notes: []
+    notes: [],
+    templates: []
   });
   const [loadingSubMenu, setLoadingSubMenu] = useState(false);
 
@@ -239,6 +240,12 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
             const data = await res.json();
             setSubMenuData(prev => ({ ...prev, notes: data }));
           }
+        } else if (slashMode === "templates" && subMenuData.templates.length === 0) {
+          const res = await fetch(`${API_BASE_URL}/templates`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setSubMenuData(prev => ({ ...prev, templates: data }));
+          }
         }
       } catch (err) {
         console.error(`Failed to load ${slashMode} data for sub-menu`, err);
@@ -247,12 +254,13 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
       }
     };
     
-    if (["tasks", "gallery", "docs", "email", "notes"].includes(slashMode)) {
+    if (["tasks", "gallery", "docs", "email", "notes", "templates"].includes(slashMode)) {
       fetchSubMenu();
     }
   }, [slashMode]);
 
   const ROOT_COMMANDS = [
+    { id: "category:templates", label: "/templates/", subtitle: "Select and insert prompt templates", icon: FileText, isFolder: true },
     { id: "category:copilot", label: "/copilot/", subtitle: "Trigger AI Copilot multi-agent workflows", icon: Bot, isFolder: true },
     { id: "category:skills", label: "/skills/", subtitle: "Reference dynamic skills context", icon: Cpu, isFolder: true },
     { id: "category:tasks", label: "/tasks/", subtitle: "Reference existing tasks from dashboard", icon: CheckSquare, isFolder: true },
@@ -267,6 +275,23 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
   const getSubMenuFeatures = () => {
     if (slashMode === "root") {
       return ROOT_COMMANDS;
+    }
+    if (slashMode === "templates") {
+      const defaultTemplates = [
+        { id: "template:research", label: "Deep Research Report", content: "Write a comprehensive deep research report analyzing the latest industry trends, core findings, key metrics, and strategic recommendations.", category: "Prompt Templates", icon: FlaskConical },
+        { id: "template:matrix", label: "Competitive Analysis Matrix", content: "Create a detailed competitive matrix comparing top market players across pricing, key features, target audience, strengths, and weaknesses in a formatted table.", category: "Prompt Templates", icon: Sliders },
+        { id: "template:code", label: "Code Review & Security Audit", content: "Perform a thorough code review and security audit on the codebase. Identify performance bottlenecks, potential vulnerabilities, code smells, and suggest clean refactored alternatives.", category: "Prompt Templates", icon: Code },
+        { id: "template:exec", label: "Executive Summary", content: "Provide a concise 1-page executive summary outlining the background, key objectives, main insights, risks, and actionable next steps.", category: "Prompt Templates", icon: FileText },
+        { id: "template:data", label: "Data Analysis & Insights Pipeline", content: "Analyze the dataset, extract statistically significant patterns, summarize distributions, and generate structured insights with charts and bullet points.", category: "Prompt Templates", icon: Zap }
+      ];
+      const fetchedTemplates = (subMenuData.templates || []).map(t => ({
+        id: `template:${t.id || t.title}`,
+        label: t.name || t.title,
+        content: t.content || t.prompt || t.description,
+        category: "Prompt Templates",
+        icon: FileText
+      }));
+      return [...defaultTemplates, ...fetchedTemplates];
     }
     if (slashMode === "tasks") {
       return [
@@ -412,6 +437,18 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
   };
 
   const handleItemClick = (feat) => {
+    if (feat.id && feat.id.startsWith("template:")) {
+      setValue((prev) => {
+        const lastSpaceIdx = Math.max(prev.lastIndexOf(" "), prev.lastIndexOf("\n"));
+        const wordStart = lastSpaceIdx === -1 ? 0 : lastSpaceIdx + 1;
+        const inserted = feat.content || feat.label;
+        return prev.slice(0, wordStart) + inserted;
+      });
+      toast.success(`Inserted template "${feat.label}"`);
+      setTimeout(() => inputRef.current?.focus(), 0);
+      return;
+    }
+
     if (feat.id && feat.id.startsWith("action:")) {
       const featId = feat.id;
       if (featId === "action:skills" || featId === "action:mcp") {
@@ -791,7 +828,7 @@ const Composer = forwardRef(function Composer({ onSend, busy, defaultMode = "res
           <textarea
             ref={inputRef} value={value} onChange={(e) => setValue(e.target.value)}
             onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
-            placeholder={`Message ${selectedBot || "TriVisionX"} ...`} rows={1}
+            placeholder={`Message ${selectedBot || "TriVisionX"}... (Type '/' for setup, skills & tools)`} rows={1}
             className="w-full resize-none bg-transparent text-[14.5px] leading-relaxed text-zinc-800 dark:text-zinc-100 outline-none placeholder:text-zinc-400 dark:placeholder:text-zinc-600 scrollbar-thin"
             onKeyDown={(e) => {
               if (showCommandPopup) {

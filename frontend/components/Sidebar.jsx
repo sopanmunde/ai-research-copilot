@@ -166,7 +166,7 @@ function AccordionSection({ id, icon, title, badge, isOpen, onToggle, addAction,
           onClick={onToggle}
           className="group relative flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-150 select-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          <span className="shrink-0 text-muted-foreground group-hover:text-sidebar-foreground transition-colors">{icon}</span>
+          <span className="shrink-0 text-primary group-hover:text-primary transition-colors">{icon}</span>
           <span className="flex-1 text-[11px] font-semibold text-sidebar-foreground/80 group-hover:text-sidebar-foreground transition-colors">{title}</span>
           {badge > 0 && (
             <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground px-1 text-[9px] font-bold tabular-nums transition-colors">{badge}</span>
@@ -374,11 +374,11 @@ export default function Sidebar({
                 }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer"
               >
-                <Plus className={cls("h-4 w-4 text-muted-foreground transition-transform duration-300 ease-in-out", rotatedNewChat ? "rotate-90" : "rotate-0")} /><span>New Chat</span>
+                <Plus className={cls("h-4 w-4 text-primary transition-transform duration-300 ease-in-out", rotatedNewChat ? "rotate-90" : "rotate-0")} /><span>New Chat</span>
               </button>
               <SearchPopover conversations={conversations} onSelect={onSelect} createNewChat={createNewChat}>
                 <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
-                  <SearchIcon className="h-4 w-4 text-muted-foreground" /><span>Search</span>
+                  <SearchIcon className="h-4 w-4 text-primary" /><span>Search</span>
                 </button>
               </SearchPopover>
               <button
@@ -393,24 +393,10 @@ export default function Sidebar({
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-muted-foreground" /><span>Email</span></span>
-              </button>
-              <button
-                onClick={() => {
-                  onSelect("integrations");
-                  onClose?.();
-                }}
-                className={cls(
-                  "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium transition-all cursor-pointer",
-                  selectedId === "integrations" || selectedId === "plugins"
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <span className="flex items-center gap-2.5"><Plug className="h-4 w-4 text-muted-foreground" /><span>Plugins & Integrations</span></span>
+                <span className="flex items-center gap-2.5"><Mail className="h-4 w-4 text-primary" /><span>Email</span></span>
               </button>
               <button onClick={toggleTools} className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
-                <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-muted-foreground" /><span>Tools</span></span>
+                <span className="flex items-center gap-2.5"><Key className="h-4 w-4 text-primary" /><span>Tools</span></span>
                 <ChevronDown className={cls("h-3 w-3 opacity-60 transition-transform duration-200", toolsOpen ? "rotate-0" : "-rotate-90")} />
               </button>
 
@@ -436,7 +422,7 @@ export default function Sidebar({
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
-                      <Brain className="h-4 w-4" /><span>Brain</span>
+                      <Brain className="h-4 w-4 text-primary" /><span>Brain</span>
                     </button>
                     <button
                       onClick={() => {
@@ -450,7 +436,7 @@ export default function Sidebar({
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
-                      <Plug className="h-4 w-4" /><span>Plugins & Integrations</span>
+                      <Plug className="h-4 w-4 text-primary" /><span>Plugins & Integrations</span>
                     </button>
                     <button
                       onClick={() => {
@@ -464,7 +450,7 @@ export default function Sidebar({
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
-                      <Calendar className="h-4 w-4" /><span>Calendar</span>
+                      <Calendar className="h-4 w-4 text-primary" /><span>Calendar</span>
                     </button>
                     <button
                       onClick={() => {
@@ -478,13 +464,7 @@ export default function Sidebar({
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       )}
                     >
-                      <CheckSquare className="h-4 w-4" /><span>Tasks</span>
-                    </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
-                      <BookOpen className="h-4 w-4" /><span>Cookbook</span>
-                    </button>
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer">
-                      <SearchIcon className="h-4 w-4" /><span>Deep Research</span>
+                      <CheckSquare className="h-4 w-4 text-primary" /><span>Tasks</span>
                     </button>
 
                     <button
@@ -493,7 +473,7 @@ export default function Sidebar({
                       }}
                       className="flex w-full justify-between items-center rounded-lg px-2.5 py-1.5 text-left text-[11.5px] font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all cursor-pointer"
                     >
-                      <span className="flex items-center gap-2.5"><FolderIcon className="h-4 w-4" /><span>Library</span></span>
+                      <span className="flex items-center gap-2.5"><FolderIcon className="h-4 w-4 text-primary" /><span>Library</span></span>
                       <ChevronDown className={cls("h-3.5 w-3.5 opacity-60 transition-transform duration-200", libraryOpen ? "rotate-0" : "-rotate-90")} />
                     </button>
 
@@ -519,7 +499,7 @@ export default function Sidebar({
                                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                           >
-                            <ImageIcon className="h-4 w-4" /><span>Gallery</span>
+                            <ImageIcon className="h-4 w-4 text-primary" /><span>Gallery</span>
                           </button>
                           <button
                             onClick={() => {
@@ -533,7 +513,7 @@ export default function Sidebar({
                                 : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                           >
-                            <FileText className="h-4 w-4" /><span>Notes</span>
+                            <FileText className="h-4 w-4 text-primary" /><span>Notes</span>
                           </button>
                         </motion.div>
                       )}
@@ -547,43 +527,48 @@ export default function Sidebar({
 
             {/* SCROLLABLE BODY */}
             <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2.5 pb-2 space-y-0.5 scrollbar-thin scrollbar-thumb-white/[0.06] scrollbar-track-transparent" aria-label="Sidebar navigation">
-              <AccordionSection
-                id="templates" icon={<FileText className="h-3.5 w-3.5 text-muted-foreground" />} title="Templates"
-                badge={templateCount} isOpen={templatesOpen} onToggle={toggleTemplates}
-                addAction={
-                  <TemplatePopover onCreateTemplate={handleCreateTemplate} editingTemplate={editingTemplate}>
-                    <AddBtn title="New template" />
-                  </TemplatePopover>
-                }
-              >
-                {(Array.isArray(templates) ? templates : []).map(t => (
-                  <TemplateRow key={t.id} template={t} onUseTemplate={handleUseTemplate}
-                    onEditTemplate={handleEditTemplate} onRenameTemplate={handleRenameTemplate}
-                    onDeleteTemplate={handleDeleteTemplate} />
-                ))}
-                {templateCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No templates yet</p>}
-              </AccordionSection>
+              {/* UNIFIED CONTAINER FOR TEMPLATES & FOLDERS */}
+              <div className="my-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/20 p-2 shadow-2xs space-y-1">
+                <AccordionSection
+                  id="templates" icon={<FileText className="h-3.5 w-3.5 text-primary" />} title="Templates"
+                  badge={templateCount} isOpen={templatesOpen} onToggle={toggleTemplates}
+                  addAction={
+                    <TemplatePopover onCreateTemplate={handleCreateTemplate} editingTemplate={editingTemplate}>
+                      <AddBtn title="New template" />
+                    </TemplatePopover>
+                  }
+                >
+                  {(Array.isArray(templates) ? templates : []).map(t => (
+                    <TemplateRow key={t.id} template={t} onUseTemplate={handleUseTemplate}
+                      onEditTemplate={handleEditTemplate} onRenameTemplate={handleRenameTemplate}
+                      onDeleteTemplate={handleDeleteTemplate} />
+                  ))}
+                  {templateCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No templates yet</p>}
+                </AccordionSection>
 
-              <AccordionSection
-                id="folders" icon={<FolderIcon className="h-3.5 w-3.5 text-muted-foreground" />} title="Folders"
-                badge={folderCount} isOpen={foldersOpen} onToggle={toggleFolders}
-                addAction={
-                  <FolderPopover onCreateFolder={handleCreateFolder}>
-                    <AddBtn title="New folder" />
-                  </FolderPopover>
-                }
-              >
-                {(Array.isArray(folders) ? folders : []).map(f => (
-                  <FolderRow key={f.id} name={f.name} count={folderCounts[f.name] || 0}
-                    conversations={getConvsByFolder(f.name)} selectedId={selectedId}
-                    onSelect={onSelect} togglePin={togglePin}
-                    onDeleteFolder={handleDeleteFolder} onRenameFolder={handleRenameFolder}
-                    onDeleteConversation={onDeleteConversation} onRenameConversation={onRenameConversation}
-                    isExpanded={expandedFolder === f.id}
-                    onToggle={() => setExpandedFolder(prev => prev === f.id ? null : f.id)} />
-                ))}
-                {folderCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No folders yet</p>}
-              </AccordionSection>
+                <div className="h-px mx-2 bg-sidebar-border/60" />
+
+                <AccordionSection
+                  id="folders" icon={<FolderIcon className="h-3.5 w-3.5 text-primary" />} title="Folders"
+                  badge={folderCount} isOpen={foldersOpen} onToggle={toggleFolders}
+                  addAction={
+                    <FolderPopover onCreateFolder={handleCreateFolder}>
+                      <AddBtn title="New folder" />
+                    </FolderPopover>
+                  }
+                >
+                  {(Array.isArray(folders) ? folders : []).map(f => (
+                    <FolderRow key={f.id} name={f.name} count={folderCounts[f.name] || 0}
+                      conversations={getConvsByFolder(f.name)} selectedId={selectedId}
+                      onSelect={onSelect} togglePin={togglePin}
+                      onDeleteFolder={handleDeleteFolder} onRenameFolder={handleRenameFolder}
+                      onDeleteConversation={onDeleteConversation} onRenameConversation={onRenameConversation}
+                      isExpanded={expandedFolder === f.id}
+                      onToggle={() => setExpandedFolder(prev => prev === f.id ? null : f.id)} />
+                  ))}
+                  {folderCount === 0 && <p className="py-2 pl-3 text-[11px] italic text-muted-foreground">No folders yet</p>}
+                </AccordionSection>
+              </div>
 
               <div role="separator" className="mx-1 my-2 h-px bg-sidebar-border" />
 
