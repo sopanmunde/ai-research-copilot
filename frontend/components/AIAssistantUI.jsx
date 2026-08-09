@@ -25,6 +25,7 @@ import { SettingsDashboard } from "./SettingsDashboard";
 import IntegrationsPanel from "./IntegrationsPanel";
 import AuditLogsModal from "./AuditLogsModal";
 import WorkflowsModal from "./WorkflowsModal";
+import ThemeConfigPanel from "./ThemeConfigPanel";
 
 export default function AIAssistantUI() {
   const router = useRouter();
@@ -167,10 +168,11 @@ export default function AIAssistantUI() {
   const [agentState, setAgentState] = useState(null);
   const [providerSwitchEvent, setProviderSwitchEvent] = useState(null);
   const [user, setUser] = useState(null);
-  const [selectedBot, setSelectedBot] = useState("Fast");
+  const [selectedBot, setSelectedBot] = useState("Gemini 2.5 Flash");
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
   const [isWorkflowsOpen, setIsWorkflowsOpen] = useState(false);
+  const [isThemeConfigOpen, setIsThemeConfigOpen] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -817,6 +819,7 @@ export default function AIAssistantUI() {
               onToggleIntegrations={() => setSelectedId(selectedId === "integrations" || selectedId === "plugins" ? null : "integrations")}
               onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
               onOpenWorkflows={() => setIsWorkflowsOpen(true)}
+              onOpenThemeConfig={() => setIsThemeConfigOpen(true)}
             />
           )}
           {["docs", "calendar", "email", "brain", "tasks", "notes", "integrations", "plugins", "setting", "settings"].includes(selectedId) && (
@@ -901,6 +904,10 @@ export default function AIAssistantUI() {
           <WorkflowsModal
             isOpen={isWorkflowsOpen}
             onClose={() => setIsWorkflowsOpen(false)}
+          />
+          <ThemeConfigPanel
+            isOpen={isThemeConfigOpen}
+            onClose={() => setIsThemeConfigOpen(false)}
           />
         </main>
       </div>

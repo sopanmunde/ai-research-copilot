@@ -48,7 +48,7 @@ function PasswordStrength({ password }: { password: string }) {
 }
 
 const inputCls =
-  "flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm text-foreground shadow-sm placeholder:text-muted-foreground outline-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+  "flex h-10 w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 px-3.5 py-2 text-xs font-semibold text-foreground shadow-2xs placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50";
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -433,16 +433,20 @@ function SignUpPageContent() {
           <TriVisionXLogo size="lg" animate={false} />
         </motion.div>
 
+        {/* ── Card ── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}
-          className="rounded-xl border border-border bg-card text-foreground shadow-2xl shadow-black/60"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-[#0C0C0D]/95 backdrop-blur-2xl text-foreground shadow-2xl"
         >
+          {/* CardHeader */}
           <div className="flex flex-col space-y-1 p-6 pb-4">
-            <h1 className="text-xl font-semibold leading-none tracking-tight text-foreground">
-              Create an account
+            <h1 className="text-xl font-extrabold leading-none tracking-tight text-foreground">
+              Create your account
             </h1>
-            <p className="text-sm text-muted-foreground mt-1.5">
-              Enter your details below to get started.
+            <p className="text-xs text-muted-foreground mt-1.5 font-medium">
+              Join TriVisionX AI platform in seconds.
             </p>
           </div>
 
@@ -473,35 +477,76 @@ function SignUpPageContent() {
               <div className="grid grid-cols-2 gap-3">
                 <FormItem>
                   <Label htmlFor="first_name">First name</Label>
-                  <input id="first_name" name="first_name" value={form.first_name} onChange={handleChange} required className={inputCls} />
+                  <input
+                    id="first_name"
+                    name="first_name"
+                    value={form.first_name}
+                    onChange={handleChange}
+                    placeholder="E.g. Alex"
+                    required
+                    className={inputCls}
+                  />
                 </FormItem>
                 <FormItem>
                   <Label htmlFor="last_name">Last name</Label>
-                  <input id="last_name" name="last_name" value={form.last_name} onChange={handleChange} className={inputCls} />
+                  <input
+                    id="last_name"
+                    name="last_name"
+                    value={form.last_name}
+                    onChange={handleChange}
+                    placeholder="E.g. Morgan"
+                    className={inputCls}
+                  />
                 </FormItem>
               </div>
+
               <FormItem>
                 <Label htmlFor="username">Username</Label>
-                <input id="username" name="username" value={form.username} onChange={handleChange} placeholder="johndoe" required className={inputCls} />
+                <input
+                  id="username"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="E.g. alexmorgan"
+                  required
+                  className={inputCls}
+                />
               </FormItem>
 
               <FormItem>
-                <Label htmlFor="email">Email</Label>
-                <input id="email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="m@example.com" required className={inputCls} />
+                <Label htmlFor="email">Email address</Label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email address (e.g. name@company.com)"
+                  required
+                  className={inputCls}
+                />
               </FormItem>
 
               <FormItem>
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <input
-                    id="password" name="password" type={showPassword ? "text" : "password"}
-                    value={form.password} onChange={handleChange} required
-                    minLength={8} maxLength={12}
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Create a password (8-12 characters)"
+                    required
+                    minLength={8}
+                    maxLength={12}
                     className={inputCls + " pr-9"}
                   />
                   <button
-                    type="button" onClick={() => setShowPassword((s) => !s)} tabIndex={-1}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    tabIndex={-1}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -513,14 +558,22 @@ function SignUpPageContent() {
                 <Label htmlFor="confirmPassword">Confirm password</Label>
                 <div className="relative">
                   <input
-                    id="confirmPassword" name="confirmPassword" type={showConfirm ? "text" : "password"}
-                    value={form.confirmPassword} onChange={handleChange} required
-                    minLength={8} maxLength={12}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirm ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter your password"
+                    required
+                    minLength={8}
+                    maxLength={12}
                     className={inputCls + " pr-9"}
                   />
                   <button
-                    type="button" onClick={() => setShowConfirm((s) => !s)} tabIndex={-1}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
+                    type="button"
+                    onClick={() => setShowConfirm((s) => !s)}
+                    tabIndex={-1}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -528,8 +581,9 @@ function SignUpPageContent() {
               </FormItem>
 
               <button
-                type="submit" disabled={isLoading || success}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-foreground shadow hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-300 disabled:pointer-events-none disabled:opacity-50 transition-colors"
+                type="submit"
+                disabled={isLoading || success}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50 transition-all cursor-pointer select-none"
               >
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create account
@@ -549,8 +603,10 @@ function SignUpPageContent() {
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                type="button" onClick={handleGoogleLogin} disabled={isGoogleLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isGoogleLoading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none"
               >
                 {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                   <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -564,8 +620,10 @@ function SignUpPageContent() {
               </button>
 
               <button
-                type="button" onClick={handleGitHubLogin} disabled={isGitHubLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50"
+                type="button"
+                onClick={handleGitHubLogin}
+                disabled={isGitHubLoading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/60 px-4 py-2 text-xs font-bold text-foreground shadow-2xs hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-colors disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none"
               >
                 {isGitHubLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
